@@ -2,14 +2,14 @@ function createOrderId() {
   return `ESMP-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 }
 
-const STAFF_PINGS = [
+const STAFF_USER_IDS = [
   "1360249226549788912",
   "608917266268028939",
   "1508140997987668009",
   "796030446018101258",
-]
-  .map((id) => `<@${id}>`)
-  .join(" ");
+];
+
+const STAFF_PINGS = STAFF_USER_IDS.map((id) => `<@${id}>`).join(" ");
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -93,14 +93,12 @@ export default async function handler(req, res) {
   };
 
   const payload = {
-   content:
-    `<@1360249226549788912> <@608917266268028939> <@1508140997987668009> <@796030446018101258>\n` +
-    `💰 **New Ellipsis SMP payment claim requires verification.**`,
-  allowed_mentions: {
-    parse: ["users"],
-  },
-  embeds: [embed],
-};
+    content: `🔔 Staff notified: ${STAFF_PINGS}`,
+    allowed_mentions: {
+      users: STAFF_USER_IDS,
+    },
+    embeds: [embed],
+  };
 
   let response;
 
