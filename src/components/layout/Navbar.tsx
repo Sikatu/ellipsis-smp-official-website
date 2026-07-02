@@ -1,8 +1,9 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown, Menu, Server, Users, Wifi, WifiOff, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { discordInviteUrl, discordTicketUrl } from "../../data/links";
 import { navigation } from "../../data/navigation";
+import { useServerStatus } from "../../hooks/useServerStatus";
 
 const primaryLabels = ["Home", "Gameplay", "Progression", "Store", "Vote"];
 
@@ -18,6 +19,7 @@ function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [isMoreOpen, setIsMoreOpen] = useState(false);
     const [activeHref, setActiveHref] = useState("#home");
+    const status = useServerStatus();
 
     useEffect(() => {
         function handleScroll() {
@@ -43,8 +45,8 @@ function Navbar() {
         const isActive = activeHref === href;
 
         return `whitespace-nowrap rounded-full px-3 py-2 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-purple-400/60 ${isActive
-            ? "bg-purple-500/20 text-purple-200 shadow-[0_0_18px_rgba(168,85,247,0.25)]"
-            : "text-gray-300 hover:bg-white/10 hover:text-purple-300"
+                ? "bg-purple-500/20 text-purple-200 shadow-[0_0_18px_rgba(168,85,247,0.25)]"
+                : "text-gray-300 hover:bg-white/10 hover:text-purple-300"
             }`;
     }
 
@@ -52,13 +54,25 @@ function Navbar() {
         const isActive = activeHref === href;
 
         return `block rounded-xl px-4 py-2 text-sm font-bold transition ${isActive
-            ? "bg-purple-500/20 text-purple-200"
-            : "text-gray-300 hover:bg-white/10 hover:text-purple-300"
+                ? "bg-purple-500/20 text-purple-200"
+                : "text-gray-300 hover:bg-white/10 hover:text-purple-300"
             }`;
     }
 
+    const serverLabel = status.loading
+        ? "Checking"
+        : status.online
+            ? "Online"
+            : "Offline";
+
+    const playerLabel = status.loading
+        ? "..."
+        : status.online
+            ? `${status.playersOnline}/${status.playersMax}`
+            : "0/0";
+
     return (
-        <header className="fixed left-0 top-0 z-50 w-full border-b border-purple-500/20 bg-black/55 backdrop-blur-xl">
+        <header className="fixed left-0 top-0 z-50 w-full border-b border-purple-500/20 bg-[#100018]/80 shadow-[0_10px_45px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
             <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-6">
                 <a
                     href="#home"
@@ -67,7 +81,7 @@ function Navbar() {
                     onClick={() => setIsOpen(false)}
                 >
                     <img
-                        src="/ellipsis-logo.webp"
+                        src="/ellipsis-logo-384.webp"
                         alt="Ellipsis SMP"
                         width="44"
                         height="44"
@@ -131,7 +145,31 @@ function Navbar() {
                     </div>
                 </nav>
 
-                <div className="hidden shrink-0 items-center gap-2 lg:flex">
+                <div className="hidden shrink-0 items-center gap-3 lg:flex">
+                    <div className="flex items-center gap-2 rounded-2xl border border-purple-400/25 bg-white/10 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                        <span
+                            className={`h-2.5 w-2.5 rounded-full ${status.loading
+                                    ? "bg-yellow-300 shadow-[0_0_14px_rgba(250,204,21,0.8)]"
+                                    : status.online
+                                        ? "bg-green-400 shadow-[0_0_14px_rgba(74,222,128,0.8)]"
+                                        : "bg-red-400 shadow-[0_0_14px_rgba(248,113,113,0.8)]"
+                                }`}
+                        />
+
+                        <div className="leading-none">
+                            <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.18em] text-purple-200">
+                                {status.online ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+                                {serverLabel}
+                            </div>
+
+                            <div className="mt-1 flex items-center gap-1 text-xs font-black text-white">
+                                <Users className="h-3.5 w-3.5 text-blue-300" />
+                                {playerLabel}
+                                <span className="text-gray-400">players</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <a
                         href={discordInviteUrl}
                         target="_blank"
@@ -161,6 +199,38 @@ function Navbar() {
                 >
                     {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                 </button>
+            </div>
+
+            <div className="border-t border-purple-500/10 bg-black/30 px-4 py-2 lg:hidden">
+                <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 rounded-2xl border border-purple-400/20 bg-white/10 px-3 py-2">
+                    <div className="flex items-center gap-2">
+                        <Server className="h-4 w-4 text-purple-300" />
+                        <span className="text-xs font-black text-white">Live Server</span>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-xs font-black">
+                        <span
+                            className={`flex items-center gap-1 ${status.loading
+                                    ? "text-yellow-300"
+                                    : status.online
+                                        ? "text-green-300"
+                                        : "text-red-300"
+                                }`}
+                        >
+                            <span
+                                className={`h-2 w-2 rounded-full ${status.loading
+                                        ? "bg-yellow-300"
+                                        : status.online
+                                            ? "bg-green-400"
+                                            : "bg-red-400"
+                                    }`}
+                            />
+                            {serverLabel}
+                        </span>
+
+                        <span className="text-blue-200">{playerLabel} players</span>
+                    </div>
+                </div>
             </div>
 
             <AnimatePresence>
