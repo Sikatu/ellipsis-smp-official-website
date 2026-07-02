@@ -1,8 +1,10 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { Copy, Gift, Globe2, Server, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { discordInviteUrl } from "../../data/links";
-import LiveServerPanel from "../ui/LiveServerPanel";
+
+
+const LiveServerPanel = lazy(() => import("../ui/LiveServerPanel"));
 
 const serverIp = "ellipsismc.com:19213";
 
@@ -57,29 +59,28 @@ function Hero() {
                 transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
             />
 
-            <motion.div
-                className="relative z-10 mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-12"
-                initial={shouldReduceMotion ? false : { opacity: 0, y: 45 }}
-                animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-                transition={{ duration: 0.9 }}
-            >
+            <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-12">
                 <div className="flex max-w-4xl flex-col items-center">
-                    <motion.img
-                        src="/ellipsis-logo.webp"
-                        alt="Ellipsis SMP Logo"
-                        width="640"
-                        height="640"
-                        loading="eager"
-                        decoding="async"
-                        fetchPriority="high"
-                        className="mb-6 h-auto w-[360px] object-contain drop-shadow-[0_0_75px_rgba(168,85,247,0.95)] sm:w-[460px] md:w-[560px] lg:w-[640px]"
-                        animate={
-                            shouldReduceMotion
-                                ? undefined
-                                : { scale: [1, 1.04, 1], y: [0, -8, 0] }
-                        }
-                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    />
+                    <picture>
+                        <source
+                            srcSet="/ellipsis-logo-384.webp"
+                            media="(max-width: 640px)"
+                        />
+                        <source
+                            srcSet="/ellipsis-logo-640.webp"
+                            media="(max-width: 1024px)"
+                        />
+                        <img
+                            src="/ellipsis-logo.webp"
+                            alt="Ellipsis SMP Logo"
+                            width="640"
+                            height="640"
+                            loading="eager"
+                            decoding="async"
+                            fetchPriority="high"
+                            className="mb-6 h-auto w-[320px] object-contain drop-shadow-[0_0_75px_rgba(168,85,247,0.95)] sm:w-[460px] md:w-[560px] lg:w-[640px]"
+                        />
+                    </picture>
 
                     <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-purple-400/30 bg-white/10 px-5 py-2 text-sm font-bold uppercase tracking-[0.25em] text-purple-200 backdrop-blur">
                         <Sparkles className="h-4 w-4 text-yellow-300" />
@@ -158,10 +159,12 @@ function Hero() {
                 >
                     <div className="absolute inset-0 rounded-full bg-purple-600/30 blur-3xl" />
                     <div className="relative">
-                        <LiveServerPanel />
+                        <Suspense fallback={null}>
+                            <LiveServerPanel />
+                        </Suspense>
                     </div>
                 </motion.div>
-            </motion.div>
+            </div>
         </section>
     );
 }

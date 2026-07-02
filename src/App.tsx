@@ -1,43 +1,48 @@
+import { lazy, Suspense } from "react";
 import Navbar from "./components/layout/Navbar";
-import Footer from "./components/layout/Footer";
-import About from "./components/sections/About";
-import Discord from "./components/sections/Discord";
-import Featured from "./components/sections/Featured";
-import Features from "./components/sections/Features";
-import GameplayShowcase from "./components/sections/GameplayShowcase";
 import Hero from "./components/sections/Hero";
-import OfficialVideo from "./components/sections/OfficialVideo";
-import RankProgression from "./components/sections/RankProgression";
-import RulesFAQ from "./components/sections/RulesFAQ";
-import ServerStats from "./components/sections/ServerStats";
-import StaffRanks from "./components/sections/StaffRanks";
-import Store from "./components/sections/Store";
-import Vote from "./components/sections/Vote";
-import BackgroundGlow from "./components/ui/BackgroundGlow";
-import ScrollProgressBar from "./components/ui/ScrollProgressBar";
-import ScrollToTop from "./components/ui/ScrollToTop";
+
+const Footer = lazy(() => import("./components/layout/Footer"));
+const About = lazy(() => import("./components/sections/About"));
+const Discord = lazy(() => import("./components/sections/Discord"));
+const Featured = lazy(() => import("./components/sections/Featured"));
+const Features = lazy(() => import("./components/sections/Features"));
+const GameplayShowcase = lazy(() => import("./components/sections/GameplayShowcase"));
+const OfficialVideo = lazy(() => import("./components/sections/OfficialVideo"));
+const RankProgression = lazy(() => import("./components/sections/RankProgression"));
+const RulesFAQ = lazy(() => import("./components/sections/RulesFAQ"));
+const ServerStats = lazy(() => import("./components/sections/ServerStats"));
+const StaffRanks = lazy(() => import("./components/sections/StaffRanks"));
+const Store = lazy(() => import("./components/sections/Store"));
+const Vote = lazy(() => import("./components/sections/Vote"));
+const BackgroundGlow = lazy(() => import("./components/ui/BackgroundGlow"));
+const ScrollProgressBar = lazy(() => import("./components/ui/ScrollProgressBar"));
+const ScrollToTop = lazy(() => import("./components/ui/ScrollToTop"));
 
 function App() {
   return (
     <div className="relative bg-[#030014] text-white">
-      <ScrollProgressBar />
-      <BackgroundGlow />
       <Navbar />
       <Hero />
-      <About />
-      <OfficialVideo />
-      <Featured />
-      <GameplayShowcase />
-      <ServerStats />
-      <RankProgression />
-      <StaffRanks />
-      <RulesFAQ />
-      <Features />
-      <Store />
-      <Vote />
-      <Discord />
-      <Footer />
-      <ScrollToTop />
+
+      <Suspense fallback={null}>
+        <ScrollProgressBar />
+        <BackgroundGlow />
+        <About />
+        <OfficialVideo />
+        <Featured />
+        <GameplayShowcase />
+        <ServerStats />
+        <RankProgression />
+        <StaffRanks />
+        <RulesFAQ />
+        <Features />
+        <Store />
+        <Vote />
+        <Discord />
+        <Footer />
+        <ScrollToTop />
+      </Suspense>
     </div>
   );
 }
