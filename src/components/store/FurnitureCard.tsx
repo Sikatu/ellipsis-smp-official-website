@@ -9,7 +9,6 @@ import {
     TriangleAlert,
 } from "lucide-react";
 import { useState } from "react";
-import { discordTicketUrl } from "../../data/links";
 
 type FurniturePack = {
     name: string;
@@ -171,13 +170,13 @@ function FurnitureCard({ furniture }: FurnitureCardProps) {
                 </p>
 
                 <a
-                    href={discordTicketUrl}
+                    href={`/checkout?product=${encodeURIComponent(selectedPack.name)}&price=${encodeURIComponent(furniture.price)}`}
                     target="_blank"
                     rel="noreferrer"
                     aria-label={`Open Discord ticket for ${furniture.title}`}
                     className="inline-block rounded-xl bg-gradient-to-r from-yellow-500 to-purple-600 px-8 py-4 text-center font-black transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-yellow-400/60"
                 >
-                    Open Ticket
+                    Make Payment
                 </a>
             </div>
         </motion.div>
