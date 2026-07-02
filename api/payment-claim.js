@@ -1,3 +1,7 @@
+function createOrderId() {
+  return `ESMP-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -21,26 +25,49 @@ export default async function handler(req, res) {
     receiptMimeType,
   } = req.body;
 
+  const orderId = createOrderId();
   const hasReceipt = Boolean(receiptBase64 && receiptFileName && receiptMimeType);
 
-  const fields = [
-    { name: "🛒 Product", value: product || "Unknown", inline: true },
-    { name: "💸 Amount", value: price || "Unknown", inline: true },
-    { name: "🏦 Method", value: method || "Unknown", inline: true },
-    { name: "🎮 Minecraft IGN", value: minecraftIgn || "Missing", inline: true },
-    { name: "👤 Discord", value: discordUsername || "Missing", inline: true },
-    {
-      name: hasReceipt ? "📎 Verification" : "🔢 Reference Number",
-      value: hasReceipt ? "Receipt image attached below." : referenceNumber || "Missing",
-      inline: false,
-    },
-  ];
-
   const embed = {
-    title: "💎 Ellipsis SMP Marketplace Payment",
-    description: "A new manual payment claim has been submitted for staff verification.",
-    color: 0x8b5cf6,
-    fields,
+    title: "💎 Ellipsis SMP Marketplace",
+    description: `**New payment claim received**\n\nOrder ID: \`${orderId}\`\nStatus: 🟡 **Pending Staff Verification**`,
+    color: 0xfacc15,
+    thumbnail: {
+      url: "https://www.ellipsissmp.com/ellipsis-logo-384.webp",
+    },
+    fields: [
+      {
+        name: "🧾 Order Summary",
+        value:
+          `**Product:** ${product || "Unknown"}\n` +
+          `**Amount:** ${price || "Unknown"}\n` +
+          `**Payment Method:** ${method || "Unknown"}`,
+        inline: false,
+      },
+      {
+        name: "👤 Customer Details",
+        value:
+          `**Minecraft IGN:** ${minecraftIgn || "Missing"}\n` +
+          `**Discord:** ${discordUsername || "Missing"}`,
+        inline: false,
+      },
+      {
+        name: "📎 Verification",
+        value: hasReceipt
+          ? "Receipt image attached below.\nStaff must manually verify the transaction."
+          : `**Reference Number:** ${referenceNumber || "Missing"}\nStaff must manually verify the transaction.`,
+        inline: false,
+      },
+      {
+        name: "✅ Staff Checklist",
+        value:
+          "1. Verify payment amount\n" +
+          "2. Match IGN and Discord user\n" +
+          "3. Deliver purchased item in-game\n" +
+          "4. Mark order as completed",
+        inline: false,
+      },
+    ],
     footer: {
       text: "Ellipsis SMP Secure Checkout • Manual Verification Required",
     },
@@ -54,6 +81,7 @@ export default async function handler(req, res) {
     const formData = new FormData();
 
     formData.append("payload_json", JSON.stringify({ embeds: [embed] }));
+
     formData.append(
       "files[0]",
       new Blob([buffer], { type: receiptMimeType }),
@@ -76,5 +104,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Failed to send Discord notification" });
   }
 
-  return res.status(200).json({ success: true });
+  return res.status(200).json({ success: true, orderId });
 }
