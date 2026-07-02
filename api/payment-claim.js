@@ -48,7 +48,7 @@ export default async function handler(req, res) {
       `**Order ID:** \`${orderId}\`\n` +
       `**Status:** 🟡 Pending Staff Verification\n\n` +
       "A new marketplace payment claim is ready for review.",
-    color: 0xfacc15,
+    color: 0x8b5cf6,
     thumbnail: {
       url: logoUrl,
     },
@@ -92,41 +92,48 @@ export default async function handler(req, res) {
     timestamp: new Date().toISOString(),
   };
 
-  const payload = {
-    content: `🔔 Staff notified: ${STAFF_PINGS}`,
-    allowed_mentions: {
-      users: STAFF_USER_IDS,
-    },
-    embeds: [embed],
-  };
-
-  let response;
+  let firstResponse;
 
   if (hasReceipt) {
     const buffer = Buffer.from(receiptBase64, "base64");
     const formData = new FormData();
 
-    formData.append("payload_json", JSON.stringify(payload));
+    formData.append("payload_json", JSON.stringify({ embeds: [embed] }));
     formData.append(
       "files[0]",
       new Blob([buffer], { type: receiptMimeType }),
       receiptFileName
     );
 
-    response = await fetch(webhookUrl, {
+    firstResponse = await fetch(webhookUrl, {
       method: "POST",
       body: formData,
     });
   } else {
-    response = await fetch(webhookUrl, {
+    firstResponse = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ embeds: [embed] }),
     });
   }
 
-  if (!response.ok) {
-    return res.status(500).json({ error: "Failed to send Discord notification" });
+  if (!firstResponse.ok) {
+    return res.status(500).json({ error: "Failed to send Discord payment embed" });
+  }
+
+  const pingResponse = await fetch(webhookUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      content: `🔔 **Staff notification:** ${STAFF_PINGS}`,
+      allowed_mentions: {
+        users: STAFF_USER_IDS,
+      },
+    }),
+  });
+
+  if (!pingResponse.ok) {
+    return res.status(500).json({ error: "Payment embed sent, but staff ping failed" });
   }
 
   return res.status(200).json({ success: true, orderId });
