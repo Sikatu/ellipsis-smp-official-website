@@ -79,7 +79,7 @@ function RankCard({ rank }: RankCardProps) {
             </ul>
 
             <a
-                href={`/checkout?product=${encodeURIComponent(rank.name)}&price=${encodeURIComponent(rank.price)}`}
+                href={`/checkout?product=${encodeURIComponent(rank.name)}&price=${encodeURIComponent(rank.price)}&image=${encodeURIComponent(rank.image)}&type=Premium%20Rank`}
                 aria-label={`Open Discord ticket for ${rank.name} rank`}
                 className="mt-7 block w-full rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-3 text-center font-black transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400/60"
             >
@@ -90,3 +90,4 @@ function RankCard({ rank }: RankCardProps) {
 }
 
 export default RankCard;
+

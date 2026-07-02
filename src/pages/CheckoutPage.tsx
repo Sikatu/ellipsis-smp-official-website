@@ -14,6 +14,8 @@ function CheckoutPage() {
   const [searchParams] = useSearchParams();
   const product = searchParams.get("product") || "Ellipsis SMP Item";
   const price = searchParams.get("price") || "Price not set";
+const image = searchParams.get("image") || "/ellipsis-logo-640.webp";
+const type = searchParams.get("type") || "Marketplace Item";
 
   const [method, setMethod] = useState(paymentMethods[0]);
   const [verifyMode, setVerifyMode] = useState<VerifyMode>("reference");
@@ -101,6 +103,17 @@ function CheckoutPage() {
             <h1 className="mt-3 text-4xl font-black">Secure Checkout</h1>
 
             <div className="mt-8 rounded-3xl border border-purple-500/20 bg-black/35 p-5">
+<div className="mb-6 flex justify-center rounded-3xl border border-purple-500/20 bg-black/35 p-5">
+  <img
+    src={image}
+    alt={product}
+    className="h-44 w-full object-contain [image-rendering:pixelated]"
+  />
+</div>
+
+<p className="text-xs font-black uppercase tracking-[0.25em] text-purple-300">
+  {type}
+</p>
               <p className="text-sm text-gray-400">Selected Product</p>
               <h2 className="mt-1 text-3xl font-black">{product}</h2>
               <p className="mt-3 text-2xl font-black text-yellow-300">{price}</p>

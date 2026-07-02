@@ -106,7 +106,7 @@ function PlushieCard({ plushies }: PlushieCardProps) {
             </div>
 
             <a
-                href={`/checkout?product=${encodeURIComponent(plushies.title)}&price=${encodeURIComponent(plushies.price)}`}
+                href={`/checkout?product=${encodeURIComponent(plushies.title)}&price=${encodeURIComponent(plushies.price)}&image=${encodeURIComponent(plushies.image)}&type=Collectible%20Plushies`}
                 aria-label={`Open Discord ticket for ${plushies.title}`}
                 className="mt-7 block w-full rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 px-5 py-4 text-center font-black transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-400/60"
             >
@@ -117,3 +117,4 @@ function PlushieCard({ plushies }: PlushieCardProps) {
 }
 
 export default PlushieCard;
+

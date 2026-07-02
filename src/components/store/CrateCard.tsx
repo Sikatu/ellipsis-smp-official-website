@@ -83,7 +83,7 @@ function CrateCard({ crate }: CrateCardProps) {
             </div>
 
             <a
-                href={`/checkout?product=${encodeURIComponent(crate.name)}&price=${encodeURIComponent(selectedOption.price)}`}
+                href={`/checkout?product=${encodeURIComponent(crate.name)}&price=${encodeURIComponent(selectedOption.price)}&image=${encodeURIComponent(crate.image)}&type=Premium%20Crate`}
                 aria-label={`Open Discord ticket for ${crate.name} crate`}
                 className="mt-7 block w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-3 text-center font-black transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400/60"
             >
@@ -94,3 +94,4 @@ function CrateCard({ crate }: CrateCardProps) {
 }
 
 export default CrateCard;
+
