@@ -36,7 +36,7 @@ export default async function handler(req, res) {
 
   const orderId = createOrderId();
   const hasReceipt = Boolean(receiptBase64 && receiptFileName && receiptMimeType);
-  const logoUrl = "https://www.ellipsissmp.com/ellipsis-logo-384.webp";
+  const logoUrl = "https://www.ellipsissmp.com/ellipsis-logo-discord.png";
 
   const embed = {
     author: {
@@ -93,17 +93,14 @@ export default async function handler(req, res) {
   };
 
   const payload = {
-    content: `${STAFF_PINGS}\n💰 **New Ellipsis SMP payment claim requires verification.**`,
-    allowed_mentions: {
-      users: [
-        "1360249226549788912",
-        "608917266268028939",
-        "1508140997987668009",
-        "796030446018101258",
-      ],
-    },
-    embeds: [embed],
-  };
+   content:
+    `<@1360249226549788912> <@608917266268028939> <@1508140997987668009> <@796030446018101258>\n` +
+    `💰 **New Ellipsis SMP payment claim requires verification.**`,
+  allowed_mentions: {
+    parse: ["users"],
+  },
+  embeds: [embed],
+};
 
   let response;
 
