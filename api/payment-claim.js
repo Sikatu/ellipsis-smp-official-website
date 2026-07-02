@@ -1,3 +1,7 @@
+function createOrderId() {
+  return `ESMP-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+}
+
 const submissionMemory = new Map();
 
 function isRateLimited(ip) {
@@ -5,16 +9,10 @@ function isRateLimited(ip) {
   const lastSubmit = submissionMemory.get(ip) || 0;
   const cooldownMs = 30 * 1000;
 
-  if (now - lastSubmit < cooldownMs) {
-    return true;
-  }
+  if (now - lastSubmit < cooldownMs) return true;
 
   submissionMemory.set(ip, now);
   return false;
-}
-
-function createOrderId() {
-  return `ESMP-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 }
 
 const STAFF_USER_IDS = [
@@ -37,8 +35,9 @@ export default async function handler(req, res) {
     "unknown";
 
   if (isRateLimited(ip)) {
-    return res.status(429).json({ error: "Please wait before submitting again" });
+    return res.status(429).json({ error: "Please wait before submitting again." });
   }
+
   const webhookUrl = process.env.DISCORD_PAYMENT_WEBHOOK_URL;
 
   if (!webhookUrl) {
@@ -59,14 +58,28 @@ export default async function handler(req, res) {
   } = req.body;
 
   if (!product || !price || !method || !minecraftIgn || !discordUsername) {
-    return res.status(400).json({ error: "Missing required payment claim details" });
+    return res.status(400).json({ error: "Missing required payment claim details." });
   }
-  const orderId = createOrderId();
-  const logoUrl = "https://www.ellipsissmp.com/ellipsis-logo-discord.png";
 
   if (!receiptBase64 || !receiptFileName || !receiptMimeType) {
-    return res.status(400).json({ error: "Receipt image is required" });
+    return res.status(400).json({ error: "Receipt image is required." });
   }
+
+  const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+
+  if (!allowedTypes.includes(receiptMimeType)) {
+    return res.status(400).json({ error: "Receipt must be PNG, JPG, JPEG, or WEBP." });
+  }
+
+  const buffer = Buffer.from(receiptBase64, "base64");
+  const maxBytes = 4 * 1024 * 1024;
+
+  if (buffer.length > maxBytes) {
+    return res.status(400).json({ error: "Receipt image must be under 4MB." });
+  }
+
+  const orderId = createOrderId();
+  const logoUrl = "https://www.ellipsissmp.com/ellipsis-logo-discord.png";
 
   const embed = {
     author: {
@@ -86,18 +99,18 @@ export default async function handler(req, res) {
       {
         name: "🧾 Order Summary",
         value:
-          `**Product:** ${product || "Unknown"}\n` +
+          `**Product:** ${product}\n` +
           `**Type:** ${productType || "Marketplace Item"}\n` +
-          `**Amount:** ${price || "Unknown"}\n` +
-          `**Payment Method:** ${method || "Unknown"}` +
-          `\n**Description:** ${productDescription || "No description provided."}`,
+          `**Amount:** ${price}\n` +
+          `**Payment Method:** ${method}\n` +
+          `**Description:** ${productDescription || "No description provided."}`,
         inline: false,
       },
       {
         name: "👤 Customer Details",
         value:
-          `**Minecraft IGN:** ${minecraftIgn || "Missing"}\n` +
-          `**Discord:** ${discordUsername || "Missing"}`,
+          `**Minecraft IGN:** ${minecraftIgn}\n` +
+          `**Discord:** ${discordUsername}`,
         inline: false,
       },
       {
@@ -122,7 +135,6 @@ export default async function handler(req, res) {
     timestamp: new Date().toISOString(),
   };
 
-  const buffer = Buffer.from(receiptBase64, "base64");
   const formData = new FormData();
 
   formData.append("payload_json", JSON.stringify({ embeds: [embed] }));
@@ -138,7 +150,7 @@ export default async function handler(req, res) {
   });
 
   if (!embedResponse.ok) {
-    return res.status(500).json({ error: "Failed to send Discord payment embed" });
+    return res.status(500).json({ error: "Failed to send Discord payment embed." });
   }
 
   const pingResponse = await fetch(webhookUrl, {
@@ -153,10 +165,8 @@ export default async function handler(req, res) {
   });
 
   if (!pingResponse.ok) {
-    return res.status(500).json({ error: "Payment embed sent, but staff ping failed" });
+    return res.status(500).json({ error: "Payment embed sent, but staff ping failed." });
   }
 
   return res.status(200).json({ success: true, orderId });
 }
-
-
