@@ -13,8 +13,9 @@ function OfficialVideo() {
                 <div className="mt-10 overflow-hidden rounded-3xl border border-purple-500/30 bg-black shadow-[0_0_60px_rgba(168,85,247,0.25)]">
                     <video
                         controls
-                        controlsList="nodownload noplaybackrate"
-                        disablePictureInPicture
+                        autoPlay
+                        muted
+                        loop
                         playsInline
                         preload="metadata"
                         poster="/ellipsis-logo-640.webp"
