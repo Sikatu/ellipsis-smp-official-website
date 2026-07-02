@@ -14,8 +14,8 @@ function CheckoutPage() {
   const [searchParams] = useSearchParams();
   const product = searchParams.get("product") || "Ellipsis SMP Item";
   const price = searchParams.get("price") || "Price not set";
-const image = searchParams.get("image") || "/ellipsis-logo-640.webp";
-const type = searchParams.get("type") || "Marketplace Item";
+  const image = searchParams.get("image") || "/ellipsis-logo-640.webp";
+  const type = searchParams.get("type") || "Marketplace Item";
 
   const [method, setMethod] = useState(paymentMethods[0]);
   const [verifyMode, setVerifyMode] = useState<VerifyMode>("reference");
@@ -103,17 +103,17 @@ const type = searchParams.get("type") || "Marketplace Item";
             <h1 className="mt-3 text-4xl font-black">Secure Checkout</h1>
 
             <div className="mt-8 rounded-3xl border border-purple-500/20 bg-black/35 p-5">
-<div className="mb-6 flex justify-center rounded-3xl border border-purple-500/20 bg-black/35 p-5">
-  <img
-    src={image}
-    alt={product}
-    className="h-44 w-full object-contain [image-rendering:pixelated]"
-  />
-</div>
+              <div className="mb-6 flex justify-center rounded-3xl border border-purple-500/20 bg-black/35 p-5">
+                <img
+                  src={image}
+                  alt={product}
+                  className="h-44 w-full object-contain [image-rendering:pixelated]"
+                />
+              </div>
 
-<p className="text-xs font-black uppercase tracking-[0.25em] text-purple-300">
-  {type}
-</p>
+              <p className="text-xs font-black uppercase tracking-[0.25em] text-purple-300">
+                {type}
+              </p>
               <p className="text-sm text-gray-400">Selected Product</p>
               <h2 className="mt-1 text-3xl font-black">{product}</h2>
               <p className="mt-3 text-2xl font-black text-yellow-300">{price}</p>
@@ -140,8 +140,8 @@ const type = searchParams.get("type") || "Marketplace Item";
                   type="button"
                   onClick={() => setMethod(item)}
                   className={`rounded-2xl border px-4 py-3 font-black transition ${method.id === item.id
-                      ? "border-purple-300 bg-purple-500/20 text-white"
-                      : "border-purple-500/20 bg-black/25 text-gray-300 hover:bg-white/10"
+                    ? "border-purple-300 bg-purple-500/20 text-white"
+                    : "border-purple-500/20 bg-black/25 text-gray-300 hover:bg-white/10"
                     }`}
                 >
                   {item.label}
@@ -185,8 +185,8 @@ const type = searchParams.get("type") || "Marketplace Item";
                   type="button"
                   onClick={() => setVerifyMode("reference")}
                   className={`rounded-xl border px-4 py-3 font-black ${verifyMode === "reference"
-                      ? "border-blue-300 bg-blue-500/20 text-blue-100"
-                      : "border-purple-500/25 bg-black/40 text-gray-300"
+                    ? "border-blue-300 bg-blue-500/20 text-blue-100"
+                    : "border-purple-500/25 bg-black/40 text-gray-300"
                     }`}
                 >
                   Reference Number
@@ -196,8 +196,8 @@ const type = searchParams.get("type") || "Marketplace Item";
                   type="button"
                   onClick={() => setVerifyMode("receipt")}
                   className={`rounded-xl border px-4 py-3 font-black ${verifyMode === "receipt"
-                      ? "border-green-300 bg-green-500/20 text-green-100"
-                      : "border-purple-500/25 bg-black/40 text-gray-300"
+                    ? "border-green-300 bg-green-500/20 text-green-100"
+                    : "border-purple-500/25 bg-black/40 text-gray-300"
                     }`}
                 >
                   Upload Receipt
