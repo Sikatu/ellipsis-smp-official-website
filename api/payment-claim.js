@@ -2,6 +2,15 @@ function createOrderId() {
   return `ESMP-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 }
 
+const STAFF_PINGS = [
+  "1360249226549788912",
+  "608917266268028939",
+  "1508140997987668009",
+  "796030446018101258",
+]
+  .map((id) => `<@${id}>`)
+  .join(" ");
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -27,13 +36,21 @@ export default async function handler(req, res) {
 
   const orderId = createOrderId();
   const hasReceipt = Boolean(receiptBase64 && receiptFileName && receiptMimeType);
+  const logoUrl = "https://www.ellipsissmp.com/ellipsis-logo-384.webp";
 
   const embed = {
-    title: "💎 Ellipsis SMP Marketplace",
-    description: `**New payment claim received**\n\nOrder ID: \`${orderId}\`\nStatus: 🟡 **Pending Staff Verification**`,
+    author: {
+      name: "Ellipsis SMP Secure Checkout",
+      icon_url: logoUrl,
+    },
+    title: "💎 Marketplace Payment Claim",
+    description:
+      `**Order ID:** \`${orderId}\`\n` +
+      `**Status:** 🟡 Pending Staff Verification\n\n` +
+      "A new marketplace payment claim is ready for review.",
     color: 0xfacc15,
     thumbnail: {
-      url: "https://www.ellipsissmp.com/ellipsis-logo-384.webp",
+      url: logoUrl,
     },
     fields: [
       {
@@ -54,24 +71,38 @@ export default async function handler(req, res) {
       {
         name: "📎 Verification",
         value: hasReceipt
-          ? "Receipt image attached below.\nStaff must manually verify the transaction."
-          : `**Reference Number:** ${referenceNumber || "Missing"}\nStaff must manually verify the transaction.`,
+          ? "Receipt image attached below.\nManual verification required."
+          : `**Reference Number:** ${referenceNumber || "Missing"}\nManual verification required.`,
         inline: false,
       },
       {
         name: "✅ Staff Checklist",
         value:
           "1. Verify payment amount\n" +
-          "2. Match IGN and Discord user\n" +
+          "2. Match customer details\n" +
           "3. Deliver purchased item in-game\n" +
           "4. Mark order as completed",
         inline: false,
       },
     ],
     footer: {
-      text: "Ellipsis SMP Secure Checkout • Manual Verification Required",
+      text: "Ellipsis SMP Marketplace • Secure Checkout",
+      icon_url: logoUrl,
     },
     timestamp: new Date().toISOString(),
+  };
+
+  const payload = {
+    content: `${STAFF_PINGS}\n💰 **New Ellipsis SMP payment claim requires verification.**`,
+    allowed_mentions: {
+      users: [
+        "1360249226549788912",
+        "608917266268028939",
+        "1508140997987668009",
+        "796030446018101258",
+      ],
+    },
+    embeds: [embed],
   };
 
   let response;
@@ -80,8 +111,7 @@ export default async function handler(req, res) {
     const buffer = Buffer.from(receiptBase64, "base64");
     const formData = new FormData();
 
-    formData.append("payload_json", JSON.stringify({ embeds: [embed] }));
-
+    formData.append("payload_json", JSON.stringify(payload));
     formData.append(
       "files[0]",
       new Blob([buffer], { type: receiptMimeType }),
@@ -96,7 +126,7 @@ export default async function handler(req, res) {
     response = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ embeds: [embed] }),
+      body: JSON.stringify(payload),
     });
   }
 
