@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, Menu, Server, Users, Wifi, WifiOff, X } from "lucide-react";
+import { ChevronDown, Menu, Server, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { discordInviteUrl, discordTicketUrl } from "../../data/links";
 import { navigation } from "../../data/navigation";
@@ -60,10 +60,10 @@ function Navbar() {
     }
 
     const serverLabel = status.loading
-        ? "Checking"
+        ? "CHECKING"
         : status.online
-            ? "Online"
-            : "Offline";
+            ? "ONLINE"
+            : "OFFLINE";
 
     const playerLabel = status.loading
         ? "..."
@@ -146,28 +146,25 @@ function Navbar() {
                 </nav>
 
                 <div className="hidden shrink-0 items-center gap-3 lg:flex">
-                    <div className="flex items-center gap-2 rounded-2xl border border-purple-400/25 bg-white/10 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                    <div className="flex items-center gap-2 rounded-full border border-purple-400/25 bg-white/[0.07] px-4 py-2 text-xs font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                         <span
                             className={`h-2.5 w-2.5 rounded-full ${status.loading
-                                    ? "bg-yellow-300 shadow-[0_0_14px_rgba(250,204,21,0.8)]"
+                                    ? "bg-yellow-300 shadow-[0_0_12px_rgba(250,204,21,0.8)]"
                                     : status.online
-                                        ? "bg-green-400 shadow-[0_0_14px_rgba(74,222,128,0.8)]"
-                                        : "bg-red-400 shadow-[0_0_14px_rgba(248,113,113,0.8)]"
+                                        ? "bg-green-400 shadow-[0_0_12px_rgba(74,222,128,0.9)]"
+                                        : "bg-red-400 shadow-[0_0_12px_rgba(248,113,113,0.9)]"
                                 }`}
                         />
 
-                        <div className="leading-none">
-                            <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.18em] text-purple-200">
-                                {status.online ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
-                                {serverLabel}
-                            </div>
+                        <span className="tracking-[0.18em] text-purple-200">
+                            {serverLabel}
+                        </span>
 
-                            <div className="mt-1 flex items-center gap-1 text-xs font-black text-white">
-                                <Users className="h-3.5 w-3.5 text-blue-300" />
-                                {playerLabel}
-                                <span className="text-gray-400">players</span>
-                            </div>
-                        </div>
+                        <span className="h-3 w-px bg-purple-300/25" />
+
+                        <span className="text-blue-200">{playerLabel}</span>
+
+                        <span className="text-gray-400">players</span>
                     </div>
 
                     <a
@@ -202,34 +199,27 @@ function Navbar() {
             </div>
 
             <div className="border-t border-purple-500/10 bg-black/30 px-4 py-2 lg:hidden">
-                <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 rounded-2xl border border-purple-400/20 bg-white/10 px-3 py-2">
-                    <div className="flex items-center gap-2">
-                        <Server className="h-4 w-4 text-purple-300" />
-                        <span className="text-xs font-black text-white">Live Server</span>
-                    </div>
+                <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 rounded-full border border-purple-400/20 bg-white/[0.07] px-4 py-2 text-xs font-black">
+                    <Server className="h-3.5 w-3.5 text-purple-300" />
 
-                    <div className="flex items-center gap-3 text-xs font-black">
-                        <span
-                            className={`flex items-center gap-1 ${status.loading
-                                    ? "text-yellow-300"
-                                    : status.online
-                                        ? "text-green-300"
-                                        : "text-red-300"
-                                }`}
-                        >
-                            <span
-                                className={`h-2 w-2 rounded-full ${status.loading
-                                        ? "bg-yellow-300"
-                                        : status.online
-                                            ? "bg-green-400"
-                                            : "bg-red-400"
-                                    }`}
-                            />
-                            {serverLabel}
-                        </span>
+                    <span
+                        className={`h-2 w-2 rounded-full ${status.loading
+                                ? "bg-yellow-300"
+                                : status.online
+                                    ? "bg-green-400"
+                                    : "bg-red-400"
+                            }`}
+                    />
 
-                        <span className="text-blue-200">{playerLabel} players</span>
-                    </div>
+                    <span className="tracking-[0.16em] text-purple-200">
+                        {serverLabel}
+                    </span>
+
+                    <span className="text-purple-300/40">|</span>
+
+                    <span className="text-blue-200">{playerLabel}</span>
+
+                    <span className="text-gray-400">players</span>
                 </div>
             </div>
 
