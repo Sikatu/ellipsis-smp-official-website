@@ -36,7 +36,7 @@ export default async function handler(req, res) {
 
   const orderId = createOrderId();
   const hasReceipt = Boolean(receiptBase64 && receiptFileName && receiptMimeType);
-  const logoUrl = "https://www.ellipsissmp.com/ellipsis-logo-discord.png";
+  const logoUrl = "https://www.ellipsissmp.com/ellipsis-logo-384.webp";
 
   const embed = {
     author: {
