@@ -16,40 +16,44 @@ export default async function handler(req, res) {
     minecraftIgn,
     discordUsername,
     referenceNumber,
-    proofLink,
     receiptBase64,
     receiptFileName,
     receiptMimeType,
   } = req.body;
 
+  const hasReceipt = Boolean(receiptBase64 && receiptFileName && receiptMimeType);
+
+  const fields = [
+    { name: "🛒 Product", value: product || "Unknown", inline: true },
+    { name: "💸 Amount", value: price || "Unknown", inline: true },
+    { name: "🏦 Method", value: method || "Unknown", inline: true },
+    { name: "🎮 Minecraft IGN", value: minecraftIgn || "Missing", inline: true },
+    { name: "👤 Discord", value: discordUsername || "Missing", inline: true },
+    {
+      name: hasReceipt ? "📎 Verification" : "🔢 Reference Number",
+      value: hasReceipt ? "Receipt image attached below." : referenceNumber || "Missing",
+      inline: false,
+    },
+  ];
+
   const embed = {
-    title: "💰 New Payment Claim",
+    title: "💎 Ellipsis SMP Marketplace Payment",
+    description: "A new manual payment claim has been submitted for staff verification.",
     color: 0x8b5cf6,
-    fields: [
-      { name: "Product", value: product || "Unknown", inline: true },
-      { name: "Price", value: price || "Unknown", inline: true },
-      { name: "Payment Method", value: method || "Unknown", inline: true },
-      { name: "Minecraft IGN", value: minecraftIgn || "Missing", inline: true },
-      { name: "Discord", value: discordUsername || "Missing", inline: true },
-      { name: "Reference Number", value: referenceNumber || "Not provided", inline: false },
-      { name: "Proof Link", value: proofLink || "Not provided", inline: false },
-    ],
+    fields,
+    footer: {
+      text: "Ellipsis SMP Secure Checkout • Manual Verification Required",
+    },
     timestamp: new Date().toISOString(),
   };
 
   let response;
 
-  if (receiptBase64 && receiptFileName && receiptMimeType) {
+  if (hasReceipt) {
     const buffer = Buffer.from(receiptBase64, "base64");
     const formData = new FormData();
 
-    formData.append(
-      "payload_json",
-      JSON.stringify({
-        embeds: [embed],
-      })
-    );
-
+    formData.append("payload_json", JSON.stringify({ embeds: [embed] }));
     formData.append(
       "files[0]",
       new Blob([buffer], { type: receiptMimeType }),

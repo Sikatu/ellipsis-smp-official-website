@@ -20,7 +20,6 @@ function CheckoutPage() {
   const [minecraftIgn, setMinecraftIgn] = useState("");
   const [discordUsername, setDiscordUsername] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
-  const [proofLink, setProofLink] = useState("");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
 
@@ -75,7 +74,6 @@ function CheckoutPage() {
           minecraftIgn,
           discordUsername,
           referenceNumber,
-          proofLink,
           receiptBase64,
           receiptFileName,
           receiptMimeType,
@@ -211,8 +209,6 @@ function CheckoutPage() {
                   />
                 </label>
               )}
-
-              <input value={proofLink} onChange={(e) => setProofLink(e.target.value)} placeholder="Proof link optional" className="rounded-xl border border-purple-500/25 bg-black/40 px-4 py-3 outline-none focus:border-purple-300" />
 
               <button type="button" disabled={!canSubmit || status === "sending"} onClick={submitClaim} className="rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-4 font-black transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50">
                 {status === "sending" ? "Submitting..." : "Submit Payment Claim"}
