@@ -1,10 +1,8 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { Copy, Gift, Globe2, Server, Sparkles } from "lucide-react";
-import { lazy, Suspense, useState } from "react";
+import { useState } from "react";
 import { discordInviteUrl } from "../../data/links";
-
-
-const LiveServerPanel = lazy(() => import("../ui/LiveServerPanel"));
+import LiveServerPanel from "../ui/LiveServerPanel";
 
 const serverIp = "ellipsismc.com:19213";
 
@@ -62,23 +60,17 @@ function Hero() {
             <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-12">
                 <div className="flex max-w-4xl flex-col items-center">
                     <picture>
-                        <source
-                            srcSet="/ellipsis-logo-384.webp"
-                            media="(max-width: 640px)"
-                        />
-                        <source
-                            srcSet="/ellipsis-logo-640.webp"
-                            media="(max-width: 1024px)"
-                        />
+                        <source media="(max-width: 640px)" srcSet="/ellipsis-logo-384.webp" />
+                        <source media="(max-width: 1024px)" srcSet="/ellipsis-logo-640.webp" />
                         <img
-                            src="/ellipsis-logo.webp"
+                            src="/ellipsis-logo-640.webp"
                             alt="Ellipsis SMP Logo"
                             width="640"
                             height="640"
                             loading="eager"
                             decoding="async"
                             fetchPriority="high"
-                            className="mb-6 h-auto w-[320px] object-contain drop-shadow-[0_0_75px_rgba(168,85,247,0.95)] sm:w-[460px] md:w-[560px] lg:w-[640px]"
+                            className="mb-6 h-auto w-[300px] object-contain drop-shadow-[0_0_75px_rgba(168,85,247,0.95)] sm:w-[460px] md:w-[560px] lg:w-[640px]"
                         />
                     </picture>
 
@@ -159,9 +151,7 @@ function Hero() {
                 >
                     <div className="absolute inset-0 rounded-full bg-purple-600/30 blur-3xl" />
                     <div className="relative">
-                        <Suspense fallback={null}>
-                            <LiveServerPanel />
-                        </Suspense>
+                        <LiveServerPanel />
                     </div>
                 </motion.div>
             </div>
