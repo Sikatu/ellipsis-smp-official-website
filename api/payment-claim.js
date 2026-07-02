@@ -1,3 +1,18 @@
+const submissionMemory = new Map();
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const lastSubmit = submissionMemory.get(ip) || 0;
+  const cooldownMs = 30 * 1000;
+
+  if (now - lastSubmit < cooldownMs) {
+    return true;
+  }
+
+  submissionMemory.set(ip, now);
+  return false;
+}
+
 function createOrderId() {
   return `ESMP-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 }
@@ -16,6 +31,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  const ip =
+    req.headers["x-forwarded-for"]?.split(",")[0] ||
+    req.socket?.remoteAddress ||
+    "unknown";
+
+  if (isRateLimited(ip)) {
+    return res.status(429).json({ error: "Please wait before submitting again" });
+  }
   const webhookUrl = process.env.DISCORD_PAYMENT_WEBHOOK_URL;
 
   if (!webhookUrl) {
@@ -24,19 +47,26 @@ export default async function handler(req, res) {
 
   const {
     product,
+    productType,
+    productDescription,
     price,
     method,
     minecraftIgn,
     discordUsername,
-    referenceNumber,
     receiptBase64,
     receiptFileName,
     receiptMimeType,
   } = req.body;
 
+  if (!product || !price || !method || !minecraftIgn || !discordUsername) {
+    return res.status(400).json({ error: "Missing required payment claim details" });
+  }
   const orderId = createOrderId();
-  const hasReceipt = Boolean(receiptBase64 && receiptFileName && receiptMimeType);
   const logoUrl = "https://www.ellipsissmp.com/ellipsis-logo-discord.png";
+
+  if (!receiptBase64 || !receiptFileName || !receiptMimeType) {
+    return res.status(400).json({ error: "Receipt image is required" });
+  }
 
   const embed = {
     author: {
@@ -57,8 +87,10 @@ export default async function handler(req, res) {
         name: "🧾 Order Summary",
         value:
           `**Product:** ${product || "Unknown"}\n` +
+          `**Type:** ${productType || "Marketplace Item"}\n` +
           `**Amount:** ${price || "Unknown"}\n` +
-          `**Payment Method:** ${method || "Unknown"}`,
+          `**Payment Method:** ${method || "Unknown"}` +
+          `\n**Description:** ${productDescription || "No description provided."}`,
         inline: false,
       },
       {
@@ -70,9 +102,7 @@ export default async function handler(req, res) {
       },
       {
         name: "📎 Verification",
-        value: hasReceipt
-          ? "Receipt image attached below.\nManual verification required."
-          : `**Reference Number:** ${referenceNumber || "Missing"}\nManual verification required.`,
+        value: "Receipt image attached below.\nManual verification required.",
         inline: false,
       },
       {
@@ -92,32 +122,22 @@ export default async function handler(req, res) {
     timestamp: new Date().toISOString(),
   };
 
-  let firstResponse;
+  const buffer = Buffer.from(receiptBase64, "base64");
+  const formData = new FormData();
 
-  if (hasReceipt) {
-    const buffer = Buffer.from(receiptBase64, "base64");
-    const formData = new FormData();
+  formData.append("payload_json", JSON.stringify({ embeds: [embed] }));
+  formData.append(
+    "files[0]",
+    new Blob([buffer], { type: receiptMimeType }),
+    receiptFileName
+  );
 
-    formData.append("payload_json", JSON.stringify({ embeds: [embed] }));
-    formData.append(
-      "files[0]",
-      new Blob([buffer], { type: receiptMimeType }),
-      receiptFileName
-    );
+  const embedResponse = await fetch(webhookUrl, {
+    method: "POST",
+    body: formData,
+  });
 
-    firstResponse = await fetch(webhookUrl, {
-      method: "POST",
-      body: formData,
-    });
-  } else {
-    firstResponse = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ embeds: [embed] }),
-    });
-  }
-
-  if (!firstResponse.ok) {
+  if (!embedResponse.ok) {
     return res.status(500).json({ error: "Failed to send Discord payment embed" });
   }
 
@@ -138,3 +158,5 @@ export default async function handler(req, res) {
 
   return res.status(200).json({ success: true, orderId });
 }
+
+
