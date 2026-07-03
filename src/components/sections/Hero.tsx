@@ -132,9 +132,7 @@ function Hero() {
 
           <div className="mt-8 flex w-full items-center justify-center gap-4">
             <div className="h-px w-24 bg-gradient-to-r from-transparent to-purple-400/70" />
-            <p className="text-xs font-black uppercase tracking-[0.35em] text-purple-200">
-              Crossplay ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Java & Bedrock
-            </p>
+            <p className="text-xs font-black uppercase tracking-[0.35em] text-purple-200">CROSSPLAY / JAVA & BEDROCK</p>
             <div className="h-px w-24 bg-gradient-to-l from-transparent to-purple-400/70" />
           </div>
 
