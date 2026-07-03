@@ -1,195 +1,167 @@
 import {
-    Code2,
-    Copy,
-    ExternalLink,
-    MessageCircle,
-    ShieldCheck,
-    Store,
-    Vote,
+  Copy,
+  ExternalLink,
+  MessageCircle,
+  ShieldCheck,
+  ShoppingBag,
+  Vote,
 } from "lucide-react";
 import { useState } from "react";
-import { discordInviteUrl } from "../../data/links";
-import { navigation } from "../../data/navigation";
+import { Link } from "react-router-dom";
+import { discordInviteUrl, discordTicketUrl } from "../../data/links";
 
 const serverAddress = "ellipsismc.com:19213";
 
-const quickLinks = navigation.filter((item) =>
-    ["Home", "Gameplay", "Progression", "Staff", "Store", "Vote"].includes(
-        item.label
-    )
-);
-
 function Footer() {
-    const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-    function copyIp() {
-        navigator.clipboard.writeText(serverAddress);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-    }
+  function copyIp() {
+    navigator.clipboard.writeText(serverAddress);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
+  }
 
-    return (
-        <footer className="relative overflow-hidden border-t border-purple-900/40 bg-black/70 px-6 py-16 text-gray-400 backdrop-blur">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.16),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.14),transparent_35%)]" />
+  return (
+    <footer className="relative overflow-hidden border-t border-purple-500/20 bg-[#05000d] px-4 py-20 text-gray-400 sm:px-6">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.2),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.16),transparent_34%)]" />
 
-            <div className="relative mx-auto grid max-w-7xl gap-10 md:grid-cols-[1.2fr_0.8fr_0.9fr_1fr]">
-                <div>
-                    <div className="flex items-center gap-3">
-                        <img
-                            src="/ellipsis-logo.webp"
-                            alt="Ellipsis SMP"
-                            className="h-14 w-auto object-contain drop-shadow-[0_0_18px_rgba(168,85,247,0.9)]"
-                        />
-
-                        <div>
-                            <p className="font-black text-white">ELLIPSIS SMP</p>
-                            <p className="text-sm text-purple-200">Official Website</p>
-                        </div>
-                    </div>
-
-                    <p className="mt-5 max-w-sm text-sm leading-6">
-                        A premium crossplay Minecraft SMP built for survival, community,
-                        custom content, cosmetics, and long-term progression.
-                    </p>
-
-                    <div className="mt-6 flex flex-wrap gap-3">
-                        <a
-                            href={discordInviteUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-2 text-sm font-bold text-purple-200 transition hover:border-purple-400/60 hover:bg-purple-500/20"
-                        >
-                            <MessageCircle className="h-4 w-4" />
-                            Discord
-                        </a>
-
-                        <a
-                            href="#store"
-                            className="inline-flex items-center gap-2 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-4 py-2 text-sm font-bold text-yellow-200 transition hover:border-yellow-400/60 hover:bg-yellow-500/20"
-                        >
-                            <Store className="h-4 w-4" />
-                            Store
-                        </a>
-                    </div>
-                </div>
+      <div className="relative mx-auto max-w-7xl">
+        <div className="rounded-[2.5rem] border border-purple-500/20 bg-white/[0.05] p-8 shadow-[0_0_70px_rgba(168,85,247,0.16)] backdrop-blur-xl md:p-10">
+          <div className="grid gap-10 lg:grid-cols-[1.3fr_0.7fr_0.7fr_1fr]">
+            <div>
+              <div className="flex items-center gap-4">
+                <img
+                  src="/ellipsis-logo.webp"
+                  alt="Ellipsis SMP"
+                  className="h-16 w-auto object-contain drop-shadow-[0_0_22px_rgba(168,85,247,0.95)]"
+                />
 
                 <div>
-                    <h3 className="mb-4 font-black text-white">Quick Links</h3>
-                    <div className="space-y-2 text-sm">
-                        {quickLinks.map((item) => (
-                            <a
-                                key={item.label}
-                                href={item.href}
-                                className="block transition hover:translate-x-1 hover:text-purple-300"
-                            >
-                                {item.label}
-                            </a>
-                        ))}
-                    </div>
+                  <p className="text-xl font-black text-white">ELLIPSIS SMP</p>
+                  <p className="text-sm font-bold text-purple-200">
+                    Premium Minecraft Survival
+                  </p>
                 </div>
+              </div>
 
-                <div>
-                    <h3 className="mb-4 font-black text-white">Community</h3>
-                    <div className="space-y-2 text-sm">
-                        <a
-                            href="#discord"
-                            className="block transition hover:translate-x-1 hover:text-purple-300"
-                        >
-                            Discord & Support
-                        </a>
-                        <a
-                            href="#rules"
-                            className="block transition hover:translate-x-1 hover:text-purple-300"
-                        >
-                            Rules
-                        </a>
-                        <a
-                            href="#features"
-                            className="block transition hover:translate-x-1 hover:text-blue-300"
-                        >
-                            Server Features
-                        </a>
-                        <a
-                            href="#vote"
-                            className="block transition hover:translate-x-1 hover:text-yellow-300"
-                        >
-                            Vote Rewards
-                        </a>
-                    </div>
+              <p className="mt-6 max-w-md text-sm leading-7 text-gray-300">
+                The official home of Ellipsis SMP - built for survival,
+                progression, community, custom content, and unforgettable
+                Minecraft moments.
+              </p>
 
-                    <div className="mt-6 rounded-2xl border border-purple-500/20 bg-white/5 p-4">
-                        <p className="mb-3 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-purple-300">
-                            <Code2 className="h-4 w-4" />
-                            Powered By
-                        </p>
-
-                        <div className="flex flex-wrap gap-2">
-                            {["React", "TypeScript", "TailwindCSS", "Framer Motion"].map(
-                                (tool) => (
-                                    <span
-                                        key={tool}
-                                        className="rounded-full border border-purple-500/20 bg-purple-500/10 px-3 py-1 text-xs font-bold text-purple-200"
-                                    >
-                                        {tool}
-                                    </span>
-                                )
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 className="mb-4 font-black text-white">Server Address</h3>
-
-                    <button
-                        type="button"
-                        onClick={copyIp}
-                        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-purple-500/30 bg-white/5 p-4 text-left transition hover:border-purple-400/60 hover:bg-white/10 hover:shadow-[0_0_24px_rgba(168,85,247,0.18)] focus:outline-none focus:ring-2 focus:ring-purple-400/60"
-                    >
-                        <span className="break-all text-sm font-black text-purple-200">
-                            {copied ? "Copied!" : serverAddress}
-                        </span>
-                        <Copy className="h-4 w-4 text-purple-300" />
-                    </button>
-
-                    <div className="mt-4 grid gap-3">
-                        <a
-                            href="#vote"
-                            className="inline-flex items-center justify-between rounded-2xl border border-yellow-500/20 bg-yellow-500/10 px-4 py-3 text-sm font-bold text-yellow-200 transition hover:border-yellow-400/50 hover:bg-yellow-500/20"
-                        >
-                            <span className="inline-flex items-center gap-2">
-                                <Vote className="h-4 w-4" />
-                                Vote for rewards
-                            </span>
-                            <ExternalLink className="h-4 w-4" />
-                        </a>
-
-                        <a
-                            href="#discord"
-                            className="inline-flex items-center justify-between rounded-2xl border border-blue-500/20 bg-blue-500/10 px-4 py-3 text-sm font-bold text-blue-200 transition hover:border-blue-400/50 hover:bg-blue-500/20"
-                        >
-                            <span className="inline-flex items-center gap-2">
-                                <ShieldCheck className="h-4 w-4" />
-                                Get support
-                            </span>
-                            <ExternalLink className="h-4 w-4" />
-                        </a>
-                    </div>
-                </div>
+              <button
+                type="button"
+                onClick={copyIp}
+                className="mt-6 flex w-full max-w-md items-center justify-between gap-3 rounded-2xl border border-purple-500/30 bg-black/35 p-4 text-left transition hover:border-purple-300/60 hover:bg-white/[0.08]"
+              >
+                <span>
+                  <span className="block text-xs font-black uppercase tracking-[0.22em] text-purple-300">
+                    Server IP
+                  </span>
+                  <span className="mt-1 block break-all text-sm font-black text-white">
+                    {copied ? "Copied!" : serverAddress}
+                  </span>
+                </span>
+                <Copy className="h-5 w-5 text-purple-300" />
+              </button>
             </div>
 
-            <div className="relative mx-auto mt-12 flex max-w-7xl flex-col gap-3 border-t border-purple-900/40 pt-6 text-sm md:flex-row md:items-center md:justify-between">
-                <p>
-                    © 2026 Ellipsis SMP. All purchases support the server through Discord
-                    tickets.
-                </p>
-
-                <p className="text-xs text-gray-500">
-                    Not affiliated with Mojang Studios or Microsoft.
-                </p>
+            <div>
+              <h3 className="mb-4 text-sm font-black uppercase tracking-[0.2em] text-white">
+                Explore
+              </h3>
+              <div className="space-y-3 text-sm">
+                <Link to="/" className="block transition hover:translate-x-1 hover:text-purple-300">Home</Link>
+                <Link to="/marketplace" className="block transition hover:translate-x-1 hover:text-purple-300">Marketplace</Link>
+                <Link to="/vote" className="block transition hover:translate-x-1 hover:text-purple-300">Vote</Link>
+                <Link to="/discord" className="block transition hover:translate-x-1 hover:text-purple-300">Discord</Link>
+                <Link to="/about" className="block transition hover:translate-x-1 hover:text-purple-300">About</Link>
+              </div>
             </div>
-        </footer>
-    );
+
+            <div>
+              <h3 className="mb-4 text-sm font-black uppercase tracking-[0.2em] text-white">
+                Store
+              </h3>
+              <div className="space-y-3 text-sm">
+                <Link to="/marketplace" className="block transition hover:translate-x-1 hover:text-yellow-300">Premium Ranks</Link>
+                <Link to="/marketplace" className="block transition hover:translate-x-1 hover:text-yellow-300">Premium Crates</Link>
+                <Link to="/marketplace" className="block transition hover:translate-x-1 hover:text-yellow-300">Furnitures</Link>
+                <Link to="/marketplace" className="block transition hover:translate-x-1 hover:text-yellow-300">Plushies</Link>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="mb-4 text-sm font-black uppercase tracking-[0.2em] text-white">
+                Community
+              </h3>
+
+              <div className="grid gap-3">
+                <a
+                  href={discordInviteUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-between rounded-2xl border border-blue-500/25 bg-blue-500/10 px-4 py-3 text-sm font-bold text-blue-100 transition hover:border-blue-300/50 hover:bg-blue-500/20"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4" />
+                    Join Discord
+                  </span>
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+
+                <a
+                  href={discordTicketUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-between rounded-2xl border border-purple-500/25 bg-purple-500/10 px-4 py-3 text-sm font-bold text-purple-100 transition hover:border-purple-300/50 hover:bg-purple-500/20"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4" />
+                    Get Support
+                  </span>
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+
+                <Link
+                  to="/vote"
+                  className="inline-flex items-center justify-between rounded-2xl border border-yellow-500/25 bg-yellow-500/10 px-4 py-3 text-sm font-bold text-yellow-100 transition hover:border-yellow-300/50 hover:bg-yellow-500/20"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <Vote className="h-4 w-4" />
+                    Vote for Ellipsis
+                  </span>
+                  <ExternalLink className="h-4 w-4" />
+                </Link>
+
+                <Link
+                  to="/marketplace"
+                  className="inline-flex items-center justify-between rounded-2xl border border-pink-500/25 bg-pink-500/10 px-4 py-3 text-sm font-bold text-pink-100 transition hover:border-pink-300/50 hover:bg-pink-500/20"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <ShoppingBag className="h-4 w-4" />
+                    Visit Store
+                  </span>
+                  <ExternalLink className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-10 flex flex-col gap-3 border-t border-purple-500/20 pt-6 text-sm md:flex-row md:items-center md:justify-between">
+            <p className="text-gray-300">
+              Copyright 2026 Ellipsis SMP. Crafted for players.
+            </p>
+
+            <p className="text-xs text-gray-500">
+              Not affiliated with Mojang Studios or Microsoft.
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
 }
 
 export default Footer;

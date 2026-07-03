@@ -1,4 +1,13 @@
-import { ArrowLeft, Download, ShieldCheck, Upload } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Copy,
+  Download,
+  ShieldCheck,
+  Sparkles,
+  Upload,
+  X,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ranks } from "../data/ranks";
@@ -27,6 +36,7 @@ const paymentMethods = [
 
 type Category = "Premium Ranks" | "Premium Crates" | "Furnitures" | "Plushies";
 type KeyQuantity = "1 key" | "3 keys" | "5 keys" | "10 keys";
+type Status = "idle" | "sending" | "success" | "error";
 
 const categories: Category[] = [
   "Premium Ranks",
@@ -41,6 +51,8 @@ const rankDetails = [
   {
     name: "NEON",
     price: "PHP 99",
+    description:
+      "Perfect for players who want essential quality-of-life commands and extra convenience.",
     includes: [
       "NEON Rank Kit",
       "/sethome 3",
@@ -54,6 +66,8 @@ const rankDetails = [
   {
     name: "AETHER",
     price: "PHP 199",
+    description:
+      "Unlock additional homes, utilities, and shop access for a more flexible survival experience.",
     includes: [
       "AETHER Rank Kit",
       "/sethome 5",
@@ -68,6 +82,8 @@ const rankDetails = [
   {
     name: "TITAN",
     price: "PHP 299",
+    description:
+      "Designed for dedicated players who want greater convenience, more auction slots, and advanced utility commands.",
     includes: [
       "TITAN Rank Kit",
       "/sethome 7",
@@ -83,6 +99,8 @@ const rankDetails = [
   {
     name: "OVERCLOCK",
     price: "PHP 399",
+    description:
+      "A high-tier package for active players who want expanded commands, more shop access, and stronger daily convenience.",
     includes: [
       "OVERCLOCK Rank Kit",
       "/sethome 9",
@@ -100,6 +118,8 @@ const rankDetails = [
   {
     name: "ASCENDANT",
     price: "PHP 499",
+    description:
+      "The top premium rank with maximum convenience, complete shop access, advanced utilities, and unlimited fly.",
     includes: [
       "ASCENDANT Rank Kit",
       "/sethome 12",
@@ -120,43 +140,6 @@ const rankDetails = [
   },
 ];
 
-const cratePricing: Record<string, Record<KeyQuantity, string>> = {
-  "MonsterHunter Pineapple KPOP": {
-    "1 key": "PHP 59",
-    "3 keys": "PHP 149",
-    "5 keys": "PHP 249",
-    "10 keys": "PHP 499",
-  },
-  "Stellar Vanguard": {
-    "1 key": "PHP 69",
-    "3 keys": "PHP 179",
-    "5 keys": "PHP 299",
-    "10 keys": "PHP 579",
-  },
-  "Phoenix Mecha Sovereign": {
-    "1 key": "PHP 79",
-    "3 keys": "PHP 219",
-    "5 keys": "PHP 349",
-    "10 keys": "PHP 679",
-  },
-};
-
-function normalizeCrateName(name: string) {
-  if (name.toLowerCase().includes("monsterhunter")) {
-    return "MonsterHunter Pineapple KPOP";
-  }
-
-  if (name.toLowerCase().includes("stellar")) {
-    return "Stellar Vanguard";
-  }
-
-  if (name.toLowerCase().includes("phoenix")) {
-    return "Phoenix Mecha Sovereign";
-  }
-
-  return name;
-}
-
 function CheckoutPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const resultRef = useRef<HTMLDivElement | null>(null);
@@ -164,26 +147,24 @@ function CheckoutPage() {
   const [selectedCategory, setSelectedCategory] =
     useState<Category>("Premium Ranks");
   const [selectedRank, setSelectedRank] = useState(rankDetails[0].name);
-  const [selectedCrate, setSelectedCrate] = useState(
-    normalizeCrateName(crates[0]?.name || "MonsterHunter Pineapple KPOP")
-  );
+  const [selectedCrate, setSelectedCrate] = useState(crates[0]?.name || "");
   const [selectedKeyQuantity, setSelectedKeyQuantity] =
     useState<KeyQuantity>("1 key");
   const [furnitureSlide, setFurnitureSlide] = useState(0);
-
   const [method, setMethod] = useState(paymentMethods[0]);
   const [minecraftIgn, setMinecraftIgn] = useState("");
   const [discordUsername, setDiscordUsername] = useState("");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [hasConfirmedPayment, setHasConfirmedPayment] = useState(false);
-  const [orderId, setOrderId] = useState("");
+  const [receiptPreviewUrl, setReceiptPreviewUrl] = useState("");
   const [fileError, setFileError] = useState("");
+  const [hasConfirmedPayment, setHasConfirmedPayment] = useState(false);
+  const [status, setStatus] = useState<Status>("idle");
   const [submitError, setSubmitError] = useState("");
-  const [status, setStatus] = useState<
-    "idle" | "sending" | "success" | "error"
-  >("idle");
-
-  const receiptPreviewUrl = receiptFile ? URL.createObjectURL(receiptFile) : "";
+  const [orderId, setOrderId] = useState("");
+  const [copiedRecipient, setCopiedRecipient] = useState(false);
+  const [copiedOrderId, setCopiedOrderId] = useState(false);
+  const [isDraggingReceipt, setIsDraggingReceipt] = useState(false);
+  const [isReceiptZoomOpen, setIsReceiptZoomOpen] = useState(false);
 
   const selectedRankDetails =
     rankDetails.find((rank) => rank.name === selectedRank) || rankDetails[0];
@@ -192,9 +173,45 @@ function CheckoutPage() {
     ranks.find((rank) => rank.name === selectedRankDetails.name) || ranks[0];
 
   const selectedCrateAsset =
-    crates.find(
-      (crate) => normalizeCrateName(crate.name) === selectedCrate
-    ) || crates[0];
+    crates.find((crate) => crate.name === selectedCrate) || crates[0];
+
+  const selectedCratePrice =
+    selectedCrateAsset?.options.find((option) => option.keys === selectedKeyQuantity)
+      ?.price || "Price not available";
+
+  const categoryBanner = useMemo(() => {
+    if (selectedCategory === "Premium Ranks") {
+      return {
+        src: selectedRankAsset.image,
+        alt: `${selectedRankDetails.name} rank banner`,
+      };
+    }
+
+    if (selectedCategory === "Premium Crates") {
+      return {
+        src: selectedCrateAsset?.image || crates[0]?.image || "",
+        alt: `${selectedCrateAsset?.name || "Premium Crate"} banner`,
+      };
+    }
+
+    if (selectedCategory === "Furnitures") {
+      return {
+        src: furniture.packs[furnitureSlide]?.image || furniture.packs[0]?.image || "",
+        alt: "Furniture preview",
+      };
+    }
+
+    return {
+      src: plushies.image,
+      alt: "Plushies preview",
+    };
+  }, [
+    selectedCategory,
+    selectedRankAsset.image,
+    selectedRankDetails.name,
+    selectedCrateAsset,
+    furnitureSlide,
+  ]);
 
   const selectedProduct = useMemo(() => {
     if (selectedCategory === "Premium Ranks") {
@@ -203,18 +220,16 @@ function CheckoutPage() {
         type: "Premium Rank",
         price: selectedRankDetails.price,
         image: selectedRankAsset.image,
-        description: `${selectedRankDetails.name} rank with premium perks. This rank lasts for 30 days only.`,
+        description: selectedRankDetails.description,
       };
     }
 
     if (selectedCategory === "Premium Crates") {
       return {
-        name: `${selectedCrate} - ${selectedKeyQuantity}`,
+        name: `${selectedCrateAsset?.name || selectedCrate} - ${selectedKeyQuantity}`,
         type: "Premium Crate",
-        price:
-          cratePricing[selectedCrate]?.[selectedKeyQuantity] ||
-          "Price not available",
-        image: selectedCrateAsset.image,
+        price: selectedCratePrice,
+        image: selectedCrateAsset?.image || "",
         description: `Premium crate package with ${selectedKeyQuantity}.`,
       };
     }
@@ -224,7 +239,7 @@ function CheckoutPage() {
         name: "Ellipsis Coins",
         type: "Furnitures",
         price: "PHP 50",
-        image: furniture.packs[furnitureSlide]?.image || furniture.packs[0].image,
+        image: furniture.packs[furnitureSlide]?.image || furniture.packs[0]?.image || "",
         description:
           "PHP 50 = 10 Ellipsis Coins. Use Ellipsis Coins in-game at /warp trades to choose the furniture you want.",
       };
@@ -241,11 +256,65 @@ function CheckoutPage() {
   }, [
     selectedCategory,
     selectedRankDetails,
-    selectedRankAsset,
+    selectedRankAsset.image,
+    selectedCrate,
+    selectedCrateAsset,
+    selectedKeyQuantity,
+    selectedCratePrice,
+    furnitureSlide,
+  ]);
+
+  const priceParts = useMemo(() => {
+    const [currency, ...amountParts] = selectedProduct.price.split(" ");
+    return {
+      currency,
+      amount: amountParts.join(" ") || selectedProduct.price,
+    };
+  }, [selectedProduct.price]);
+
+  const productBadge = useMemo(() => {
+    if (selectedCategory === "Premium Ranks") return "Premium Rank";
+    if (selectedCategory === "Premium Crates") return "Premium Crate";
+    if (selectedCategory === "Furnitures") return "Furniture Coins";
+    return "Plushie Keys";
+  }, [selectedCategory]);
+
+  const receiveItems = useMemo(() => {
+    if (selectedCategory === "Premium Ranks") {
+      return [
+        `${selectedRankDetails.name} Rank`,
+        "30 Days Premium Access",
+        "Delivered after staff verification",
+      ];
+    }
+
+    if (selectedCategory === "Premium Crates") {
+      return [
+        `${selectedCrateAsset?.name || selectedCrate}`,
+        selectedKeyQuantity,
+        "Delivered after staff verification",
+      ];
+    }
+
+    if (selectedCategory === "Furnitures") {
+      return [
+        "10 Ellipsis Coins",
+        "Use at /warp trades",
+        "Delivered after staff verification",
+      ];
+    }
+
+    return [
+      "5 Plushie Keys",
+      "Unlock plushies in-game",
+      "Delivered after staff verification",
+    ];
+  }, [
+    selectedCategory,
+    selectedRankDetails.name,
+    selectedCrateAsset,
     selectedCrate,
     selectedKeyQuantity,
-    selectedCrateAsset,
-    furnitureSlide,
   ]);
 
   const canSubmit = useMemo(() => {
@@ -266,6 +335,25 @@ function CheckoutPage() {
     return "Submit Payment Claim";
   }, [minecraftIgn, discordUsername, receiptFile, hasConfirmedPayment, status]);
 
+  const activeCheckoutStep = useMemo(() => {
+    if (status === "success") return 3;
+    if (status === "sending" || canSubmit) return 2;
+    if (receiptFile || hasConfirmedPayment) return 2;
+    return 1;
+  }, [canSubmit, hasConfirmedPayment, receiptFile, status]);
+
+  useEffect(() => {
+    if (!receiptFile) {
+      setReceiptPreviewUrl("");
+      return;
+    }
+
+    const preview = URL.createObjectURL(receiptFile);
+    setReceiptPreviewUrl(preview);
+
+    return () => URL.revokeObjectURL(preview);
+  }, [receiptFile]);
+
   useEffect(() => {
     if (selectedCategory !== "Furnitures") return;
 
@@ -285,13 +373,15 @@ function CheckoutPage() {
   function clearReceiptUpload() {
     setReceiptFile(null);
     setFileError("");
+    setIsDraggingReceipt(false);
+    setIsReceiptZoomOpen(false);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   }
 
-  function resetForm() {
+  function resetCheckoutState() {
     setMinecraftIgn("");
     setDiscordUsername("");
     setHasConfirmedPayment(false);
@@ -304,10 +394,26 @@ function CheckoutPage() {
   function resetPurchase(category: Category) {
     setSelectedCategory(category);
     setSelectedRank(rankDetails[0].name);
-    setSelectedCrate("MonsterHunter Pineapple KPOP");
+    setSelectedCrate(crates[0]?.name || "");
     setSelectedKeyQuantity("1 key");
     setFurnitureSlide(0);
-    resetForm();
+    resetCheckoutState();
+  }
+
+  function updateRank(rankName: string) {
+    setSelectedRank(rankName);
+    resetCheckoutState();
+  }
+
+  function updateCrate(crateName: string) {
+    setSelectedCrate(crateName);
+    setSelectedKeyQuantity("1 key");
+    resetCheckoutState();
+  }
+
+  function updateKeyQuantity(quantity: KeyQuantity) {
+    setSelectedKeyQuantity(quantity);
+    resetCheckoutState();
   }
 
   function downloadQr() {
@@ -315,6 +421,61 @@ function CheckoutPage() {
     link.href = method.qr;
     link.download = `${method.label.toLowerCase()}-ellipsis-smp-qr`;
     link.click();
+  }
+
+  async function copyRecipientInfo() {
+    const recipientInfo = "Account name: DG\nAccount number: 09153461734";
+
+    try {
+      await navigator.clipboard.writeText(recipientInfo);
+      setCopiedRecipient(true);
+      window.setTimeout(() => setCopiedRecipient(false), 1800);
+    } catch {
+      setCopiedRecipient(false);
+    }
+  }
+
+  async function copyOrderId() {
+    if (!orderId) return;
+
+    try {
+      await navigator.clipboard.writeText(orderId);
+      setCopiedOrderId(true);
+      window.setTimeout(() => setCopiedOrderId(false), 1800);
+    } catch {
+      setCopiedOrderId(false);
+    }
+  }
+
+  function processReceiptFile(file: File | null) {
+    setFileError("");
+    setStatus("idle");
+
+    if (!file) {
+      setReceiptFile(null);
+      return;
+    }
+
+    const allowedTypes = [
+      "image/png",
+      "image/jpeg",
+      "image/jpg",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      clearReceiptUpload();
+      setFileError("Receipt must be PNG, JPG, JPEG, or WEBP.");
+      return;
+    }
+
+    if (file.size > 4 * 1024 * 1024) {
+      clearReceiptUpload();
+      setFileError("Receipt image must be under 4MB.");
+      return;
+    }
+
+    setReceiptFile(file);
   }
 
   function fileToBase64(file: File) {
@@ -359,9 +520,7 @@ function CheckoutPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        throw new Error(
-          errorData?.error || "Failed to submit payment claim."
-        );
+        throw new Error(errorData?.error || "Failed to submit payment claim.");
       }
 
       const data = await response.json();
@@ -376,199 +535,272 @@ function CheckoutPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#030014] px-4 py-10 text-white sm:px-6">
+    <main className="min-h-screen bg-[#030014] px-3 pb-32 pt-28 text-white sm:px-6 lg:pb-12">
       <div className="mx-auto max-w-6xl">
         <Link
-          to="/"
-          className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-purple-300 hover:text-purple-200"
+          to="/marketplace"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-purple-300 hover:text-purple-200"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Marketplace
         </Link>
 
-        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-          <section className="rounded-[2rem] border border-purple-500/25 bg-white/[0.06] p-6 shadow-[0_0_60px_rgba(168,85,247,0.18)] backdrop-blur-xl">
+        <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:gap-8">
+          <section className="rounded-[1.75rem] border border-purple-500/25 bg-white/[0.06] p-4 shadow-[0_0_60px_rgba(168,85,247,0.18)] backdrop-blur-xl sm:rounded-[2rem] sm:p-6">
             <p className="text-sm font-black uppercase tracking-[0.25em] text-purple-300">
               Ellipsis SMP
             </p>
 
-            <h1 className="mt-3 text-4xl font-black">Secure Checkout</h1>
+            <h1 className="mt-3 text-3xl font-black sm:text-4xl">Secure Checkout</h1>
 
-            <div className="mt-6 grid grid-cols-2 gap-3 text-[10px] font-black uppercase tracking-[0.12em] text-gray-300 sm:grid-cols-4">
-              {["Select Payment", "Pay QR", "Submit Claim", "Verification"].map(
-                (step, index) => (
-                  <div
-                    key={step}
-                    className={`flex min-h-[58px] items-center justify-center rounded-2xl border px-2 py-3 text-center leading-tight ${index === 3
-                        ? "border-yellow-400/30 bg-yellow-400/10 text-yellow-200"
-                        : "border-purple-500/25 bg-black/30 text-purple-200"
-                      }`}
-                  >
-                    {index + 1}. {step}
-                  </div>
-                )
-              )}
-            </div>
+            <div className="mt-6 grid grid-cols-2 gap-2 text-[9px] font-black uppercase tracking-[0.1em] text-gray-300 sm:grid-cols-4 sm:gap-3 sm:text-[10px]">
+              {["Select Product", "Pay QR", "Submit Claim", "Verification"].map(
+                (step, index) => {
+                  const isActive = index === activeCheckoutStep;
+                  const isComplete = index < activeCheckoutStep;
 
-            <div className="mt-8 rounded-3xl border border-purple-500/20 bg-black/35 p-5">
-              <p className="text-xs font-black uppercase tracking-[0.25em] text-purple-300">
-                Choose Category
-              </p>
-
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {categories.map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => resetPurchase(category)}
-                    className={`rounded-2xl border px-4 py-3 text-sm font-black transition ${selectedCategory === category
-                        ? "border-purple-300 bg-purple-500/20 text-white"
-                        : "border-purple-500/20 bg-black/35 text-gray-300 hover:bg-white/10"
-                      }`}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
-
-              {selectedCategory === "Premium Ranks" && (
-                <div className="mt-5 grid gap-3">
-                  {rankDetails.map((rank) => {
-                    const isActive = selectedRank === rank.name;
-                    const rankAsset =
-                      ranks.find((item) => item.name === rank.name) || ranks[0];
-
-                    return (
-                      <button
-                        key={rank.name}
-                        type="button"
-                        onClick={() => {
-                          setSelectedRank(rank.name);
-                          resetForm();
-                        }}
-                        className={`rounded-2xl border p-4 text-left transition ${isActive
-                            ? "border-purple-300 bg-purple-500/15"
-                            : "border-purple-500/20 bg-black/35 hover:bg-white/10"
-                          }`}
-                      >
-                        <div className="flex items-center gap-4">
-                          <img
-                            src={rankAsset.image}
-                            alt={`${rank.name} rank badge`}
-                            className="h-12 w-24 object-contain [image-rendering:pixelated]"
-                          />
-
-                          <div>
-                            <p className="font-black text-white">{rank.name}</p>
-                            <p className="text-sm font-black text-yellow-300">
-                              {rank.price}
-                            </p>
-                          </div>
-                        </div>
-
-                        {isActive && (
-                          <div className="mt-4 text-sm text-gray-300">
-                            <p className="mb-2 font-black text-purple-200">
-                              Complete Inclusions
-                            </p>
-                            <ul className="grid gap-1 sm:grid-cols-2">
-                              {rank.includes.map((item) => (
-                                <li key={item}>• {item}</li>
-                              ))}
-                            </ul>
-                            <p className="mt-3 rounded-xl border border-yellow-400/25 bg-yellow-400/10 p-3 text-yellow-100">
-                              This rank lasts for 30 days only.
-                            </p>
-                          </div>
+                  return (
+                    <div
+                      key={step}
+                      className={`relative flex min-h-[56px] items-center justify-center overflow-hidden rounded-2xl border px-2 py-3 text-center leading-tight transition duration-300 sm:min-h-[64px] ${isActive
+                          ? "scale-[1.02] border-purple-200 bg-purple-500/25 text-white shadow-[0_0_32px_rgba(168,85,247,0.45)]"
+                          : isComplete
+                            ? "border-emerald-300/40 bg-emerald-400/10 text-emerald-100"
+                            : "border-purple-500/25 bg-black/30 text-purple-200"
+                        }`}
+                    >
+                      {isActive && (
+                        <span className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-300/10 to-blue-400/0" />
+                      )}
+                      <span className="relative z-10 flex items-center gap-2">
+                        {isComplete ? (
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        ) : (
+                          <span>{index + 1}.</span>
                         )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {selectedCategory === "Premium Crates" && (
-                <div className="mt-5">
-                  <label className="text-xs font-black uppercase tracking-[0.2em] text-purple-300">
-                    Choose Crate
-                  </label>
-
-                  <select
-                    value={selectedCrate}
-                    onChange={(e) => {
-                      setSelectedCrate(e.target.value);
-                      setSelectedKeyQuantity("1 key");
-                      resetForm();
-                    }}
-                    className="mt-3 w-full rounded-xl border border-purple-500/25 bg-black/60 px-4 py-3 font-bold text-white outline-none focus:border-purple-300"
-                  >
-                    {Object.keys(cratePricing).map((crateName) => (
-                      <option key={crateName} value={crateName}>
-                        {crateName}
-                      </option>
-                    ))}
-                  </select>
-
-                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    {keyQuantities.map((quantity) => (
-                      <button
-                        key={quantity}
-                        type="button"
-                        onClick={() => {
-                          setSelectedKeyQuantity(quantity);
-                          resetForm();
-                        }}
-                        className={`rounded-xl border px-3 py-3 text-sm font-black transition ${selectedKeyQuantity === quantity
-                            ? "border-blue-300 bg-blue-500/20 text-blue-100"
-                            : "border-purple-500/25 bg-black/40 text-gray-300 hover:bg-white/10"
-                          }`}
-                      >
-                        {quantity}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-6 flex justify-center rounded-3xl border border-purple-500/20 bg-black/50 p-5">
-                <img
-                  src={selectedProduct.image}
-                  alt={selectedProduct.name}
-                  className="h-44 w-full object-contain [image-rendering:pixelated]"
-                />
-              </div>
-
-              <p className="mt-5 text-xs font-black uppercase tracking-[0.25em] text-purple-300">
-                {selectedProduct.type}
-              </p>
-
-              <h2 className="mt-2 text-3xl font-black">
-                {selectedProduct.name}
-              </h2>
-
-              <p className="mt-3 text-2xl font-black text-yellow-300">
-                {selectedProduct.price}
-              </p>
-
-              <p className="mt-4 text-sm leading-6 text-gray-300">
-                {selectedProduct.description}
-              </p>
-
-              {selectedCategory === "Furnitures" && (
-                <p className="mt-4 rounded-xl border border-purple-500/25 bg-purple-500/10 p-3 text-sm text-purple-100">
-                  Purchase Ellipsis Coins and use them in-game at /warp trades
-                  to choose the furniture you want.
-                </p>
-              )}
-
-              {selectedCategory === "Plushies" && (
-                <p className="mt-4 rounded-xl border border-pink-500/25 bg-pink-500/10 p-3 text-sm text-pink-100">
-                  Purchase Plushie Keys and unlock adorable plushies in-game.
-                </p>
+                        {step}
+                      </span>
+                    </div>
+                  );
+                }
               )}
             </div>
 
-            <div className="mt-6 rounded-3xl border border-green-400/20 bg-green-400/10 p-5 text-sm text-green-200">
+            <div className="mt-8 overflow-hidden rounded-3xl border border-purple-500/20 bg-black/35">
+              <div className="relative flex min-h-[180px] items-center justify-center overflow-hidden border-b border-purple-500/20 bg-gradient-to-br from-black via-purple-950/30 to-black p-4 sm:min-h-[220px] sm:p-5">
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.22),transparent_55%)]" />
+                {categoryBanner.src && (
+                  <img
+                    key={categoryBanner.src}
+                    src={categoryBanner.src}
+                    alt={categoryBanner.alt}
+                    className="relative z-10 h-40 w-full object-contain opacity-100 transition-opacity duration-300 [image-rendering:pixelated] sm:h-52"
+                  />
+                )}
+              </div>
+
+              <div className="p-4 sm:p-5">
+                <p className="text-xs font-black uppercase tracking-[0.25em] text-purple-300">
+                  Choose a Category
+                </p>
+
+                <div className="mt-4 grid gap-2 sm:grid-cols-2 sm:gap-3">
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => resetPurchase(category)}
+                      className={`rounded-2xl border px-4 py-3 text-sm font-black transition ${selectedCategory === category
+                          ? "border-purple-300 bg-purple-500/20 text-white"
+                          : "border-purple-500/20 bg-black/35 text-gray-300 hover:bg-white/10"
+                        }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+
+                {selectedCategory === "Premium Ranks" && (
+                  <div className="mt-5">
+                    <label className="text-xs font-black uppercase tracking-[0.2em] text-purple-300">
+                      Choose Rank
+                    </label>
+                    <select
+                      value={selectedRank}
+                      onChange={(event) => updateRank(event.target.value)}
+                      className="mt-3 w-full rounded-xl border border-purple-500/25 bg-black/60 px-4 py-3 font-bold text-white outline-none focus:border-purple-300"
+                    >
+                      {rankDetails.map((rank) => (
+                        <option key={rank.name} value={rank.name}>
+                          {rank.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {selectedCategory === "Premium Crates" && (
+                  <div className="mt-5">
+                    <label className="text-xs font-black uppercase tracking-[0.2em] text-purple-300">
+                      Choose Crate
+                    </label>
+
+                    <select
+                      value={selectedCrate}
+                      onChange={(event) => updateCrate(event.target.value)}
+                      className="mt-3 w-full rounded-xl border border-purple-500/25 bg-black/60 px-4 py-3 font-bold text-white outline-none focus:border-purple-300"
+                    >
+                      {crates.map((crate) => (
+                        <option key={crate.name} value={crate.name}>
+                          {crate.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      {keyQuantities.map((quantity) => (
+                        <button
+                          key={quantity}
+                          type="button"
+                          onClick={() => updateKeyQuantity(quantity)}
+                          className={`rounded-xl border px-3 py-3 text-sm font-black transition ${selectedKeyQuantity === quantity
+                              ? "border-blue-300 bg-blue-500/20 text-blue-100"
+                              : "border-purple-500/25 bg-black/40 text-gray-300 hover:bg-white/10"
+                            }`}
+                        >
+                          {quantity}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div
+                  key={`${selectedCategory}-${selectedProduct.name}-${selectedProduct.price}`}
+                  className="mt-6 rounded-3xl border border-purple-500/20 bg-black/45 p-5 shadow-inner shadow-purple-950/30 transition-all duration-300"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <div className="inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-purple-200">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        {productBadge}
+                      </div>
+
+                      <h2 className="mt-4 text-3xl font-black leading-tight sm:text-4xl">
+                        {selectedProduct.name}
+                      </h2>
+                    </div>
+
+                    <div className="rounded-2xl border border-yellow-300/20 bg-yellow-300/10 px-5 py-4 text-right shadow-[0_0_25px_rgba(250,204,21,0.12)]">
+                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-yellow-100/80">
+                        {priceParts.currency}
+                      </p>
+                      <p className="text-3xl font-black leading-none text-yellow-300 sm:text-4xl">
+                        {priceParts.amount}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="my-6 h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
+
+                  <div className="rounded-2xl border border-purple-400/15 bg-white/[0.04] p-4">
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-200">
+                      About this purchase
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-gray-200">
+                      {selectedProduct.description}
+                    </p>
+                  </div>
+
+                  {selectedCategory === "Premium Ranks" && (
+                    <div className="mt-6">
+                      <div className="flex items-center justify-between gap-4">
+                        <p className="text-sm font-black uppercase tracking-[0.18em] text-purple-200">
+                          Included Perks
+                        </p>
+                        <p className="rounded-full border border-purple-400/15 bg-purple-500/10 px-3 py-1 text-xs font-black text-purple-100">
+                          {selectedRankDetails.includes.length} benefits
+                        </p>
+                      </div>
+
+                      <ul className="mt-4 grid gap-3 text-sm text-gray-100 sm:grid-cols-2">
+                        {selectedRankDetails.includes.map((item) => (
+                          <li
+                            key={item}
+                            className="group flex min-h-[48px] items-center gap-3 rounded-2xl border border-purple-400/15 bg-white/[0.05] px-4 py-3 font-semibold shadow-inner shadow-purple-950/20 transition hover:border-purple-300/35 hover:bg-purple-500/10"
+                          >
+                            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      <div className="mt-6 rounded-2xl border border-purple-400/20 bg-gradient-to-br from-purple-500/10 to-blue-500/10 p-4">
+                        <p className="text-sm font-black uppercase tracking-[0.16em] text-purple-100">
+                          You will receive
+                        </p>
+                        <ul className="mt-3 grid gap-2 text-sm text-gray-100">
+                          {receiveItems.map((item) => (
+                            <li key={item} className="flex items-center gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="mt-5 rounded-2xl border border-yellow-400/25 bg-yellow-400/10 p-4">
+                        <p className="text-sm font-black uppercase tracking-[0.16em] text-yellow-200">
+                          30-Day Premium Access
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-yellow-100/90">
+                          This rank remains active for 30 days from activation.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedCategory !== "Premium Ranks" && (
+                    <div className="mt-6 rounded-2xl border border-purple-400/20 bg-gradient-to-br from-purple-500/10 to-blue-500/10 p-4">
+                      <p className="text-sm font-black uppercase tracking-[0.16em] text-purple-100">
+                        You will receive
+                      </p>
+                      <ul className="mt-3 grid gap-2 text-sm text-gray-100">
+                        {receiveItems.map((item) => (
+                          <li key={item} className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {selectedCategory === "Premium Crates" && (
+                    <p className="mt-5 rounded-xl border border-blue-400/25 bg-blue-400/10 p-3 text-sm text-blue-100">
+                      Select the key bundle you want, pay the exact amount, then
+                      upload your receipt for staff verification.
+                    </p>
+                  )}
+
+                  {selectedCategory === "Furnitures" && (
+                    <p className="mt-5 rounded-xl border border-purple-500/25 bg-purple-500/10 p-3 text-sm text-purple-100">
+                      Purchase Ellipsis Coins and use them in-game at /warp
+                      trades to choose the furniture you want.
+                    </p>
+                  )}
+
+                  {selectedCategory === "Plushies" && (
+                    <p className="mt-5 rounded-xl border border-pink-500/25 bg-pink-500/10 p-3 text-sm text-pink-100">
+                      Purchase Plushie Keys and unlock adorable plushies in-game.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-3xl border border-green-400/20 bg-green-400/10 p-4 text-sm text-green-200 sm:p-5">
               <div className="flex items-center gap-2 font-black">
                 <ShieldCheck className="h-5 w-5" />
                 Manual Verification
@@ -581,135 +813,271 @@ function CheckoutPage() {
             </div>
           </section>
 
-          <section className="rounded-[2rem] border border-purple-500/25 bg-white/[0.06] p-6 backdrop-blur-xl">
-            <h2 className="text-2xl font-black">Choose Payment Method</h2>
+          <section className="rounded-[2rem] border border-purple-500/25 bg-white/[0.06] p-6 shadow-[0_0_55px_rgba(59,130,246,0.12)] backdrop-blur-xl">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-purple-300">
+                  Payment
+                </p>
+                <h2 className="mt-2 text-2xl font-black">
+                  Complete Your Purchase
+                </h2>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-gray-400">
+                  Pay the exact amount, upload your receipt, then Ellipsis staff
+                  will verify and deliver your purchase.
+                </p>
+              </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-yellow-400/25 bg-yellow-400/10 px-4 py-3 text-right">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-yellow-200">
+                  Amount Due
+                </p>
+                <p className="text-2xl font-black text-yellow-300">
+                  {selectedProduct.price}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {paymentMethods.map((item) => (
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setMethod(item)}
-                  className={`rounded-2xl border px-4 py-3 font-black transition ${method.id === item.id
-                      ? "border-purple-300 bg-purple-500/20 text-white"
+                  onClick={() => {
+                    setMethod(item);
+                    setCopiedRecipient(false);
+                  }}
+                  className={`group rounded-2xl border px-4 py-4 text-left transition hover:-translate-y-0.5 ${method.id === item.id
+                      ? "border-purple-300 bg-purple-500/20 text-white shadow-[0_0_25px_rgba(168,85,247,0.22)]"
                       : "border-purple-500/20 bg-black/25 text-gray-300 hover:bg-white/10"
                     }`}
                 >
-                  {item.label}
+                  <span className="block text-sm font-black">{item.label}</span>
+                  <span className="mt-1 block text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500 group-hover:text-purple-200">
+                    QR Payment
+                  </span>
                 </button>
               ))}
             </div>
 
-            <div className="mt-6 rounded-3xl border border-purple-500/20 bg-gradient-to-br from-black via-purple-950/30 to-black p-5">
-              <div className="mb-4 flex items-center justify-between rounded-2xl border border-purple-500/20 bg-black/40 px-4 py-3">
-                <span className="text-xs font-black uppercase tracking-[0.18em] text-purple-300">
-                  Selected Method
-                </span>
-                <span className="font-black text-white">{method.label}</span>
-              </div>
-
-              <div
-                className={`mb-4 h-1 rounded-full bg-gradient-to-r ${method.color}`}
-              />
-
-              <div className="rounded-3xl border border-purple-400/20 bg-black/60 p-4 shadow-[0_0_35px_rgba(168,85,247,0.25)]">
-                <img
-                  src={method.qr}
-                  alt={`${method.label} QR code`}
-                  className="mx-auto max-h-[360px] w-full max-w-[360px] rounded-2xl object-contain"
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={downloadQr}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-purple-500/30 px-4 py-3 font-bold text-purple-200 hover:bg-white/10"
-              >
-                <Download className="h-4 w-4" />
-                Save QR
-              </button>
-            </div>
-
-            <div className="mt-4 rounded-2xl border border-purple-500/20 bg-black/40 p-4 text-sm text-gray-300">
-              <p className="font-black text-purple-200">
-                Payment Instructions
-              </p>
-              <ol className="mt-2 list-decimal space-y-1 pl-5">
-                <li>Open your selected payment app.</li>
-                <li>Scan or save the QR code above.</li>
-                <li>Send the exact amount shown in the order summary.</li>
-                <li>Upload your payment receipt below.</li>
-              </ol>
-            </div>
-
-            <div className="mt-6 grid gap-4">
-              <div className="rounded-2xl border border-purple-500/20 bg-black/40 p-4">
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-300">
-                  Order Review
-                </p>
-                <div className="mt-3 space-y-2 text-sm text-gray-300">
-                  <p>
-                    <span className="text-gray-500">Item:</span>{" "}
-                    <span className="font-bold text-white">
-                      {selectedProduct.name}
-                    </span>
+            <div className="mt-6 overflow-hidden rounded-3xl border border-purple-500/20 bg-gradient-to-br from-black via-purple-950/30 to-black">
+              <div className="flex items-center justify-between border-b border-purple-500/20 bg-white/[0.04] px-5 py-4">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-purple-300">
+                    Selected Method
                   </p>
-                  <p>
-                    <span className="text-gray-500">Amount:</span>{" "}
-                    <span className="font-bold text-yellow-300">
-                      {selectedProduct.price}
-                    </span>
+                  <p className="mt-1 text-lg font-black text-white">
+                    {method.label}
                   </p>
-                  <p>
-                    <span className="text-gray-500">Payment:</span>{" "}
-                    <span className="font-bold text-purple-200">
-                      {method.label}
-                    </span>
-                  </p>
+                </div>
+
+                <div className="rounded-full border border-purple-400/25 bg-black/45 px-3 py-1 text-xs font-black text-purple-100">
+                  Exact Amount Only
                 </div>
               </div>
 
-              <input
-                value={minecraftIgn}
-                onChange={(e) => {
-                  setMinecraftIgn(e.target.value);
-                  setStatus("idle");
-                }}
-                placeholder="Minecraft IGN"
-                className="rounded-xl border border-purple-500/25 bg-black/40 px-4 py-3 outline-none focus:border-purple-300"
-              />
+              <div className={`h-1 bg-gradient-to-r ${method.color}`} />
 
-              <input
-                value={discordUsername}
-                onChange={(e) => {
-                  setDiscordUsername(e.target.value);
-                  setStatus("idle");
-                }}
-                placeholder="Discord username"
-                className="rounded-xl border border-purple-500/25 bg-black/40 px-4 py-3 outline-none focus:border-purple-300"
-              />
+              <div className="p-4 sm:p-5">
+                <div className="rounded-[1.75rem] border border-purple-400/20 bg-black/65 p-4 shadow-[0_0_35px_rgba(168,85,247,0.25)]">
+                  <img
+                    src={method.qr}
+                    alt={`${method.label} QR code`}
+                    className="mx-auto max-h-[300px] w-full max-w-[300px] rounded-2xl object-contain sm:max-h-[360px] sm:max-w-[360px]"
+                  />
+                </div>
 
-              <label className="flex cursor-pointer items-center justify-center gap-3 rounded-xl border border-purple-500/25 bg-black/40 px-4 py-5 font-bold text-purple-200 hover:bg-white/10">
-                <Upload className="h-5 w-5" />
-                {receiptFile ? receiptFile.name : "Upload payment receipt"}
+                <div className="mt-4 grid gap-2 sm:grid-cols-2 sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={downloadQr}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-purple-500/30 bg-white/[0.04] px-4 py-3 font-bold text-purple-100 transition hover:bg-white/10"
+                  >
+                    <Download className="h-4 w-4" />
+                    Save QR
+                  </button>
+
+                  {method.id === "GCash" && (
+                    <button
+                      type="button"
+                      onClick={copyRecipientInfo}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-400/30 bg-blue-500/10 px-4 py-3 font-bold text-blue-100 transition hover:bg-blue-500/20"
+                    >
+                      {copiedRecipient ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                      {copiedRecipient
+                        ? "Recipient Info Copied"
+                        : "Copy Recipient Info"}
+                    </button>
+                  )}
+                </div>
+
+                {method.id === "GCash" && (
+                  <div className="mt-4 rounded-2xl border border-blue-400/20 bg-blue-500/10 p-4">
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-200">
+                      GCash Recipient
+                    </p>
+                    <div className="mt-3 grid gap-2 text-sm text-blue-50">
+                      <p className="flex items-center justify-between gap-4 rounded-xl bg-black/25 px-3 py-2">
+                        <span className="text-blue-200/70">Account name</span>
+                        <span className="font-black">DG</span>
+                      </p>
+                      <p className="flex items-center justify-between gap-4 rounded-xl bg-black/25 px-3 py-2">
+                        <span className="text-blue-200/70">Account number</span>
+                        <span className="font-black">09153461734</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-3xl border border-purple-500/20 bg-black/40 p-5">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-purple-300">
+                Payment Instructions
+              </p>
+
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 sm:gap-3">
+                {[
+                  "Open your selected payment app.",
+                  "Scan or save the QR code.",
+                  "Pay the exact amount shown.",
+                  "Upload the receipt for verification.",
+                ].map((instruction, index) => (
+                  <div
+                    key={instruction}
+                    className="flex gap-3 rounded-2xl border border-purple-500/15 bg-white/[0.04] p-3 text-sm text-gray-300"
+                  >
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-500/20 text-xs font-black text-purple-100">
+                      {index + 1}
+                    </span>
+                    <span className="leading-6">{instruction}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:gap-4">
+              <div className="rounded-3xl border border-purple-500/20 bg-black/45 p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-purple-300">
+                      Order Review
+                    </p>
+                    <p className="mt-2 text-lg font-black text-white">
+                      {selectedProduct.name}
+                    </p>
+                    <p className="mt-1 text-sm text-gray-400">
+                      {selectedProduct.type}
+                    </p>
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-yellow-200">
+                      Total
+                    </p>
+                    <p className="text-2xl font-black text-yellow-300">
+                      {selectedProduct.price}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 border-t border-purple-500/15 pt-4 text-sm sm:grid-cols-2">
+                  <div className="rounded-2xl bg-white/[0.04] p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-gray-500">
+                      Payment Method
+                    </p>
+                    <p className="mt-1 font-black text-purple-100">
+                      {method.label}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-white/[0.04] p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-gray-500">
+                      Verification
+                    </p>
+                    <p className="mt-1 font-black text-green-200">
+                      Manual Staff Review
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  value={minecraftIgn}
+                  onChange={(e) => {
+                    setMinecraftIgn(e.target.value);
+                    setStatus("idle");
+                  }}
+                  placeholder="Minecraft IGN"
+                  className="rounded-2xl border border-purple-500/25 bg-black/40 px-4 py-3 font-semibold outline-none transition placeholder:text-gray-600 focus:border-purple-300 focus:bg-black/60"
+                />
+
+                <input
+                  value={discordUsername}
+                  onChange={(e) => {
+                    setDiscordUsername(e.target.value);
+                    setStatus("idle");
+                  }}
+                  placeholder="Discord username"
+                  className="rounded-2xl border border-purple-500/25 bg-black/40 px-4 py-3 font-semibold outline-none transition placeholder:text-gray-600 focus:border-purple-300 focus:bg-black/60"
+                />
+              </div>
+
+              <label
+                onDragEnter={(event) => {
+                  event.preventDefault();
+                  setIsDraggingReceipt(true);
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setIsDraggingReceipt(true);
+                }}
+                onDragLeave={(event) => {
+                  event.preventDefault();
+                  setIsDraggingReceipt(false);
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  setIsDraggingReceipt(false);
+                  processReceiptFile(event.dataTransfer.files?.[0] || null);
+                }}
+                className={`group flex cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border border-dashed px-4 py-7 text-center transition ${isDraggingReceipt
+                    ? "border-emerald-300 bg-emerald-400/10 shadow-[0_0_28px_rgba(52,211,153,0.18)]"
+                    : "border-purple-400/35 bg-black/40 hover:border-purple-300 hover:bg-purple-500/10"
+                  }`}
+              >
+                <span
+                  className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition group-hover:scale-105 ${isDraggingReceipt
+                      ? "border-emerald-300/35 bg-emerald-400/15 text-emerald-200"
+                      : "border-purple-400/25 bg-purple-500/10 text-purple-200"
+                    }`}
+                >
+                  <Upload className="h-5 w-5" />
+                </span>
+                <span className="font-black text-purple-100">
+                  {receiptFile
+                    ? receiptFile.name
+                    : isDraggingReceipt
+                      ? "Drop receipt to upload"
+                      : "Upload or drag receipt here"}
+                </span>
+                <span className="max-w-md text-xs font-semibold leading-5 text-gray-500">
+                  PNG, JPG, JPEG, or WEBP only. Maximum 4MB. The receipt resets
+                  automatically when you change your purchase.
+                </span>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/png,image/jpeg,image/webp"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
                   className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] || null;
-                    setFileError("");
-                    setStatus("idle");
-
-                    if (file && file.size > 4 * 1024 * 1024) {
-                      clearReceiptUpload();
-                      setFileError("Receipt image must be under 4MB.");
-                      return;
-                    }
-
-                    setReceiptFile(file);
-                  }}
+                  onChange={(e) =>
+                    processReceiptFile(e.target.files?.[0] || null)
+                  }
                 />
               </label>
 
@@ -720,29 +1088,58 @@ function CheckoutPage() {
               )}
 
               {receiptPreviewUrl && (
-                <div className="rounded-2xl border border-purple-500/20 bg-black/40 p-4">
-                  <p className="mb-3 text-sm font-black text-purple-200">
-                    Receipt Preview
-                  </p>
-                  <img
-                    src={receiptPreviewUrl}
-                    alt="Uploaded receipt preview"
-                    className="max-h-64 w-full rounded-xl object-contain"
-                  />
+                <div className="rounded-3xl border border-purple-500/20 bg-black/45 p-4">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-purple-200">
+                        Receipt Preview
+                      </p>
+                      <p className="mt-1 text-xs font-semibold text-gray-500">
+                        Ready for submission. Click the preview to inspect it.
+                      </p>
+                    </div>
+                    <span className="rounded-full border border-emerald-300/25 bg-emerald-400/10 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-emerald-200">
+                      Uploaded
+                    </span>
+                  </div>
+
                   <button
                     type="button"
-                    onClick={() => {
-                      clearReceiptUpload();
-                      setStatus("idle");
-                    }}
-                    className="mt-3 w-full rounded-lg border border-red-400/30 px-3 py-2 text-sm font-bold text-red-200 hover:bg-red-400/10"
+                    onClick={() => setIsReceiptZoomOpen(true)}
+                    className="group w-full overflow-hidden rounded-2xl border border-purple-500/15 bg-black/40"
                   >
-                    Remove Receipt
+                    <img
+                      src={receiptPreviewUrl}
+                      alt="Uploaded receipt preview"
+                      className="max-h-56 w-full object-contain transition duration-300 group-hover:scale-[1.02] sm:max-h-64"
+                    />
                   </button>
+
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsReceiptZoomOpen(true)}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-purple-400/30 px-3 py-2 text-sm font-bold text-purple-100 transition hover:bg-purple-400/10"
+                    >
+                      View Larger
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        clearReceiptUpload();
+                        setStatus("idle");
+                      }}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-400/30 px-3 py-2 text-sm font-bold text-red-200 transition hover:bg-red-400/10"
+                    >
+                      <X className="h-4 w-4" />
+                      Remove Receipt
+                    </button>
+                  </div>
                 </div>
               )}
 
-              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-yellow-400/25 bg-yellow-400/10 p-4 text-sm text-yellow-100">
+              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-yellow-400/25 bg-yellow-400/10 p-4 text-sm text-yellow-100 transition hover:bg-yellow-400/15">
                 <input
                   type="checkbox"
                   checked={hasConfirmedPayment}
@@ -752,7 +1149,7 @@ function CheckoutPage() {
                   className="mt-1 h-4 w-4 accent-yellow-400"
                 />
                 <span>
-                  I confirm that I have already sent the payment using the
+                  I confirm that I have already sent the exact payment using the
                   selected QR code.
                 </span>
               </label>
@@ -761,14 +1158,14 @@ function CheckoutPage() {
                 type="button"
                 disabled={!canSubmit || status === "sending"}
                 onClick={submitClaim}
-                className="rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-4 font-black transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-4 font-black shadow-[0_0_30px_rgba(99,102,241,0.28)] transition hover:-translate-y-0.5 hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:scale-100"
               >
                 {submitLabel}
               </button>
 
               <div className="rounded-2xl border border-purple-500/20 bg-black/30 p-4 text-sm text-gray-300">
                 <p className="font-black text-purple-200">What happens next?</p>
-                <p className="mt-2">
+                <p className="mt-2 leading-6">
                   Your claim is sent privately to Ellipsis SMP staff. Please
                   keep your receipt until your purchase is verified and
                   delivered.
@@ -778,35 +1175,82 @@ function CheckoutPage() {
               {status === "success" && (
                 <div
                   ref={resultRef}
-                  className="rounded-xl border border-green-400/30 bg-green-400/10 p-4 text-green-200"
+                  className="overflow-hidden rounded-[1.75rem] border border-emerald-300/30 bg-gradient-to-br from-emerald-400/15 via-black/45 to-purple-500/10 p-5 text-emerald-100 shadow-[0_0_40px_rgba(52,211,153,0.18)]"
                 >
-                  <p className="font-black">Payment claim sent.</p>
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-emerald-300/30 bg-emerald-400/15 shadow-[0_0_26px_rgba(52,211,153,0.25)]">
+                      <CheckCircle2 className="h-6 w-6 text-emerald-200" />
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
+                        Claim Submitted
+                      </p>
+                      <h3 className="mt-1 text-2xl font-black text-white">
+                        Payment claim sent successfully.
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-emerald-100/80">
+                        Your order is now waiting for manual staff verification.
+                        Usual verification time is 5–30 minutes.
+                      </p>
+                    </div>
+                  </div>
 
                   {orderId && (
-                    <p className="mt-2">
-                      Order ID:{" "}
-                      <span className="font-black text-white">{orderId}</span>
-                    </p>
+                    <div className="mt-5 rounded-2xl border border-white/10 bg-black/35 p-4">
+                      <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-200">
+                        Order ID
+                      </p>
+
+                      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <span className="font-mono text-xl font-black text-white">
+                          {orderId}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={copyOrderId}
+                          className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-emerald-400/10 px-4 py-2 text-sm font-black text-emerald-100 hover:bg-emerald-400/20"
+                        >
+                          {copiedOrderId ? (
+                            <CheckCircle2 className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                          {copiedOrderId ? "Copied" : "Copy Order ID"}
+                        </button>
+                      </div>
+                    </div>
                   )}
 
-                  <p className="mt-2 text-sm text-green-100/80">
-                    Do you want to make another purchase?
+                  <div className="mt-5 rounded-2xl border border-yellow-300/25 bg-yellow-300/10 p-4">
+                    <p className="text-sm font-black text-yellow-100">
+                      Estimated verification time
+                    </p>
+                    <p className="mt-1 text-sm text-yellow-100/80">
+                      Usually within 5–30 minutes. Please keep your receipt until
+                      your purchase is verified and delivered in-game.
+                    </p>
+                  </div>
+
+                  <p className="mt-5 text-sm font-bold text-emerald-100/85">
+                    Would you like another purchase?
                   </p>
 
-                  <div className="mt-4 flex flex-wrap gap-3">
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2 sm:gap-3">
                     <button
                       type="button"
-                      onClick={resetForm}
-                      className="rounded-lg border border-green-400/30 px-3 py-2 text-sm font-bold text-green-100 hover:bg-green-400/10"
+                      onClick={() => resetPurchase("Premium Ranks")}
+                      className="rounded-xl border border-emerald-300/30 bg-emerald-400/10 px-4 py-3 font-bold text-emerald-100 hover:bg-emerald-400/20"
                     >
-                      Yes, another purchase
+                      Yes, Start Another Purchase
                     </button>
 
                     <Link
-                      to="/"
-                      className="rounded-lg border border-purple-400/30 px-3 py-2 text-sm font-bold text-purple-100 hover:bg-purple-400/10"
+                      to="/marketplace"
+                      className="rounded-xl border border-purple-300/30 bg-purple-400/10 px-4 py-3 text-center font-bold text-purple-100 hover:bg-purple-400/20"
                     >
-                      No, back home
+                      Back to Marketplace
                     </Link>
                   </div>
                 </div>
@@ -815,30 +1259,65 @@ function CheckoutPage() {
               {status === "error" && (
                 <div
                   ref={resultRef}
-                  className="rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-red-200"
+                  className="rounded-2xl border border-red-400/30 bg-red-400/10 p-5 text-red-200"
                 >
-                  {submitError || "Something went wrong. Please try again."}
+                  <p className="font-black">Submission failed.</p>
+                  <p className="mt-2 text-sm">{submitError}</p>
                 </div>
               )}
             </div>
           </section>
         </div>
-      </div>
 
-      <div className="fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-purple-500/30 bg-black/85 p-3 shadow-[0_0_30px_rgba(168,85,247,0.25)] backdrop-blur-xl lg:hidden">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-300">
-              Checkout
-            </p>
-            <p className="max-w-[210px] truncate text-sm font-black text-white">
-              {selectedProduct.name}
+        {isReceiptZoomOpen && receiptPreviewUrl && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-md sm:p-4">
+            <div className="w-full max-w-4xl rounded-[1.5rem] border border-purple-400/25 bg-[#080019]/95 p-3 shadow-[0_0_70px_rgba(168,85,247,0.25)] sm:rounded-[2rem] sm:p-4">
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-black uppercase tracking-[0.18em] text-purple-300">
+                    Receipt Zoom
+                  </p>
+                  <p className="mt-1 text-xs font-semibold text-gray-500">
+                    Review the uploaded receipt before submitting your claim.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsReceiptZoomOpen(false)}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-purple-400/25 text-purple-100 transition hover:bg-white/10"
+                  aria-label="Close receipt preview"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="max-h-[72vh] overflow-auto rounded-2xl border border-purple-500/15 bg-black/60 p-2 sm:max-h-[75vh] sm:p-3">
+                <img
+                  src={receiptPreviewUrl}
+                  alt="Uploaded receipt zoom preview"
+                  className="mx-auto max-h-[68vh] w-full object-contain sm:max-h-[70vh]"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-purple-500/30 bg-[#080019]/95 p-3 shadow-[0_0_35px_rgba(168,85,247,0.35)] backdrop-blur-xl sm:p-4 lg:hidden">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-300">
+                Selected Product
+              </p>
+              <p className="line-clamp-1 text-sm font-black text-white">
+                {selectedProduct.name}
+              </p>
+            </div>
+
+            <p className="shrink-0 text-right text-lg font-black text-yellow-300">
+              {selectedProduct.price}
             </p>
           </div>
-
-          <p className="text-sm font-black text-yellow-300">
-            {selectedProduct.price}
-          </p>
         </div>
       </div>
     </main>
