@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import {
   Clock3,
@@ -34,7 +34,11 @@ import type {
   OrderStatus,
   StatusFilter,
 } from "../types/admin";
-import { roleDescriptions, canManageOrders } from "../lib/adminPermissions";
+import {
+  roleDescriptions,
+  canManageOrders,
+  getAdminDisplayName,
+} from "../lib/adminPermissions";
 
 const NEEDS_ATTENTION_MINUTES = 30;
 
@@ -57,15 +61,15 @@ function orderNeedsAttention(order: Order) {
   if (!order.minecraft_username) return true;
   if (!order.discord_username) return true;
   if (!order.receipt_url && !order.payment_reference) return true;
-  
+
   if (order.status === "pending") {
     const minsSinceCreated = (new Date().getTime() - new Date(order.created_at).getTime()) / 60000;
     if (minsSinceCreated > NEEDS_ATTENTION_MINUTES) return true;
     if (!order.receipt_url) return true;
   }
-  
+
   if (order.status === "verified") return true; // Verified but not delivered
-  
+
   return false;
 }
 
@@ -74,20 +78,20 @@ function AdminPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [adminProfile, setAdminProfile] = useState<AdminProfile | null>(null);
   const [accessState, setAccessState] = useState<AccessState>("checking");
-  
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [message, setMessage] = useState("");
   const [lastUpdated, setLastUpdated] = useState("");
   const [activeFilter, setActiveFilter] = useState<StatusFilter>("pending");
   const [search, setSearch] = useState("");
-  
+
   const [receiptPreviewUrl, setReceiptPreviewUrl] = useState("");
   const [receiptPreviewLabel, setReceiptPreviewLabel] = useState("");
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
 
   const [realtimeStatus, setRealtimeStatus] = useState<"connecting" | "live" | "error">("connecting");
   const [editingNotesOrder, setEditingNotesOrder] = useState<Order | null>(null);
-  
+
   const [activeTab, setActiveTab] = useState<"orders" | "audit">("orders");
 
   const hasManageRights = canManageOrders(adminProfile?.role);
@@ -314,16 +318,15 @@ function AdminPage() {
               Ellipsis SMP Admin
             </p>
             <h1 className="mt-3 text-4xl font-black">Orders Dashboard</h1>
-            
+
             <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
               <span className="text-sm font-bold text-gray-300">
-                {adminProfile?.email}
+                {getAdminDisplayName(adminProfile)}
               </span>
-              <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-black uppercase tracking-wider ${
-                adminProfile?.role === "owner" ? "border-purple-500/50 bg-purple-500/20 text-purple-200" :
+              <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-black uppercase tracking-wider ${adminProfile?.role === "owner" ? "border-purple-500/50 bg-purple-500/20 text-purple-200" :
                 adminProfile?.role === "manager" ? "border-blue-500/50 bg-blue-500/20 text-blue-200" :
-                "border-gray-500/50 bg-gray-500/20 text-gray-200"
-              }`}>
+                  "border-gray-500/50 bg-gray-500/20 text-gray-200"
+                }`}>
                 {adminProfile?.role}
               </span>
             </div>
@@ -342,11 +345,10 @@ function AdminPage() {
             </button>
 
             {lastUpdated && (
-              <div className={`flex items-center rounded-2xl border px-4 py-3 text-sm font-bold ${
-                realtimeStatus === "error"
-                  ? "border-red-500/20 bg-red-500/10 text-red-200"
-                  : "border-emerald-500/20 bg-emerald-500/10 text-emerald-200"
-              }`}>
+              <div className={`flex items-center rounded-2xl border px-4 py-3 text-sm font-bold ${realtimeStatus === "error"
+                ? "border-red-500/20 bg-red-500/10 text-red-200"
+                : "border-emerald-500/20 bg-emerald-500/10 text-emerald-200"
+                }`}>
                 {realtimeStatus === "live" && (
                   <span className="mr-2 h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 )}
@@ -381,11 +383,10 @@ function AdminPage() {
             return (
               <div
                 key={stat.label}
-                className={`rounded-[1.5rem] border p-5 ${
-                  stat.alert 
-                    ? "border-red-500/50 bg-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.3)]" 
-                    : "border-purple-500/25 bg-white/[0.06]"
-                }`}
+                className={`rounded-[1.5rem] border p-5 ${stat.alert
+                  ? "border-red-500/50 bg-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+                  : "border-purple-500/25 bg-white/[0.06]"
+                  }`}
               >
                 <StatIcon className={`h-5 w-5 ${stat.alert ? "text-red-300" : "text-purple-300"}`} />
                 <p className={`mt-4 text-[10px] font-black uppercase tracking-[0.18em] ${stat.alert ? "text-red-200" : "text-purple-300"}`}>
@@ -403,22 +404,20 @@ function AdminPage() {
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab("orders")}
-              className={`flex items-center gap-2 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-bold ${
-                activeTab === "orders"
-                  ? "border-purple-400 text-purple-400"
-                  : "border-transparent text-gray-400 hover:border-gray-300 hover:text-gray-300"
-              }`}
+              className={`flex items-center gap-2 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-bold ${activeTab === "orders"
+                ? "border-purple-400 text-purple-400"
+                : "border-transparent text-gray-400 hover:border-gray-300 hover:text-gray-300"
+                }`}
             >
               <PackageCheck className="h-5 w-5" />
               Orders View
             </button>
             <button
               onClick={() => setActiveTab("audit")}
-              className={`flex items-center gap-2 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-bold ${
-                activeTab === "audit"
-                  ? "border-blue-400 text-blue-400"
-                  : "border-transparent text-gray-400 hover:border-gray-300 hover:text-gray-300"
-              }`}
+              className={`flex items-center gap-2 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-bold ${activeTab === "audit"
+                ? "border-blue-400 text-blue-400"
+                : "border-transparent text-gray-400 hover:border-gray-300 hover:text-gray-300"
+                }`}
             >
               <History className="h-5 w-5" />
               Global Audit Log
@@ -445,15 +444,14 @@ function AdminPage() {
                     key={filter.value}
                     type="button"
                     onClick={() => setActiveFilter(filter.value)}
-                    className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
-                      activeFilter === filter.value
-                        ? filter.value === "needs_attention" 
-                          ? "border-red-400 bg-red-500/30 text-white" 
-                          : "border-purple-300 bg-purple-500/25 text-white"
-                        : filter.value === "needs_attention"
-                          ? "border-red-500/25 bg-white/[0.04] text-red-300 hover:bg-white/[0.08]"
-                          : "border-purple-500/25 bg-white/[0.04] text-purple-200 hover:bg-white/[0.08]"
-                    }`}
+                    className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${activeFilter === filter.value
+                      ? filter.value === "needs_attention"
+                        ? "border-red-400 bg-red-500/30 text-white"
+                        : "border-purple-300 bg-purple-500/25 text-white"
+                      : filter.value === "needs_attention"
+                        ? "border-red-500/25 bg-white/[0.04] text-red-300 hover:bg-white/[0.08]"
+                        : "border-purple-500/25 bg-white/[0.04] text-purple-200 hover:bg-white/[0.08]"
+                      }`}
                   >
                     {filter.label}
                   </button>
@@ -512,3 +510,4 @@ function AdminPage() {
 }
 
 export default AdminPage;
+

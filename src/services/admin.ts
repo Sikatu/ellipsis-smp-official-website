@@ -58,7 +58,13 @@ export async function insertOrderAuditLog(
     action,
     previous_status: previousStatus || null,
     next_status: nextStatus || null,
-    metadata: metadata || {},
+    metadata: {
+      ...(metadata || {}),
+      admin_display_name:
+        adminProfile.display_name?.trim() ||
+        adminProfile.email.split("@")[0] ||
+        "Staff",
+    },
   });
 
   return { error };
@@ -159,10 +165,10 @@ export async function getReceiptUrl(path: string | null) {
       .createSignedUrl(receiptPath, 300);
 
     if (!error && data?.signedUrl) {
-      return { 
-        signedUrl: data.signedUrl, 
+      return {
+        signedUrl: data.signedUrl,
         label: receiptPath.split("/").pop() || "Receipt",
-        error: null 
+        error: null
       };
     }
   }
