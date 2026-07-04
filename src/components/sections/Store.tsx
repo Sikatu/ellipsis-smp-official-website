@@ -146,18 +146,30 @@ function Store() {
     selectedProduct.price ||
     "Price unavailable";
 
-  const checkoutPath = useMemo(() => {
+  function getProductPrice(product: StoreProduct, keyBundle = "1 key") {
+    if (product.type !== "crate") return product.price;
+
+    const crate = crates.find((item) => item.name === product.name);
+    return (
+      crate?.options.find((option) => option.keys === keyBundle)?.price ||
+      product.price
+    );
+  }
+
+  function getCheckoutPath(product: StoreProduct, keyBundle = "1 key") {
     const params = new URLSearchParams({
-      type: selectedProduct.type,
-      product: selectedProduct.name,
+      type: product.type,
+      product: product.name,
     });
 
-    if (selectedProduct.type === "crate") {
-      params.set("quantity", selectedKeyBundle);
+    if (product.type === "crate") {
+      params.set("quantity", keyBundle);
     }
 
     return `/checkout?${params.toString()}`;
-  }, [selectedKeyBundle, selectedProduct.name, selectedProduct.type]);
+  }
+
+  const checkoutPath = getCheckoutPath(selectedProduct, selectedKeyBundle);
 
   function selectProduct(product: StoreProduct) {
     setSelectedProductId(product.id);
@@ -179,24 +191,24 @@ function Store() {
         <SectionHeader
           eyebrow="Marketplace Catalog"
           title="Browse first. Expand when ready."
-          description="Explore compact product cards, then open the full details only when something catches your eye."
+          description="Tap any product to preview it, or use Buy Now to go straight to checkout."
         />
 
         <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <GlassPanel className="flex items-center gap-3 px-4 py-3 lg:min-w-[360px]">
             <Search className="h-5 w-5 text-purple-300" />
             <p className="text-sm font-bold text-gray-300">
-              Select a product below to preview full details.
+              Mobile buyers can check out directly from each product card.
             </p>
           </GlassPanel>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
             {categoryFilters.map((filter) => (
               <button
                 key={filter.id}
                 type="button"
                 onClick={() => setActiveFilter(filter.id)}
-                className={`rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${activeFilter === filter.id
+                className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${activeFilter === filter.id
                     ? "border-purple-300 bg-purple-500/20 text-purple-100 shadow-[0_0_22px_rgba(168,85,247,0.2)]"
                     : "border-purple-500/20 bg-white/[0.04] text-gray-300 hover:border-purple-300/40 hover:bg-white/[0.08]"
                   }`}
@@ -207,62 +219,170 @@ function Store() {
           </div>
         </div>
 
+        <div className="sticky top-28 z-30 mb-5 rounded-[1.5rem] border border-purple-400/30 bg-[#080019]/95 p-4 shadow-[0_0_35px_rgba(168,85,247,0.28)] backdrop-blur-xl lg:hidden">
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-purple-300">
+                Selected Item
+              </p>
+              <p className="line-clamp-1 text-base font-black text-white">
+                {selectedProduct.name}
+              </p>
+              <p className="mt-1 text-sm font-black text-yellow-300">
+                {selectedProduct.type === "crate"
+                  ? selectedCratePrice
+                  : selectedProduct.price}
+              </p>
+            </div>
+
+            <Link
+              to={checkoutPath}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-3 text-xs font-black text-white shadow-[0_0_24px_rgba(168,85,247,0.28)]"
+            >
+              Buy Selected
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          {selectedProduct.type === "crate" && selectedCrate && (
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              {selectedCrate.options.map((option) => {
+                const isSelected = selectedKeyBundle === option.keys;
+
+                return (
+                  <button
+                    key={option.keys}
+                    type="button"
+                    onClick={() => setSelectedKeyBundle(option.keys)}
+                    className={`rounded-xl border px-2 py-2 text-left transition ${isSelected
+                        ? "border-blue-300 bg-blue-500/20 text-blue-100"
+                        : "border-purple-500/20 bg-black/35 text-gray-300"
+                      }`}
+                  >
+                    <span className="block text-[11px] font-black">
+                      {option.keys}
+                    </span>
+                    <span className="mt-0.5 block text-[10px] font-black text-yellow-300">
+                      {option.price.replace("PHP ", "P")}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="space-y-3">
             {filteredProducts.map((product) => {
               const isActive = product.id === selectedProduct.id;
+              const productKeyBundle =
+                product.type === "crate" && isActive
+                  ? selectedKeyBundle
+                  : "1 key";
+              const productPrice = getProductPrice(product, productKeyBundle);
+              const productCheckoutPath = getCheckoutPath(
+                product,
+                productKeyBundle
+              );
 
               return (
-                <motion.button
+                <motion.div
                   key={product.id}
-                  type="button"
                   layout
-                  onClick={() => selectProduct(product)}
-                  className={`group flex w-full items-center gap-4 rounded-[1.5rem] border p-3 text-left transition ${isActive
+                  className={`group rounded-[1.5rem] border p-3 text-left transition ${isActive
                       ? "border-purple-300/60 bg-purple-500/15 shadow-[0_0_35px_rgba(168,85,247,0.24)]"
                       : "border-purple-500/20 bg-white/[0.045] hover:border-purple-300/40 hover:bg-white/[0.075]"
                     }`}
                 >
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-purple-500/20 bg-black/40">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-full w-full object-contain p-2 [image-rendering:pixelated]"
-                    />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full border border-purple-400/20 bg-purple-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-purple-200">
-                        {product.eyebrow}
-                      </span>
-
-                      {product.badge && (
-                        <span className="rounded-full border border-yellow-400/25 bg-yellow-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-yellow-200">
-                          {product.badge}
-                        </span>
-                      )}
+                  <button
+                    type="button"
+                    onClick={() => selectProduct(product)}
+                    className="flex w-full items-center gap-4 text-left"
+                  >
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-purple-500/20 bg-black/40">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-contain p-2 [image-rendering:pixelated]"
+                      />
                     </div>
 
-                    <h3 className="mt-2 line-clamp-2 text-lg font-black leading-tight text-white">
-                      {product.name}
-                    </h3>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full border border-purple-400/20 bg-purple-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-purple-200">
+                          {product.eyebrow}
+                        </span>
 
-                    <p className="mt-1 text-sm font-black text-yellow-300">
-                      {product.type === "crate" &&
-                        selectedProduct.id === product.id
-                        ? selectedCratePrice
-                        : product.price}
-                    </p>
+                        {product.badge && (
+                          <span className="rounded-full border border-yellow-400/25 bg-yellow-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-yellow-200">
+                            {product.badge}
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className="mt-2 line-clamp-2 text-lg font-black leading-tight text-white">
+                        {product.name}
+                      </h3>
+
+                      <p className="mt-1 text-sm font-black text-yellow-300">
+                        {productPrice}
+                      </p>
+                    </div>
+
+                    <ArrowRight
+                      className={`h-5 w-5 shrink-0 text-purple-300 transition ${isActive ? "translate-x-1" : "group-hover:translate-x-1"
+                        }`}
+                    />
+                  </button>
+
+                  {isActive && product.type === "crate" && selectedCrate && (
+                    <div className="mt-3 grid grid-cols-4 gap-2 border-t border-purple-500/15 pt-3 lg:hidden">
+                      {selectedCrate.options.map((option) => {
+                        const isSelected = selectedKeyBundle === option.keys;
+
+                        return (
+                          <button
+                            key={option.keys}
+                            type="button"
+                            onClick={() => setSelectedKeyBundle(option.keys)}
+                            className={`rounded-xl border px-2 py-2 text-left transition ${isSelected
+                                ? "border-blue-300 bg-blue-500/20 text-blue-100"
+                                : "border-purple-500/20 bg-black/35 text-gray-300"
+                              }`}
+                          >
+                            <span className="block text-[11px] font-black">
+                              {option.keys}
+                            </span>
+                            <span className="mt-0.5 block text-[10px] font-black text-yellow-300">
+                              {option.price.replace("PHP ", "P")}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="mt-3 grid grid-cols-[1fr_auto] gap-2 border-t border-purple-500/15 pt-3 lg:hidden">
+                    <button
+                      type="button"
+                      onClick={() => selectProduct(product)}
+                      className="rounded-xl border border-purple-500/25 bg-black/30 px-4 py-3 text-sm font-black text-purple-100"
+                    >
+                      {isActive ? "Selected" : "View"}
+                    </button>
+
+                    <Link
+                      to={productCheckoutPath}
+                      className="inline-flex min-w-[112px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-3 text-sm font-black text-white shadow-[0_0_24px_rgba(168,85,247,0.24)]"
+                    >
+                      Buy Now
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
                   </div>
-
-                  <ArrowRight
-                    className={`h-5 w-5 shrink-0 text-purple-300 transition ${isActive ? "translate-x-1" : "group-hover:translate-x-1"
-                      }`}
-                  />
-                </motion.button>
+                </motion.div>
               );
             })}
           </div>
@@ -274,7 +394,7 @@ function Store() {
               animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
               exit={shouldReduceMotion ? undefined : { opacity: 0, y: -18 }}
               transition={{ duration: 0.22 }}
-              className="lg:sticky lg:top-28 lg:self-start"
+              className="hidden lg:sticky lg:top-28 lg:block lg:self-start"
             >
               <GlassPanel className="overflow-hidden">
                 <div className="relative">
