@@ -60,7 +60,7 @@ function RankProgression() {
                         Rank Progression
                     </p>
 
-                    <h2 className="mt-4 text-4xl font-black uppercase tracking-tight md:text-6xl lg:text-7xl">
+                    <h2 className="mt-4 text-4xl font-black uppercase md:text-6xl lg:text-7xl">
                         Earn Ranks Through{" "}
                         <span className="bg-gradient-to-r from-purple-300 to-fuchsia-500 bg-clip-text text-transparent">
                             Play

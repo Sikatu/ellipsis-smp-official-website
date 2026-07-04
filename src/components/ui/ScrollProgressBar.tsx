@@ -4,18 +4,31 @@ function ScrollProgressBar() {
     const [progress, setProgress] = useState(0);
 
     useEffect(() => {
-        function updateProgress() {
-            const scrollTop = window.scrollY;
-            const pageHeight =
-                document.documentElement.scrollHeight - window.innerHeight;
+        let animationFrame = 0;
 
-            setProgress(pageHeight > 0 ? (scrollTop / pageHeight) * 100 : 0);
+        function updateProgress() {
+            if (animationFrame) return;
+
+            animationFrame = window.requestAnimationFrame(() => {
+                const scrollTop = window.scrollY;
+                const pageHeight =
+                    document.documentElement.scrollHeight - window.innerHeight;
+
+                setProgress(pageHeight > 0 ? (scrollTop / pageHeight) * 100 : 0);
+                animationFrame = 0;
+            });
         }
 
         updateProgress();
-        window.addEventListener("scroll", updateProgress);
+        window.addEventListener("scroll", updateProgress, { passive: true });
 
-        return () => window.removeEventListener("scroll", updateProgress);
+        return () => {
+            window.removeEventListener("scroll", updateProgress);
+
+            if (animationFrame) {
+                window.cancelAnimationFrame(animationFrame);
+            }
+        };
     }, []);
 
     return (

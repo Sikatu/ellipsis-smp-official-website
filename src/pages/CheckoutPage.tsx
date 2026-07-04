@@ -617,7 +617,7 @@ function CheckoutPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#030014] px-3 pb-32 pt-28 text-white sm:px-6 lg:pb-12">
+    <main className="min-h-screen bg-[#030014] px-3 pb-[calc(env(safe-area-inset-bottom)+8rem)] pt-28 text-white sm:px-6 lg:pb-12">
       <div className="mx-auto max-w-6xl">
         <Link
           to="/marketplace"
@@ -635,7 +635,7 @@ function CheckoutPage() {
 
             <h1 className="mt-3 text-3xl font-black sm:text-4xl">Secure Checkout</h1>
 
-            <div className="mt-6 grid grid-cols-2 gap-2 text-[9px] font-black uppercase tracking-[0.1em] text-gray-300 sm:grid-cols-4 sm:gap-3 sm:text-[10px]">
+            <div className="mt-6 grid grid-cols-2 gap-2 text-[8px] font-black uppercase tracking-[0.08em] text-gray-300 sm:grid-cols-4 sm:gap-3 sm:text-[10px] sm:tracking-[0.1em]">
               {["Select Product", "Pay QR", "Submit Claim", "Verification"].map(
                 (step, index) => {
                   const isActive = index === activeCheckoutStep;
@@ -654,7 +654,7 @@ function CheckoutPage() {
                       {isActive && (
                         <span className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-300/10 to-blue-400/0" />
                       )}
-                      <span className="relative z-10 flex items-center gap-2">
+                      <span className="relative z-10 flex flex-col items-center gap-1 sm:flex-row sm:gap-2">
                         {isComplete ? (
                           <CheckCircle2 className="h-3.5 w-3.5" />
                         ) : (
@@ -677,6 +677,8 @@ function CheckoutPage() {
                     key={categoryBanner.src}
                     src={categoryBanner.src}
                     alt={categoryBanner.alt}
+                    loading="eager"
+                    decoding="async"
                     className="relative z-10 h-40 w-full object-contain opacity-100 transition-opacity duration-300 [image-rendering:pixelated] sm:h-52"
                   />
                 )}
@@ -763,22 +765,22 @@ function CheckoutPage() {
                   className="mt-6 rounded-3xl border border-purple-500/20 bg-black/45 p-5 shadow-inner shadow-purple-950/30 transition-all duration-300"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-purple-200">
                         <Sparkles className="h-3.5 w-3.5" />
                         {productBadge}
                       </div>
 
-                      <h2 className="mt-4 text-3xl font-black leading-tight sm:text-4xl">
+                      <h2 className="mt-4 break-words text-2xl font-black leading-tight sm:text-4xl">
                         {selectedProduct.name}
                       </h2>
                     </div>
 
-                    <div className="rounded-2xl border border-yellow-300/20 bg-yellow-300/10 px-5 py-4 text-right shadow-[0_0_25px_rgba(250,204,21,0.12)]">
+                    <div className="w-full rounded-2xl border border-yellow-300/20 bg-yellow-300/10 px-5 py-4 text-left shadow-[0_0_25px_rgba(250,204,21,0.12)] sm:w-auto sm:text-right">
                       <p className="text-[10px] font-black uppercase tracking-[0.22em] text-yellow-100/80">
                         {priceParts.currency}
                       </p>
-                      <p className="text-3xl font-black leading-none text-yellow-300 sm:text-4xl">
+                      <p className="text-2xl font-black leading-none text-yellow-300 sm:text-4xl">
                         {priceParts.amount}
                       </p>
                     </div>
@@ -895,7 +897,7 @@ function CheckoutPage() {
             </div>
           </section>
 
-          <section className="rounded-[2rem] border border-purple-500/25 bg-white/[0.06] p-6 shadow-[0_0_55px_rgba(59,130,246,0.12)] backdrop-blur-xl">
+          <section className="rounded-[1.75rem] border border-purple-500/25 bg-white/[0.06] p-4 shadow-[0_0_55px_rgba(59,130,246,0.12)] backdrop-blur-xl sm:rounded-[2rem] sm:p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-purple-300">
@@ -965,6 +967,8 @@ function CheckoutPage() {
                   <img
                     src={method.qr}
                     alt={`${method.label} QR code`}
+                    loading="lazy"
+                    decoding="async"
                     className="mx-auto max-h-[300px] w-full max-w-[300px] rounded-2xl object-contain sm:max-h-[360px] sm:max-w-[360px]"
                   />
                 </div>
@@ -1044,12 +1048,12 @@ function CheckoutPage() {
 
             <div className="mt-6 grid gap-3 sm:gap-4">
               <div className="rounded-3xl border border-purple-500/20 bg-black/45 p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
                     <p className="text-xs font-black uppercase tracking-[0.2em] text-purple-300">
                       Order Review
                     </p>
-                    <p className="mt-2 text-lg font-black text-white">
+                    <p className="mt-2 break-words text-lg font-black text-white">
                       {selectedProduct.name}
                     </p>
                     <p className="mt-1 text-sm text-gray-400">
@@ -1057,7 +1061,7 @@ function CheckoutPage() {
                     </p>
                   </div>
 
-                  <div className="text-right">
+                  <div className="shrink-0 text-left sm:text-right">
                     <p className="text-[10px] font-black uppercase tracking-[0.18em] text-yellow-200">
                       Total
                     </p>
@@ -1095,6 +1099,8 @@ function CheckoutPage() {
                     setMinecraftIgn(e.target.value);
                     setStatus("idle");
                   }}
+                  aria-label="Minecraft IGN"
+                  autoComplete="nickname"
                   placeholder="Minecraft IGN"
                   className="rounded-2xl border border-purple-500/25 bg-black/40 px-4 py-3 font-semibold outline-none transition placeholder:text-gray-600 focus:border-purple-300 focus:bg-black/60"
                 />
@@ -1105,6 +1111,8 @@ function CheckoutPage() {
                     setDiscordUsername(e.target.value);
                     setStatus("idle");
                   }}
+                  aria-label="Discord username"
+                  autoComplete="username"
                   placeholder="Discord username"
                   className="rounded-2xl border border-purple-500/25 bg-black/40 px-4 py-3 font-semibold outline-none transition placeholder:text-gray-600 focus:border-purple-300 focus:bg-black/60"
                 />
@@ -1193,6 +1201,7 @@ function CheckoutPage() {
                     <img
                       src={receiptPreviewUrl}
                       alt="Uploaded receipt preview"
+                      decoding="async"
                       className="max-h-56 w-full object-contain transition duration-300 group-hover:scale-[1.02] sm:max-h-64"
                     />
                   </button>
@@ -1387,6 +1396,7 @@ function CheckoutPage() {
                 <img
                   src={receiptPreviewUrl}
                   alt="Uploaded receipt zoom preview"
+                  decoding="async"
                   className="mx-auto max-h-[68vh] w-full object-contain sm:max-h-[70vh]"
                 />
               </div>
@@ -1394,9 +1404,9 @@ function CheckoutPage() {
           </div>
         )}
 
-        <div className="fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-purple-500/30 bg-[#080019]/95 p-3 shadow-[0_0_35px_rgba(168,85,247,0.35)] backdrop-blur-xl sm:p-4 lg:hidden">
+        <div className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-40 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-purple-500/30 bg-[#080019]/95 p-3 shadow-[0_0_35px_rgba(168,85,247,0.35)] backdrop-blur-xl sm:p-4 lg:hidden">
           <div className="flex items-center justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-300">
                 Selected Product
               </p>

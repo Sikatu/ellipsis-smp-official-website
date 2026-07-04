@@ -13,7 +13,7 @@ function SectionHeader({ eyebrow, title, description }: SectionHeaderProps) {
         </p>
       )}
 
-      <h2 className="mt-3 text-3xl font-black text-white md:text-5xl">
+      <h2 className="mt-3 break-words text-3xl font-black leading-tight text-white sm:text-4xl md:text-5xl">
         {title}
       </h2>
 

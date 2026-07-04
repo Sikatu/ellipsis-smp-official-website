@@ -10,8 +10,10 @@ function LoadingScreen() {
         >
             <div className="flex flex-col items-center">
                 <motion.img
-                    src="/ellipsis-logo.webp"
+                    src="/ellipsis-logo-384.webp"
                     alt="Ellipsis SMP"
+                    width="384"
+                    height="384"
                     className="h-40 w-auto drop-shadow-[0_0_70px_rgba(168,85,247,0.95)]"
                     animate={{ scale: [1, 1.08, 1], opacity: [0.85, 1, 0.85] }}
                     transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}

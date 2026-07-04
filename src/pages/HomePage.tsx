@@ -60,14 +60,17 @@ function HomePage() {
                 <SectionHeader
                     eyebrow="Inside Ellipsis"
                     title="A glimpse of the world waiting for you."
-                    description="Explore cinematic snapshots from across Ellipsis SMP — from spawn to markets, custom dimensions, and dangerous realms."
+                    description="Explore cinematic snapshots from across Ellipsis SMP, from spawn to markets, custom dimensions, and dangerous realms."
                 />
 
                 <div className="grid gap-4 lg:grid-cols-[1.25fr_1fr]">
-                    <div className="group relative min-h-[420px] overflow-hidden rounded-[2rem] border border-purple-500/20 bg-black shadow-[0_0_45px_rgba(168,85,247,0.16)] transition hover:-translate-y-1 hover:border-purple-300/50">
+                    <div className="group relative min-h-[320px] overflow-hidden rounded-[1.5rem] border border-purple-500/20 bg-black shadow-[0_0_45px_rgba(168,85,247,0.16)] transition hover:-translate-y-1 hover:border-purple-300/50 sm:min-h-[420px] sm:rounded-[2rem]">
                         <img
                             src={featuredImage.src}
                             alt={featuredImage.title}
+                            loading="lazy"
+                            decoding="async"
+                            sizes="(min-width: 1024px) 55vw, 100vw"
                             className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
@@ -75,7 +78,7 @@ function HomePage() {
                             <p className="text-xs font-black uppercase tracking-[0.22em] text-purple-200">
                                 {featuredImage.title}
                             </p>
-                            <h3 className="mt-2 max-w-xl text-3xl font-black leading-tight text-white md:text-4xl">
+                            <h3 className="mt-2 max-w-xl text-2xl font-black leading-tight text-white sm:text-3xl md:text-4xl">
                                 Start your story at the heart of Ellipsis.
                             </h3>
                             <p className="mt-3 max-w-lg text-sm leading-6 text-gray-300">
@@ -89,11 +92,14 @@ function HomePage() {
                         {supportImages.map((item) => (
                             <div
                                 key={item.src}
-                                className="group relative min-h-[200px] overflow-hidden rounded-[1.5rem] border border-purple-500/20 bg-black shadow-[0_0_35px_rgba(168,85,247,0.1)] transition hover:-translate-y-1 hover:border-purple-300/50"
+                                className="group relative min-h-[170px] overflow-hidden rounded-[1.25rem] border border-purple-500/20 bg-black shadow-[0_0_35px_rgba(168,85,247,0.1)] transition hover:-translate-y-1 hover:border-purple-300/50 sm:min-h-[200px] sm:rounded-[1.5rem]"
                             >
                                 <img
                                     src={item.src}
                                     alt={item.title}
+                                    loading="lazy"
+                                    decoding="async"
+                                    sizes="(min-width: 1024px) 22vw, (min-width: 640px) 50vw, 100vw"
                                     className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />

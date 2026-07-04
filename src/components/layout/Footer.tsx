@@ -31,8 +31,12 @@ function Footer() {
             <div>
               <div className="flex items-center gap-4">
                 <img
-                  src="/ellipsis-logo.webp"
+                  src="/ellipsis-logo-384.webp"
                   alt="Ellipsis SMP"
+                  width="384"
+                  height="384"
+                  loading="lazy"
+                  decoding="async"
                   className="h-16 w-auto object-contain drop-shadow-[0_0_22px_rgba(168,85,247,0.95)]"
                 />
 

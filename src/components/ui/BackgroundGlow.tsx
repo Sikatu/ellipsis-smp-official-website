@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from "framer-motion";
 
-const stars = Array.from({ length: 45 }, (_, index) => {
+const stars = Array.from({ length: 30 }, (_, index) => {
     const left = (index * 37) % 100;
     const top = (index * 61) % 100;
 
@@ -19,7 +19,7 @@ function BackgroundGlow() {
     return (
         <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-[#030014]">
             <motion.div
-                className="absolute left-1/2 top-0 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-purple-700/30 blur-[130px]"
+                className="absolute left-1/2 top-0 h-[320px] w-[320px] -translate-x-1/2 rounded-full bg-purple-700/30 blur-[100px] sm:h-[520px] sm:w-[520px] sm:blur-[130px]"
                 animate={
                     shouldReduceMotion
                         ? undefined
@@ -29,7 +29,7 @@ function BackgroundGlow() {
             />
 
             <motion.div
-                className="absolute right-0 top-1/3 h-[440px] w-[440px] rounded-full bg-blue-600/20 blur-[130px]"
+                className="absolute right-0 top-1/3 h-[300px] w-[300px] rounded-full bg-blue-600/20 blur-[100px] sm:h-[440px] sm:w-[440px] sm:blur-[130px]"
                 animate={
                     shouldReduceMotion
                         ? undefined
@@ -39,7 +39,7 @@ function BackgroundGlow() {
             />
 
             <motion.div
-                className="absolute bottom-0 left-0 h-[440px] w-[440px] rounded-full bg-yellow-500/10 blur-[130px]"
+                className="absolute bottom-0 left-0 h-[300px] w-[300px] rounded-full bg-yellow-500/10 blur-[100px] sm:h-[440px] sm:w-[440px] sm:blur-[130px]"
                 animate={
                     shouldReduceMotion
                         ? undefined

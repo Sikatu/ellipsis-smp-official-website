@@ -23,7 +23,7 @@ function SectionTitle({
             <p className={`mb-3 text-sm font-bold uppercase tracking-[0.3em] ${accentClasses[accent]}`}>
                 {label}
             </p>
-            <h2 className="text-4xl font-black md:text-6xl">{title}</h2>
+            <h2 className="break-words text-3xl font-black leading-tight sm:text-4xl md:text-6xl">{title}</h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-400">{description}</p>
         </div>
     );

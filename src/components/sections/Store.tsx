@@ -227,6 +227,8 @@ function Store() {
                     <img
                       src={product.image}
                       alt={product.name}
+                      loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-contain p-2 [image-rendering:pixelated]"
                     />
                   </div>
@@ -244,7 +246,7 @@ function Store() {
                       )}
                     </div>
 
-                    <h3 className="mt-2 truncate text-lg font-black text-white">
+                    <h3 className="mt-2 line-clamp-2 text-lg font-black leading-tight text-white">
                       {product.name}
                     </h3>
 
@@ -284,6 +286,8 @@ function Store() {
                       key={selectedProduct.image}
                       src={selectedProduct.image}
                       alt={selectedProduct.name}
+                      loading="lazy"
+                      decoding="async"
                       initial={
                         shouldReduceMotion
                           ? false
@@ -318,11 +322,11 @@ function Store() {
                       )}
                     </div>
 
-                    <h2 className="mt-5 text-4xl font-black leading-tight text-white md:text-5xl">
+                    <h2 className="mt-5 break-words text-3xl font-black leading-tight text-white sm:text-4xl md:text-5xl">
                       {selectedProduct.name}
                     </h2>
 
-                    <p className="mt-4 text-4xl font-black text-yellow-300">
+                    <p className="mt-4 text-3xl font-black text-yellow-300 sm:text-4xl">
                       {selectedProduct.type === "crate"
                         ? selectedCratePrice
                         : selectedProduct.price}
