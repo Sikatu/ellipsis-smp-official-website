@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchAuditLogs, fetchAuditLogsForOrder } from "../../services/admin";
 import type { OrderAuditLog } from "../../types/admin";
+import { getAuditStaffName } from "../../lib/adminPermissions";
 import { History, FileText } from "lucide-react";
 
 type AdminAuditLogProps = {
@@ -62,7 +63,7 @@ export function AdminAuditLog({ orderId, isGlobal = false }: AdminAuditLogProps)
                 </td>
               )}
               <td className="px-4 py-3 text-xs text-blue-200">
-                {log.admin_email}
+                {getAuditStaffName(log)}
               </td>
               <td className="px-4 py-3">
                 <span className="inline-flex rounded-full bg-white/10 px-2 py-1 text-xs font-bold text-white">
@@ -72,8 +73,8 @@ export function AdminAuditLog({ orderId, isGlobal = false }: AdminAuditLogProps)
               <td className="px-4 py-3 text-xs">
                 {log.action === "status_update" && (
                   <span className="text-gray-400">
-                    <span className="line-through">{log.previous_status || "unknown"}</span> 
-                    {" → "} 
+                    <span className="line-through">{log.previous_status || "unknown"}</span>
+                    {" → "}
                     <span className="font-bold text-white">{log.next_status}</span>
                   </span>
                 )}
