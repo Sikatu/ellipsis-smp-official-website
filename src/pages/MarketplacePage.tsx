@@ -31,6 +31,7 @@ const featuredProducts = [
     description: "Top premium rank with the strongest utility perks.",
     href: "/checkout?type=rank&product=ASCENDANT",
     badge: "Most Premium",
+    wideImage: true,
   },
   {
     name: "Stellar Vanguard Crate",
@@ -108,14 +109,15 @@ function MarketplacePage() {
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
         <div className="grid items-stretch gap-6 lg:grid-cols-[1.05fr_0.95fr]">
           <GlassPanel className="overflow-hidden p-0">
-            <div className="grid min-h-full gap-6 bg-gradient-to-br from-purple-950/55 via-black/50 to-yellow-950/20 p-6 sm:p-8 lg:grid-cols-[0.9fr_1.1fr] lg:p-10">
-              <div className="flex items-center justify-center rounded-[1.5rem] border border-yellow-400/20 bg-black/35 p-6">
+            <div className="grid min-h-full gap-6 bg-gradient-to-br from-purple-950/55 via-black/50 to-yellow-950/20 p-6 sm:p-8 lg:grid-cols-[0.95fr_1.05fr] lg:p-10">
+              <div className="relative flex min-h-[180px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-yellow-400/20 bg-black/35 p-6 sm:min-h-[220px] lg:min-h-full">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(250,204,21,0.16),transparent_55%)]" />
                 <img
                   src="/ranks/ascendant.png"
                   alt="ASCENDANT rank"
                   loading="lazy"
                   decoding="async"
-                  className="max-h-72 w-full object-contain drop-shadow-[0_0_45px_rgba(250,204,21,0.28)] [image-rendering:pixelated]"
+                  className="relative w-full max-w-[520px] scale-[1.85] object-contain drop-shadow-[0_0_45px_rgba(250,204,21,0.35)] [image-rendering:pixelated] sm:scale-[2.15] lg:scale-[2.35]"
                 />
               </div>
 
@@ -172,13 +174,19 @@ function MarketplacePage() {
               <Link key={product.name} to={product.href} className="group block">
                 <GlassPanel className="flex h-full min-h-[190px] flex-col p-4 transition group-hover:-translate-y-1 group-hover:border-purple-300/50 group-hover:bg-white/[0.08]">
                   <div className="flex items-start gap-4">
-                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-purple-500/20 bg-black/35 p-2">
+                    <div
+                      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-purple-500/20 bg-black/35 p-2 ${
+                        product.wideImage ? "h-20 w-32" : "h-20 w-20"
+                      }`}
+                    >
                       <img
                         src={product.image}
                         alt={product.name}
                         loading="lazy"
                         decoding="async"
-                        className="h-full w-full object-contain [image-rendering:pixelated]"
+                        className={`h-full w-full object-contain [image-rendering:pixelated] ${
+                          product.wideImage ? "scale-[1.75]" : ""
+                        }`}
                       />
                     </div>
                     <div className="min-w-0">
