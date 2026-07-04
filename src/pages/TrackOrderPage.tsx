@@ -112,7 +112,7 @@ function TrackOrderPage() {
                         : "border-purple-500/25 bg-black/30"
                     }`}
                   >
-                    <p className="font-black">{isComplete ? "âœ“ " : ""}{title}</p>
+                    <p className="font-black">{isComplete ? "Complete - " : ""}{title}</p>
                     <p className="mt-1 text-sm text-gray-300">{description}</p>
                   </div>
                 );

@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://ellipsissmp.com/</loc>
+    <loc>https://www.ellipsissmp.com/</loc>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://ellipsissmp.com/marketplace</loc>
+    <loc>https://www.ellipsissmp.com/marketplace</loc>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://ellipsissmp.com/vote</loc>
+    <loc>https://www.ellipsissmp.com/vote</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ellipsissmp.com/discord</loc>
+    <loc>https://www.ellipsissmp.com/discord</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ellipsissmp.com/about</loc>
+    <loc>https://www.ellipsissmp.com/about</loc>
     <priority>0.7</priority>
   </url>
 </urlset>

@@ -9,7 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { createCheckoutOrder } from "../services/orders";
 import { ranks } from "../data/ranks";
 import { crates, furniture, plushies } from "../data/storeItems";
@@ -141,16 +141,106 @@ const rankDetails = [
   },
 ];
 
+type CheckoutSelection = {
+  category: Category;
+  rank: string;
+  crate: string;
+  keyQuantity: KeyQuantity;
+};
+
+const defaultCheckoutSelection: CheckoutSelection = {
+  category: "Premium Ranks",
+  rank: rankDetails[0].name,
+  crate: crates[0]?.name || "",
+  keyQuantity: "1 key",
+};
+
+function normalizeParam(value: string | null) {
+  return (value || "").trim().toLowerCase();
+}
+
+function isKeyQuantity(value: string | null | undefined): value is KeyQuantity {
+  return keyQuantities.includes(value as KeyQuantity);
+}
+
+function getCheckoutSelectionFromSearch(search: string): CheckoutSelection {
+  const params = new URLSearchParams(search);
+  const product = normalizeParam(params.get("product"));
+  const type = normalizeParam(params.get("type") || params.get("category"));
+  const price = normalizeParam(params.get("price"));
+  const quantity = params.get("quantity") || params.get("keys");
+
+  const rank = rankDetails.find((item) => {
+    const name = item.name.toLowerCase();
+    return product === name || product.includes(name);
+  });
+
+  if (type.includes("rank") || rank) {
+    return {
+      ...defaultCheckoutSelection,
+      category: "Premium Ranks",
+      rank: rank?.name || defaultCheckoutSelection.rank,
+    };
+  }
+
+  const crate = crates.find((item) => {
+    const name = item.name.toLowerCase();
+    return product === name || product.includes(name);
+  });
+
+  if (type.includes("crate") || crate) {
+    const pricedQuantity = crate?.options.find(
+      (option) => option.price.toLowerCase() === price
+    )?.keys;
+
+    return {
+      ...defaultCheckoutSelection,
+      category: "Premium Crates",
+      crate: crate?.name || defaultCheckoutSelection.crate,
+      keyQuantity: isKeyQuantity(quantity)
+        ? quantity
+        : isKeyQuantity(pricedQuantity)
+          ? pricedQuantity
+          : "1 key",
+    };
+  }
+
+  if (
+    type.includes("furniture") ||
+    product.includes("furniture") ||
+    product.includes("ellipsis coins")
+  ) {
+    return {
+      ...defaultCheckoutSelection,
+      category: "Furnitures",
+    };
+  }
+
+  if (type.includes("plush") || product.includes("plush")) {
+    return {
+      ...defaultCheckoutSelection,
+      category: "Plushies",
+    };
+  }
+
+  return defaultCheckoutSelection;
+}
+
 function CheckoutPage() {
+  const location = useLocation();
+  const initialSelection = useMemo(
+    () => getCheckoutSelectionFromSearch(location.search),
+    [location.search]
+  );
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const resultRef = useRef<HTMLDivElement | null>(null);
 
   const [selectedCategory, setSelectedCategory] =
-    useState<Category>("Premium Ranks");
-  const [selectedRank, setSelectedRank] = useState(rankDetails[0].name);
-  const [selectedCrate, setSelectedCrate] = useState(crates[0]?.name || "");
+    useState<Category>(initialSelection.category);
+  const [selectedRank, setSelectedRank] = useState(initialSelection.rank);
+  const [selectedCrate, setSelectedCrate] = useState(initialSelection.crate);
   const [selectedKeyQuantity, setSelectedKeyQuantity] =
-    useState<KeyQuantity>("1 key");
+    useState<KeyQuantity>(initialSelection.keyQuantity);
   const [furnitureSlide, setFurnitureSlide] = useState(0);
   const [method, setMethod] = useState(paymentMethods[0]);
   const [minecraftIgn, setMinecraftIgn] = useState("");
@@ -370,6 +460,17 @@ function CheckoutPage() {
       resultRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [status]);
+
+  useEffect(() => {
+    const nextSelection = getCheckoutSelectionFromSearch(location.search);
+
+    setSelectedCategory(nextSelection.category);
+    setSelectedRank(nextSelection.rank);
+    setSelectedCrate(nextSelection.crate);
+    setSelectedKeyQuantity(nextSelection.keyQuantity);
+    setFurnitureSlide(0);
+    resetCheckoutState();
+  }, [location.search]);
 
   function clearReceiptUpload() {
     setReceiptFile(null);
@@ -1172,7 +1273,7 @@ function CheckoutPage() {
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-emerald-100/80">
                         Your order is now waiting for manual staff verification.
-                        Usual verification time is 5ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“30 minutes.
+                        Usual verification time is 5-30 minutes.
                       </p>
                     </div>
                   </div>
@@ -1218,7 +1319,7 @@ function CheckoutPage() {
                       Estimated verification time
                     </p>
                     <p className="mt-1 text-sm text-yellow-100/80">
-                      Usually within 5ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“30 minutes. Please keep your receipt until
+                      Usually within 5-30 minutes. Please keep your receipt until
                       your purchase is verified and delivered in-game.
                     </p>
                   </div>

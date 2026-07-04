@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /admin
 
-Sitemap: https://ellipsissmp.com/sitemap.xml
+Sitemap: https://www.ellipsissmp.com/sitemap.xml

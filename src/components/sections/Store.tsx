@@ -146,6 +146,19 @@ function Store() {
     selectedProduct.price ||
     "Price unavailable";
 
+  const checkoutPath = useMemo(() => {
+    const params = new URLSearchParams({
+      type: selectedProduct.type,
+      product: selectedProduct.name,
+    });
+
+    if (selectedProduct.type === "crate") {
+      params.set("quantity", selectedKeyBundle);
+    }
+
+    return `/checkout?${params.toString()}`;
+  }, [selectedKeyBundle, selectedProduct.name, selectedProduct.type]);
+
   function selectProduct(product: StoreProduct) {
     setSelectedProductId(product.id);
 
@@ -389,7 +402,7 @@ function Store() {
 
                     <div className="mt-8 grid gap-3 sm:grid-cols-2">
                       <Link
-                        to="/checkout"
+                        to={checkoutPath}
                         className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-4 text-sm font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.32)] transition hover:scale-[1.02]"
                       >
                         Make Payment

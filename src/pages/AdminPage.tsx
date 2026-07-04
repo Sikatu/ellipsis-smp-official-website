@@ -75,13 +75,15 @@ function AdminPage() {
     }
 
     setIsLoggedIn(true);
-    loadOrders();
   }
 
   async function logout() {
     await supabase.auth.signOut();
     setIsLoggedIn(false);
     setOrders([]);
+    setLastUpdated("");
+    setReceiptPreviewUrl("");
+    setReceiptPreviewLabel("");
   }
 
   async function updateOrderStatus(id: string, status: OrderStatus) {
@@ -177,11 +179,21 @@ function AdminPage() {
   }, [orders]);
 
   useEffect(() => {
+    let isMounted = true;
+
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
+      if (isMounted && data.session) {
         setIsLoggedIn(true);
       }
     });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
 
     loadOrders();
 
@@ -192,7 +204,7 @@ function AdminPage() {
     return () => {
       window.clearInterval(intervalId);
     };
-  }, []);
+  }, [isLoggedIn]);
 
   if (!isLoggedIn) {
     return (
