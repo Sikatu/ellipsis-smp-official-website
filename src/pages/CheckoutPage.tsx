@@ -1,5 +1,6 @@
 import {
   ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   Copy,
   Download,
@@ -38,6 +39,7 @@ const paymentMethods = [
 type Category = "Premium Ranks" | "Premium Crates" | "Furnitures" | "Plushies";
 type KeyQuantity = "1 key" | "3 keys" | "5 keys" | "10 keys";
 type Status = "idle" | "sending" | "success" | "error";
+type MobileCheckoutStep = "review" | "pay" | "claim";
 
 const categories: Category[] = [
   "Premium Ranks",
@@ -47,6 +49,12 @@ const categories: Category[] = [
 ];
 
 const keyQuantities: KeyQuantity[] = ["1 key", "3 keys", "5 keys", "10 keys"];
+
+const mobileCheckoutSteps: { id: MobileCheckoutStep; label: string }[] = [
+  { id: "review", label: "Review" },
+  { id: "pay", label: "Pay" },
+  { id: "claim", label: "Claim" },
+];
 
 const rankDetails = [
   {
@@ -234,7 +242,12 @@ function CheckoutPage() {
   );
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const resultRef = useRef<HTMLDivElement | null>(null);
+  const productSectionRef = useRef<HTMLElement | null>(null);
+  const paymentSectionRef = useRef<HTMLElement | null>(null);
+  const claimSectionRef = useRef<HTMLDivElement | null>(null);
 
+  const [mobileStep, setMobileStep] =
+    useState<MobileCheckoutStep>("review");
   const [selectedCategory, setSelectedCategory] =
     useState<Category>(initialSelection.category);
   const [selectedRank, setSelectedRank] = useState(initialSelection.rank);
@@ -428,10 +441,20 @@ function CheckoutPage() {
 
   const activeCheckoutStep = useMemo(() => {
     if (status === "success") return 3;
-    if (status === "sending" || canSubmit) return 2;
-    if (receiptFile || hasConfirmedPayment) return 2;
-    return 1;
-  }, [canSubmit, hasConfirmedPayment, receiptFile, status]);
+    if (mobileStep === "review") return 0;
+    if (mobileStep === "pay") return 1;
+    return 2;
+  }, [mobileStep, status]);
+
+  const mobilePrimaryLabel =
+    mobileStep === "review"
+      ? "Continue to Payment"
+      : mobileStep === "pay"
+        ? "Continue to Claim"
+        : submitLabel;
+
+  const isMobilePrimaryDisabled =
+    mobileStep === "claim" && (!canSubmit || status === "sending");
 
   useEffect(() => {
     if (!receiptFile) {
@@ -469,6 +492,7 @@ function CheckoutPage() {
     setSelectedCrate(nextSelection.crate);
     setSelectedKeyQuantity(nextSelection.keyQuantity);
     setFurnitureSlide(0);
+    setMobileStep("review");
     resetCheckoutState();
   }, [location.search]);
 
@@ -499,6 +523,7 @@ function CheckoutPage() {
     setSelectedCrate(crates[0]?.name || "");
     setSelectedKeyQuantity("1 key");
     setFurnitureSlide(0);
+    setMobileStep("review");
     resetCheckoutState();
   }
 
@@ -547,6 +572,38 @@ function CheckoutPage() {
     } catch {
       setCopiedOrderId(false);
     }
+  }
+
+  function goToMobileStep(step: MobileCheckoutStep) {
+    setMobileStep(step);
+
+    const targetRef =
+      step === "review"
+        ? productSectionRef
+        : step === "pay"
+          ? paymentSectionRef
+          : claimSectionRef;
+
+    window.requestAnimationFrame(() => {
+      targetRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
+
+  function handleMobilePrimaryAction() {
+    if (mobileStep === "review") {
+      goToMobileStep("pay");
+      return;
+    }
+
+    if (mobileStep === "pay") {
+      goToMobileStep("claim");
+      return;
+    }
+
+    void submitClaim();
   }
 
   function processReceiptFile(file: File | null) {
@@ -627,8 +684,34 @@ function CheckoutPage() {
           Back to Marketplace
         </Link>
 
+        <div className="mb-4 grid grid-cols-3 gap-2 lg:hidden">
+          {mobileCheckoutSteps.map((step, index) => {
+            const isActive = mobileStep === step.id;
+
+            return (
+              <button
+                key={step.id}
+                type="button"
+                onClick={() => goToMobileStep(step.id)}
+                className={`rounded-2xl border px-3 py-3 text-center text-[10px] font-black uppercase tracking-[0.12em] transition ${isActive
+                    ? "border-purple-200 bg-purple-500/25 text-white shadow-[0_0_24px_rgba(168,85,247,0.25)]"
+                    : "border-purple-500/20 bg-white/[0.04] text-purple-200"
+                  }`}
+              >
+                <span className="block text-[9px] text-purple-300/75">
+                  Step {index + 1}
+                </span>
+                {step.label}
+              </button>
+            );
+          })}
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:gap-8">
-          <section className="rounded-[1.75rem] border border-purple-500/25 bg-white/[0.06] p-4 shadow-[0_0_60px_rgba(168,85,247,0.18)] backdrop-blur-xl sm:rounded-[2rem] sm:p-6">
+          <section
+            ref={productSectionRef}
+            className={`rounded-[1.75rem] border border-purple-500/25 bg-white/[0.06] p-4 shadow-[0_0_60px_rgba(168,85,247,0.18)] backdrop-blur-xl sm:rounded-[2rem] sm:p-6 ${mobileStep !== "review" ? "hidden lg:block" : ""}`}
+          >
             <p className="text-sm font-black uppercase tracking-[0.25em] text-purple-300">
               Ellipsis SMP
             </p>
@@ -668,7 +751,132 @@ function CheckoutPage() {
               )}
             </div>
 
-            <div className="mt-8 overflow-hidden rounded-3xl border border-purple-500/20 bg-black/35">
+            <div className="mt-6 rounded-3xl border border-purple-500/20 bg-black/35 p-4 lg:hidden">
+              <div className="flex gap-4">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-purple-500/20 bg-black/45">
+                  {categoryBanner.src && (
+                    <img
+                      src={categoryBanner.src}
+                      alt={categoryBanner.alt}
+                      loading="eager"
+                      decoding="async"
+                      className="h-full w-full object-contain p-2 [image-rendering:pixelated]"
+                    />
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-purple-300">
+                    {productBadge}
+                  </p>
+                  <h2 className="mt-1 break-words text-xl font-black leading-tight text-white">
+                    {selectedProduct.name}
+                  </h2>
+                  <p className="mt-2 text-2xl font-black text-yellow-300">
+                    {selectedProduct.price}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-2">
+                {receiveItems.slice(0, 3).map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-center gap-2 rounded-2xl border border-purple-500/15 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-gray-200"
+                  >
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              <details className="mt-4 rounded-2xl border border-purple-500/20 bg-black/35 p-4">
+                <summary className="cursor-pointer text-sm font-black uppercase tracking-[0.16em] text-purple-200">
+                  Change Purchase
+                </summary>
+
+                <div className="mt-4 grid gap-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    {categories.map((category) => (
+                      <button
+                        key={category}
+                        type="button"
+                        onClick={() => resetPurchase(category)}
+                        className={`rounded-2xl border px-3 py-3 text-xs font-black transition ${selectedCategory === category
+                            ? "border-purple-300 bg-purple-500/20 text-white"
+                            : "border-purple-500/20 bg-black/35 text-gray-300"
+                          }`}
+                      >
+                        {category}
+                      </button>
+                    ))}
+                  </div>
+
+                  {selectedCategory === "Premium Ranks" && (
+                    <label className="text-xs font-black uppercase tracking-[0.16em] text-purple-300">
+                      Rank
+                      <select
+                        value={selectedRank}
+                        onChange={(event) => updateRank(event.target.value)}
+                        className="mt-2 w-full rounded-xl border border-purple-500/25 bg-black/60 px-4 py-3 font-bold text-white outline-none focus:border-purple-300"
+                      >
+                        {rankDetails.map((rank) => (
+                          <option key={rank.name} value={rank.name}>
+                            {rank.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+
+                  {selectedCategory === "Premium Crates" && (
+                    <div>
+                      <label className="text-xs font-black uppercase tracking-[0.16em] text-purple-300">
+                        Crate
+                        <select
+                          value={selectedCrate}
+                          onChange={(event) => updateCrate(event.target.value)}
+                          className="mt-2 w-full rounded-xl border border-purple-500/25 bg-black/60 px-4 py-3 font-bold text-white outline-none focus:border-purple-300"
+                        >
+                          {crates.map((crate) => (
+                            <option key={crate.name} value={crate.name}>
+                              {crate.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        {keyQuantities.map((quantity) => (
+                          <button
+                            key={quantity}
+                            type="button"
+                            onClick={() => updateKeyQuantity(quantity)}
+                            className={`rounded-xl border px-3 py-3 text-sm font-black transition ${selectedKeyQuantity === quantity
+                                ? "border-blue-300 bg-blue-500/20 text-blue-100"
+                                : "border-purple-500/25 bg-black/40 text-gray-300"
+                              }`}
+                          >
+                            {quantity}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </details>
+
+              <button
+                type="button"
+                onClick={() => goToMobileStep("pay")}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-4 text-sm font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.32)]"
+              >
+                Continue to Payment
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-8 hidden overflow-hidden rounded-3xl border border-purple-500/20 bg-black/35 lg:block">
               <div className="relative flex min-h-[180px] items-center justify-center overflow-hidden border-b border-purple-500/20 bg-gradient-to-br from-black via-purple-950/30 to-black p-4 sm:min-h-[220px] sm:p-5">
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" />
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.22),transparent_55%)]" />
@@ -884,7 +1092,7 @@ function CheckoutPage() {
               </div>
             </div>
 
-            <div className="mt-6 rounded-3xl border border-green-400/20 bg-green-400/10 p-4 text-sm text-green-200 sm:p-5">
+            <div className="mt-6 hidden rounded-3xl border border-green-400/20 bg-green-400/10 p-4 text-sm text-green-200 sm:p-5 lg:block">
               <div className="flex items-center gap-2 font-black">
                 <ShieldCheck className="h-5 w-5" />
                 Manual Verification
@@ -897,7 +1105,10 @@ function CheckoutPage() {
             </div>
           </section>
 
-          <section className="rounded-[1.75rem] border border-purple-500/25 bg-white/[0.06] p-4 shadow-[0_0_55px_rgba(59,130,246,0.12)] backdrop-blur-xl sm:rounded-[2rem] sm:p-6">
+          <section
+            ref={paymentSectionRef}
+            className={`rounded-[1.75rem] border border-purple-500/25 bg-white/[0.06] p-4 shadow-[0_0_55px_rgba(59,130,246,0.12)] backdrop-blur-xl sm:rounded-[2rem] sm:p-6 ${mobileStep === "review" ? "hidden lg:block" : ""}`}
+          >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-purple-300">
@@ -922,6 +1133,7 @@ function CheckoutPage() {
               </div>
             </div>
 
+            <div className={mobileStep === "claim" ? "hidden lg:block" : ""}>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {paymentMethods.map((item) => (
                 <button
@@ -1046,7 +1258,20 @@ function CheckoutPage() {
               </div>
             </div>
 
-            <div className="mt-6 grid gap-3 sm:gap-4">
+            <button
+              type="button"
+              onClick={() => goToMobileStep("claim")}
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-4 text-sm font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.32)] lg:hidden"
+            >
+              Continue to Submit Proof
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            </div>
+
+            <div
+              ref={claimSectionRef}
+              className={`mt-6 gap-3 sm:gap-4 ${mobileStep === "claim" ? "grid" : "hidden lg:grid"}`}
+            >
               <div className="rounded-3xl border border-purple-500/20 bg-black/45 p-5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
@@ -1404,22 +1629,30 @@ function CheckoutPage() {
           </div>
         )}
 
-        <div className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-40 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-purple-500/30 bg-[#080019]/95 p-3 shadow-[0_0_35px_rgba(168,85,247,0.35)] backdrop-blur-xl sm:p-4 lg:hidden">
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-300">
-                Selected Product
-              </p>
-              <p className="line-clamp-1 text-sm font-black text-white">
-                {selectedProduct.name}
-              </p>
-            </div>
+        {status !== "success" && (
+          <div className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-40 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-purple-500/30 bg-[#080019]/95 p-3 shadow-[0_0_35px_rgba(168,85,247,0.35)] backdrop-blur-xl sm:p-4 lg:hidden">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-purple-300">
+                  {selectedProduct.price}
+                </p>
+                <p className="line-clamp-1 text-sm font-black text-white">
+                  {selectedProduct.name}
+                </p>
+              </div>
 
-            <p className="shrink-0 text-right text-lg font-black text-yellow-300">
-              {selectedProduct.price}
-            </p>
+              <button
+                type="button"
+                onClick={handleMobilePrimaryAction}
+                disabled={isMobilePrimaryDisabled}
+                className="inline-flex min-w-[138px] shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-3 text-xs font-black text-white shadow-[0_0_24px_rgba(168,85,247,0.28)] transition disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {mobilePrimaryLabel}
+                {mobileStep !== "claim" && <ArrowRight className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </main>
   );
