@@ -2,6 +2,8 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
   CheckCircle2,
+  Clock3,
+  HelpCircle,
   Package,
   Search,
   ShieldCheck,
@@ -50,6 +52,24 @@ const rankDescriptions: Record<string, string> = {
   ASCENDANT:
     "The top premium rank with the strongest perks, complete shop access, utility commands, and unlimited fly.",
 };
+
+const buyerNotes = [
+  {
+    icon: ShieldCheck,
+    title: "Verified by staff",
+    text: "Receipt-based checkout keeps purchases trackable before delivery.",
+  },
+  {
+    icon: Clock3,
+    title: "Manual delivery",
+    text: "Items are delivered after staff confirms the receipt and username.",
+  },
+  {
+    icon: HelpCircle,
+    title: "Need help?",
+    text: "Use Discord support if the receipt, username, or order needs review.",
+  },
+];
 
 function Store() {
   const shouldReduceMotion = useReducedMotion();
@@ -190,15 +210,39 @@ function Store() {
       <div className="relative mx-auto max-w-7xl">
         <SectionHeader
           eyebrow="Marketplace Catalog"
-          title="Browse first. Expand when ready."
-          description="Tap any product to preview it, or use Buy Now to go straight to checkout."
+          title="Browse, compare, then buy with confidence."
+          description="Tap a product to preview it, pick crate quantities before checkout, or use Buy Now when you already know what you want."
         />
+
+        <div className="mb-6 grid gap-3 md:grid-cols-3">
+          {buyerNotes.map((note) => {
+            const Icon = note.icon;
+
+            return (
+              <GlassPanel key={note.title} className="p-4">
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/15 text-purple-200">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-white">
+                      {note.title}
+                    </h3>
+                    <p className="mt-1 text-xs leading-5 text-gray-300">
+                      {note.text}
+                    </p>
+                  </div>
+                </div>
+              </GlassPanel>
+            );
+          })}
+        </div>
 
         <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <GlassPanel className="flex items-center gap-3 px-4 py-3 lg:min-w-[360px]">
             <Search className="h-5 w-5 text-purple-300" />
             <p className="text-sm font-bold text-gray-300">
-              Mobile buyers can check out directly from each product card.
+              Mobile buyers can buy directly from each product card or use the sticky selected item.
             </p>
           </GlassPanel>
 
@@ -538,6 +582,11 @@ function Store() {
                         Manual Delivery
                       </div>
                     </div>
+
+                    <p className="mt-4 rounded-2xl border border-yellow-400/20 bg-yellow-400/10 px-4 py-3 text-sm leading-6 text-yellow-100">
+                      After payment, upload your receipt in checkout and staff
+                      will verify the order before delivery.
+                    </p>
                   </div>
                 </div>
               </GlassPanel>

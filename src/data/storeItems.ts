@@ -58,9 +58,9 @@ export const furniture = {
     obtain:
         "Furniture can be obtained using Ellipsis Coins from the vending machine or through store purchase.",
     reminder: "You can check them by doing /warp trades.",
-    disclaimer: "Mostly it has technical issues for Bedrock players.",
+    disclaimer: "Some furniture may have technical issues for Bedrock players.",
     howToBuy:
-        "Open a store ticket in 🧩〣ᴛɪᴄᴋᴇᴛ and select the Buy/Donate button.",
+        "Open a store ticket in Discord and select the Buy/Donate button.",
     packs: [
         {
             name: "Cherry Blossom Pack",
@@ -105,8 +105,8 @@ export const plushies = {
     price: "PHP 50 = 5 Plushie Keys",
     image: "/plushies/nogs-megapack.webp",
     description:
-        "Decorate your world with collectible plushies from Volumes I–VII, bonus variants, and the MEGA Pack.",
-    includes: ["Collectible plushies", "Volumes I–VII + Bonus Variants MEGA Pack"],
+        "Decorate your world with collectible plushies from Volumes I-VII, bonus variants, and the MEGA Pack.",
+    includes: ["Collectible plushies", "Volumes I-VII + Bonus Variants MEGA Pack"],
     bestFor:
         "Collectors and players who love cute cosmetic decorations for their base.",
     obtain:
@@ -115,5 +115,5 @@ export const plushies = {
         "Some plushies may not be visible to Bedrock players depending on resource pack and client support.",
     reminder: "You can check them by doing /warp trades.",
     howToBuy:
-        "Open a store ticket in 🧩〣ᴛɪᴄᴋᴇᴛ and select the Buy/Donate button.",
+        "Open a store ticket in Discord and select the Buy/Donate button.",
 };
