@@ -25,6 +25,7 @@ import {
   subscribeToOrders,
   updateOrderStatus,
   updateStaffNotesDb,
+  notifyDiscordOrderAction,
 } from "../services/admin";
 import type {
   AccessState,
@@ -170,16 +171,51 @@ function AdminPage() {
 
   async function handleUpdateStatus(id: string, status: OrderStatus) {
     setMessage("");
-    const currentOrder = orders.find(o => o.id === id);
-    if (!currentOrder) return { error: new Error("Order not found"), warning: null };
 
-    const { error, warning } = await updateOrderStatus(id, currentOrder.status, status, adminProfile?.role, session, adminProfile);
+    const currentOrder = orders.find((order) => order.id === id);
+    if (!currentOrder) {
+      return { error: new Error("Order not found"), warning: null };
+    }
+
+    const previousStatus = currentOrder.status;
+
+    const { error, warning } = await updateOrderStatus(
+      id,
+      previousStatus,
+      status,
+      adminProfile?.role,
+      session,
+      adminProfile
+    );
+
     if (error) {
       setMessage(error.message);
+      return { error, warning };
     }
-    return { error, warning };
-  }
 
+    const notifyResult = await notifyDiscordOrderAction(
+      currentOrder,
+      status,
+      previousStatus,
+      session,
+      adminProfile
+    );
+
+    const discordWarning = notifyResult.error
+      ? `Order updated, but Discord notification failed: ${notifyResult.error.message}`
+      : null;
+
+    const finalWarning =
+      warning && discordWarning
+        ? `${warning} ${discordWarning}`
+        : warning || discordWarning;
+
+    if (finalWarning) {
+      setMessage(finalWarning);
+    }
+
+    return { error: null, warning: finalWarning };
+  }
   async function handleSaveNotes(notes: string) {
     if (!editingNotesOrder) return;
     const { error } = await updateStaffNotesDb(
@@ -510,4 +546,6 @@ function AdminPage() {
 }
 
 export default AdminPage;
+
+
 

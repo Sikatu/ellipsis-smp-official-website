@@ -1,4 +1,4 @@
-import type { Session } from "@supabase/supabase-js";
+﻿import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import type { AdminProfile, Order, OrderStatus, AdminRole, OrderAuditLog } from "../types/admin";
 import { canManageOrders, canApproveStaff } from "../lib/adminPermissions";
@@ -196,3 +196,47 @@ export function subscribeToOrders(callback: () => void, onError?: (err: any) => 
     supabase.removeChannel(channel);
   };
 }
+
+export async function notifyDiscordOrderAction(
+  order: Order,
+  status: OrderStatus,
+  previousStatus: OrderStatus,
+  session: Session | null,
+  adminProfile: AdminProfile | null
+) {
+  if (!session?.access_token) {
+    return { error: new Error("Missing admin session token.") };
+  }
+
+  const response = await fetch("/api/admin-order-notification", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({
+      orderId: order.payment_reference || order.id,
+      ign: order.minecraft_username,
+      discord: order.discord_username || "N/A",
+      product: order.product_name,
+      price: order.product_price,
+      paymentMethod: order.payment_method,
+      previousStatus,
+      status,
+      handledBy:
+        adminProfile?.display_name?.trim() ||
+        adminProfile?.email?.split("@")[0] ||
+        "Staff",
+    }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    return {
+      error: new Error(data?.error || "Discord notification failed."),
+    };
+  }
+
+  return { error: null };
+}
+
