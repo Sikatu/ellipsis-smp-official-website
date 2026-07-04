@@ -6,9 +6,9 @@ const featuredItems = [
     {
         icon: Newspaper,
         label: "Latest Update",
-        title: "Official Website Upgrade",
+        title: "Official Website 3.0",
         description:
-            "Ellipsis SMP now has a dedicated official website for server info, store access, voting, Discord, and support.",
+            "Ellipsis SMP now has a clearer official hub for joining, server info, store access, voting, Discord, and support.",
     },
     {
         icon: CalendarDays,
@@ -39,7 +39,7 @@ function Featured() {
             <div className="mx-auto max-w-7xl">
                 <SectionTitle
                     label="Featured"
-                    title="What’s Happening on Ellipsis SMP"
+                    title="What's Happening on Ellipsis SMP"
                     description="Stay updated with server highlights, community features, and current promotions."
                     accent="gold"
                 />

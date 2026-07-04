@@ -21,22 +21,22 @@ const featureCards = [
   {
     icon: Swords,
     title: "Crossplay",
-    text: "Play together on Java & Bedrock.",
+    text: "Java and Bedrock players on one official server.",
   },
   {
     icon: Users,
     title: "Active Community",
-    text: "Friendly players, active staff, and events.",
+    text: "Discord support, staff help, events, and announcements.",
   },
   {
     icon: Box,
     title: "Custom Content",
-    text: "Custom items, cosmetics, and unique systems.",
+    text: "Custom End content, cosmetics, crates, and progression.",
   },
   {
     icon: Star,
     title: "Daily Rewards",
-    text: "Vote, play, and earn rewards.",
+    text: "Vote daily, play consistently, and grow with the server.",
   },
 ];
 
@@ -139,16 +139,17 @@ function Hero() {
             <div className="h-px w-24 bg-gradient-to-l from-transparent to-purple-400/70" />
           </div>
 
-          <h1 className="mt-6 text-4xl font-black uppercase leading-[0.95] sm:text-6xl lg:text-7xl">
-            Adventure. Community.
+          <h1 className="mt-6 text-5xl font-black uppercase leading-[0.95] sm:text-7xl lg:text-8xl">
+            Ellipsis SMP
             <span className="block bg-gradient-to-r from-purple-300 via-fuchsia-300 to-blue-300 bg-clip-text text-transparent">
-              Legends.
+              Official Server
             </span>
           </h1>
 
           <p className="mt-6 max-w-2xl text-base leading-8 text-gray-200 sm:text-lg">
-            A crossplay Minecraft SMP built for adventure, community, custom
-            content, cosmetics, and long-term progression.
+            The official home for the Ellipsis crossplay Minecraft SMP: live
+            status, joining info, marketplace, voting, Discord, support, and
+            server updates in one place.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -158,7 +159,7 @@ function Hero() {
               className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-4 text-sm font-black text-white shadow-[0_0_35px_rgba(168,85,247,0.45)] transition hover:scale-[1.03]"
             >
               <Box className="h-5 w-5" />
-              {copied ? "IP Copied" : "Play Now"}
+              {copied ? "IP Copied" : "Copy Server IP"}
             </button>
 
             <a
@@ -176,7 +177,7 @@ function Hero() {
               className="inline-flex items-center justify-center gap-3 rounded-2xl border border-purple-400/40 bg-black/35 px-8 py-4 text-sm font-black text-white backdrop-blur-xl transition hover:scale-[1.03] hover:bg-white/[0.08]"
             >
               <Heart className="h-5 w-5 text-purple-300" />
-              Support Server
+              Marketplace
             </Link>
           </div>
 
