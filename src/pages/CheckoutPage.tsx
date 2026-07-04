@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { createCheckoutOrder } from "../services/orders";
 import { ranks } from "../data/ranks";
 import { crates, furniture, plushies } from "../data/storeItems";
 
@@ -478,19 +479,6 @@ function CheckoutPage() {
     setReceiptFile(file);
   }
 
-  function fileToBase64(file: File) {
-    return new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        resolve(String(reader.result).split(",")[1]);
-      };
-
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
   async function submitClaim() {
     if (!canSubmit || !receiptFile) return;
 
@@ -499,32 +487,25 @@ function CheckoutPage() {
     setOrderId("");
 
     try {
-      const receiptBase64 = await fileToBase64(receiptFile);
-
-      const response = await fetch("/api/payment-claim", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          product: selectedProduct.name,
-          productType: selectedProduct.type,
-          productDescription: selectedProduct.description,
-          price: selectedProduct.price,
-          method: method.label,
-          minecraftIgn,
-          discordUsername,
-          receiptBase64,
-          receiptFileName: receiptFile.name,
-          receiptMimeType: receiptFile.type,
-        }),
+      const createdOrderId = await createCheckoutOrder({
+        customerName: minecraftIgn.trim(),
+        minecraftUsername: minecraftIgn.trim(),
+        discordUsername: discordUsername.trim(),
+        productId: `${selectedProduct.type}-${selectedProduct.name}`
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-"),
+        productName: selectedProduct.name,
+        productCategory: selectedProduct.type,
+        productPrice: selectedProduct.price,
+        quantity:
+          selectedCategory === "Premium Crates"
+            ? selectedKeyQuantity
+            : null,
+        paymentMethod: method.label,
+        receiptFile,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.error || "Failed to submit payment claim.");
-      }
-
-      const data = await response.json();
-      setOrderId(data.orderId || "");
+      setOrderId(createdOrderId);
       setStatus("success");
     } catch (error) {
       setSubmitError(
@@ -1191,7 +1172,7 @@ function CheckoutPage() {
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-emerald-100/80">
                         Your order is now waiting for manual staff verification.
-                        Usual verification time is 5–30 minutes.
+                        Usual verification time is 5ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“30 minutes.
                       </p>
                     </div>
                   </div>
@@ -1223,12 +1204,21 @@ function CheckoutPage() {
                     </div>
                   )}
 
+                  {orderId && (
+                    <Link
+                      to={`/track?order=${orderId}`}
+                      className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-3 text-sm font-black text-white hover:opacity-90"
+                    >
+                      Track This Order
+                    </Link>
+                  )}
+
                   <div className="mt-5 rounded-2xl border border-yellow-300/25 bg-yellow-300/10 p-4">
                     <p className="text-sm font-black text-yellow-100">
                       Estimated verification time
                     </p>
                     <p className="mt-1 text-sm text-yellow-100/80">
-                      Usually within 5–30 minutes. Please keep your receipt until
+                      Usually within 5ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“30 minutes. Please keep your receipt until
                       your purchase is verified and delivered in-game.
                     </p>
                   </div>

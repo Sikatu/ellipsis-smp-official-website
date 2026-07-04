@@ -41,16 +41,22 @@ const categoryFilters: { id: ProductCategory | "All"; label: string }[] = [
 
 const rankDescriptions: Record<string, string> = {
   NEON: "A clean starter upgrade for players who want essential convenience and early premium access.",
-  AETHER: "A flexible premium rank for players who want more homes, more utilities, and expanded shop access.",
-  TITAN: "Built for dedicated players who want stronger convenience, more warps, and better trading flexibility.",
-  OVERCLOCK: "A high-tier upgrade for active players who want repair access, feed, and stronger shop coverage.",
-  ASCENDANT: "The top premium rank with the strongest perks, complete shop access, utility commands, and unlimited fly.",
+  AETHER:
+    "A flexible premium rank for players who want more homes, more utilities, and expanded shop access.",
+  TITAN:
+    "Built for dedicated players who want stronger convenience, more warps, and better trading flexibility.",
+  OVERCLOCK:
+    "A high-tier upgrade for active players who want repair access, feed, and stronger shop coverage.",
+  ASCENDANT:
+    "The top premium rank with the strongest perks, complete shop access, utility commands, and unlimited fly.",
 };
 
 function Store() {
   const shouldReduceMotion = useReducedMotion();
-  const [activeFilter, setActiveFilter] = useState<ProductCategory | "All">("All");
-  const [selectedProductId, setSelectedProductId] = useState("rank-ascendant");
+  const [activeFilter, setActiveFilter] =
+    useState<ProductCategory | "All">("All");
+  const [selectedProductId, setSelectedProductId] =
+    useState("rank-ascendant");
   const [selectedKeyBundle, setSelectedKeyBundle] = useState("1 key");
 
   const products = useMemo<StoreProduct[]>(() => {
@@ -62,7 +68,9 @@ function Store() {
       price: rank.price,
       image: rank.image,
       eyebrow: "Premium Rank",
-      description: rankDescriptions[rank.name] || "Premium monthly rank upgrade for Ellipsis SMP.",
+      description:
+        rankDescriptions[rank.name] ||
+        "Premium monthly rank upgrade for Ellipsis SMP.",
       perks: rank.perks,
       badge: rank.badge,
     }));
@@ -75,7 +83,8 @@ function Store() {
       price: crate.options[0]?.price || "Price unavailable",
       image: crate.image,
       eyebrow: "Premium Crate",
-      description: "Choose a key bundle, pay the exact amount, and claim your crate keys after staff verification.",
+      description:
+        "Choose a key bundle, pay the exact amount, and claim your crate keys after staff verification.",
       perks: crate.options.map((option) => `${option.keys} - ${option.price}`),
     }));
 
@@ -87,7 +96,8 @@ function Store() {
       price: "PHP 50",
       image: furniture.packs[0]?.image || "",
       eyebrow: "Furniture Currency",
-      description: "Purchase Ellipsis Coins and use them in-game at /warp trades to choose the furniture you want.",
+      description:
+        "Purchase Ellipsis Coins and use them in-game at /warp trades to choose the furniture you want.",
       perks: [
         "PHP 50 = 10 Ellipsis Coins",
         "Used at /warp trades",
@@ -104,7 +114,8 @@ function Store() {
       price: "PHP 50",
       image: plushies.image,
       eyebrow: "Collectible Keys",
-      description: "Purchase Plushie Keys and unlock adorable plushies in-game.",
+      description:
+        "Purchase Plushie Keys and unlock adorable plushies in-game.",
       perks: [
         "PHP 50 = 5 Plushie Keys",
         "Unlock collectible plushies",
@@ -125,13 +136,14 @@ function Store() {
     products.find((product) => product.id === selectedProductId) || products[0];
 
   const selectedCrate =
-    selectedProduct?.type === "crate"
+    selectedProduct.type === "crate"
       ? crates.find((crate) => selectedProduct.name === crate.name)
       : null;
 
   const selectedCratePrice =
-    selectedCrate?.options.find((option) => option.keys === selectedKeyBundle)?.price ||
-    selectedProduct?.price ||
+    selectedCrate?.options.find((option) => option.keys === selectedKeyBundle)
+      ?.price ||
+    selectedProduct.price ||
     "Price unavailable";
 
   function selectProduct(product: StoreProduct) {
@@ -143,7 +155,10 @@ function Store() {
   }
 
   return (
-    <section id="store" className="relative overflow-hidden px-4 py-20 text-white sm:px-6 sm:py-24">
+    <section
+      id="store"
+      className="relative overflow-hidden px-4 py-20 text-white sm:px-6 sm:py-24"
+    >
       <div className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-80 max-w-5xl rounded-full bg-purple-600/20 blur-[120px]" />
       <div className="pointer-events-none absolute bottom-20 right-0 h-80 w-80 rounded-full bg-blue-600/20 blur-[110px]" />
 
@@ -168,11 +183,10 @@ function Store() {
                 key={filter.id}
                 type="button"
                 onClick={() => setActiveFilter(filter.id)}
-                className={`rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
-                  activeFilter === filter.id
+                className={`rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${activeFilter === filter.id
                     ? "border-purple-300 bg-purple-500/20 text-purple-100 shadow-[0_0_22px_rgba(168,85,247,0.2)]"
                     : "border-purple-500/20 bg-white/[0.04] text-gray-300 hover:border-purple-300/40 hover:bg-white/[0.08]"
-                }`}
+                  }`}
               >
                 {filter.label}
               </button>
@@ -191,11 +205,10 @@ function Store() {
                   type="button"
                   layout
                   onClick={() => selectProduct(product)}
-                  className={`group flex w-full items-center gap-4 rounded-[1.5rem] border p-3 text-left transition ${
-                    isActive
+                  className={`group flex w-full items-center gap-4 rounded-[1.5rem] border p-3 text-left transition ${isActive
                       ? "border-purple-300/60 bg-purple-500/15 shadow-[0_0_35px_rgba(168,85,247,0.24)]"
                       : "border-purple-500/20 bg-white/[0.045] hover:border-purple-300/40 hover:bg-white/[0.075]"
-                  }`}
+                    }`}
                 >
                   <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-purple-500/20 bg-black/40">
                     <img
@@ -223,16 +236,16 @@ function Store() {
                     </h3>
 
                     <p className="mt-1 text-sm font-black text-yellow-300">
-                      {product.type === "crate" && selectedProduct.id === product.id
+                      {product.type === "crate" &&
+                        selectedProduct.id === product.id
                         ? selectedCratePrice
                         : product.price}
                     </p>
                   </div>
 
                   <ArrowRight
-                    className={`h-5 w-5 shrink-0 text-purple-300 transition ${
-                      isActive ? "translate-x-1" : "group-hover:translate-x-1"
-                    }`}
+                    className={`h-5 w-5 shrink-0 text-purple-300 transition ${isActive ? "translate-x-1" : "group-hover:translate-x-1"
+                      }`}
                   />
                 </motion.button>
               );
@@ -249,13 +262,27 @@ function Store() {
               className="lg:sticky lg:top-28 lg:self-start"
             >
               <GlassPanel className="overflow-hidden">
-                <div className="grid gap-0 xl:grid-cols-[0.95fr_1.05fr]">
-                  <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden bg-gradient-to-br from-purple-950/40 via-black/50 to-blue-950/30 p-8">
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.22),transparent_42%)]" />
-                    <img
+                <div className="relative">
+                  <div className="relative flex min-h-[280px] items-center justify-center overflow-hidden border-b border-purple-500/20 bg-gradient-to-br from-purple-950/50 via-black/70 to-blue-950/40 p-8 sm:min-h-[320px]">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.24),transparent_45%)]" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                    <motion.img
+                      key={selectedProduct.image}
                       src={selectedProduct.image}
                       alt={selectedProduct.name}
-                      className="relative max-h-[300px] w-full object-contain drop-shadow-[0_0_40px_rgba(168,85,247,0.55)] [image-rendering:pixelated]"
+                      initial={
+                        shouldReduceMotion
+                          ? false
+                          : { opacity: 0, scale: 1.04 }
+                      }
+                      animate={
+                        shouldReduceMotion
+                          ? undefined
+                          : { opacity: 1, scale: 1 }
+                      }
+                      transition={{ duration: 0.45, ease: "easeOut" }}
+                      className="relative max-h-[260px] w-full object-contain drop-shadow-[0_0_45px_rgba(168,85,247,0.6)] [image-rendering:pixelated] sm:max-h-[300px]"
                     />
                   </div>
 
@@ -270,6 +297,12 @@ function Store() {
                         <ShieldCheck className="h-3.5 w-3.5" />
                         Staff Verified
                       </span>
+
+                      {selectedProduct.badge && (
+                        <span className="inline-flex rounded-full border border-yellow-400/25 bg-yellow-400/10 px-3 py-1.5 text-xs font-black uppercase tracking-[0.16em] text-yellow-200">
+                          {selectedProduct.badge}
+                        </span>
+                      )}
                     </div>
 
                     <h2 className="mt-5 text-4xl font-black leading-tight text-white md:text-5xl">
@@ -277,41 +310,66 @@ function Store() {
                     </h2>
 
                     <p className="mt-4 text-4xl font-black text-yellow-300">
-                      {selectedProduct.type === "crate" ? selectedCratePrice : selectedProduct.price}
+                      {selectedProduct.type === "crate"
+                        ? selectedCratePrice
+                        : selectedProduct.price}
                     </p>
 
                     <p className="mt-5 text-sm leading-7 text-gray-300 md:text-base">
                       {selectedProduct.description}
                     </p>
 
+                    <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                      {[
+                        "Manual Verification",
+                        "Secure Checkout",
+                        "Staff Delivery",
+                      ].map((item) => (
+                        <div
+                          key={item}
+                          className="flex items-center gap-2 rounded-2xl border border-purple-500/15 bg-white/[0.04] px-3 py-3 text-xs font-black uppercase tracking-[0.12em] text-purple-100"
+                        >
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+
                     {selectedProduct.type === "crate" && selectedCrate && (
-                      <div className="mt-6">
+                      <div className="mt-7">
                         <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-blue-300">
                           Key Quantity
                         </p>
+
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                          {selectedCrate.options.map((option) => (
-                            <button
-                              key={option.keys}
-                              type="button"
-                              onClick={() => setSelectedKeyBundle(option.keys)}
-                              className={`rounded-2xl border px-3 py-3 text-sm font-black transition ${
-                                selectedKeyBundle === option.keys
-                                  ? "border-blue-300 bg-blue-500/20 text-blue-100"
-                                  : "border-purple-500/20 bg-black/30 text-gray-300 hover:bg-white/[0.08]"
-                              }`}
-                            >
-                              <span className="block">{option.keys}</span>
-                              <span className="mt-1 block text-xs text-yellow-300">
-                                {option.price}
-                              </span>
-                            </button>
-                          ))}
+                          {selectedCrate.options.map((option) => {
+                            const isSelected =
+                              selectedKeyBundle === option.keys;
+
+                            return (
+                              <button
+                                key={option.keys}
+                                type="button"
+                                onClick={() => setSelectedKeyBundle(option.keys)}
+                                className={`rounded-2xl border px-3 py-4 text-left transition ${isSelected
+                                    ? "scale-[1.02] border-blue-300 bg-blue-500/20 text-blue-100 shadow-[0_0_24px_rgba(59,130,246,0.22)]"
+                                    : "border-purple-500/20 bg-black/30 text-gray-300 hover:border-blue-300/40 hover:bg-white/[0.08]"
+                                  }`}
+                              >
+                                <span className="block text-sm font-black uppercase">
+                                  {option.keys}
+                                </span>
+                                <span className="mt-1 block text-xs font-black text-yellow-300">
+                                  {option.price}
+                                </span>
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
 
-                    <div className="mt-6">
+                    <div className="mt-7">
                       <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-purple-300">
                         Included Details
                       </p>
@@ -320,7 +378,7 @@ function Store() {
                         {selectedProduct.perks.map((perk) => (
                           <div
                             key={perk}
-                            className="flex items-center gap-2 rounded-2xl border border-purple-500/15 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-gray-200"
+                            className="flex items-center gap-2 rounded-2xl border border-purple-500/15 bg-white/[0.04] px-3 py-2.5 text-sm font-semibold text-gray-200"
                           >
                             <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
                             <span>{perk}</span>
@@ -329,7 +387,7 @@ function Store() {
                       </div>
                     </div>
 
-                    <div className="mt-7 grid gap-3 sm:grid-cols-2">
+                    <div className="mt-8 grid gap-3 sm:grid-cols-2">
                       <Link
                         to="/checkout"
                         className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-4 text-sm font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.32)] transition hover:scale-[1.02]"
@@ -354,7 +412,8 @@ function Store() {
           <div className="flex flex-col items-center justify-center gap-2 sm:flex-row">
             <Sparkles className="h-5 w-5 text-yellow-300" />
             <p>
-              Browse here first, then complete payment through secure checkout with receipt-based staff verification.
+              Browse here first, then complete payment through secure checkout
+              with receipt-based staff verification.
             </p>
           </div>
         </div>
