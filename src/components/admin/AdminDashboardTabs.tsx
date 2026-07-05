@@ -1,6 +1,7 @@
 ﻿import {
   BarChart3,
   History,
+  LayoutDashboard,
   PackageCheck,
   Settings,
   ShieldCheck,
@@ -10,6 +11,7 @@
 import type { LucideIcon } from "lucide-react";
 
 export type AdminTab =
+  | "overview"
   | "orders"
   | "players"
   | "minecraft"
@@ -29,6 +31,7 @@ const tabs: Array<{
   accent: string;
   icon: LucideIcon;
 }> = [
+  { label: "Command Center", value: "overview", accent: "pink", icon: LayoutDashboard },
   { label: "Orders", value: "orders", accent: "purple", icon: PackageCheck },
   { label: "Players", value: "players", accent: "emerald", icon: UsersRound },
   { label: "Minecraft Queue", value: "minecraft", accent: "yellow", icon: Terminal },
@@ -39,6 +42,7 @@ const tabs: Array<{
 ];
 
 function activeClass(accent: string) {
+  if (accent === "pink") return "border-pink-400 text-pink-300";
   if (accent === "emerald") return "border-emerald-400 text-emerald-300";
   if (accent === "yellow") return "border-yellow-400 text-yellow-300";
   if (accent === "cyan") return "border-cyan-400 text-cyan-300";
