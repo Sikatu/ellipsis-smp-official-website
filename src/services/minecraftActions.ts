@@ -14,11 +14,27 @@ function getPlayerKey(minecraftUsername: string) {
 export const minecraftActionLabels: Record<MinecraftActionType, string> = {
   give_rank: "Give Rank",
   give_coins: "Give Coins",
+  give_crate_key: "Give Crate Key",
+  give_item: "Give Item",
+  give_kit: "Give Kit",
   jail: "Jail Player",
   unjail: "Unjail Player",
   temp_ban: "Temp Ban Player",
+  unban: "Unban Player",
+  kick: "Kick Player",
+  mute: "Mute Player",
+  unmute: "Unmute Player",
+  warn: "Warn Player",
+  whitelist_add: "Whitelist Add",
+  whitelist_remove: "Whitelist Remove",
+  maintenance_enable: "Enable Maintenance",
+  maintenance_disable: "Disable Maintenance",
   manual_delivery: "Manual Delivery",
   server_broadcast: "Server Broadcast",
+  title_broadcast: "Title Broadcast",
+  actionbar_broadcast: "Action Bar Broadcast",
+  sound_broadcast: "Sound Broadcast",
+  approved_command: "Approved Command",
 };
 
 export const minecraftActionStatusLabels: Record<MinecraftActionStatus, string> = {
@@ -32,27 +48,59 @@ export const minecraftActionStatusLabels: Record<MinecraftActionStatus, string> 
 export function getMinecraftActionPayloadSummary(action: MinecraftAdminAction) {
   const payload = action.payload || {};
 
-  if (action.action_type === "give_rank") {
-    return `Rank: ${String(payload.rank || "N/A")}`;
-  }
+  switch (action.action_type) {
+    case "give_rank":
+      return `Rank: ${String(payload.rank || "N/A")}`;
 
-  if (action.action_type === "give_coins") {
-    return `Coins: ${String(payload.amount || "N/A")}`;
-  }
+    case "give_coins":
+      return `Coins: ${String(payload.amount || "N/A")}`;
 
-  if (action.action_type === "temp_ban") {
-    return `Duration: ${String(payload.duration || "N/A")}`;
-  }
+    case "give_crate_key":
+      return `Crate: ${String(payload.crate || "N/A")} · Amount: ${String(payload.amount || "N/A")}`;
 
-  if (action.action_type === "manual_delivery") {
-    return `Delivery: ${String(payload.deliveryType || payload.productName || "Manual review")}`;
-  }
+    case "give_item":
+      return `Item: ${String(payload.item || "N/A")} · Amount: ${String(payload.amount || "N/A")}`;
 
-  if (action.action_type === "server_broadcast") {
-    return `Broadcast: ${String(payload.title || "Announcement")} — ${String(payload.message || "No message")}`;
-  }
+    case "give_kit":
+      return `Kit: ${String(payload.kit || "N/A")}`;
 
-  return "No extra payload.";
+    case "temp_ban":
+    case "mute":
+      return `Duration: ${String(payload.duration || "N/A")} · Reason: ${String(payload.reason || action.reason || "No reason")}`;
+
+    case "jail":
+    case "unjail":
+    case "unban":
+    case "kick":
+    case "unmute":
+    case "warn":
+      return `Reason: ${String(payload.reason || action.reason || "No reason")}`;
+
+    case "whitelist_add":
+    case "whitelist_remove":
+      return `Player: ${action.minecraft_username}`;
+
+    case "maintenance_enable":
+      return "Maintenance mode: enable";
+
+    case "maintenance_disable":
+      return "Maintenance mode: disable";
+
+    case "manual_delivery":
+      return `Delivery: ${String(payload.deliveryType || payload.productName || "Manual review")}`;
+
+    case "server_broadcast":
+    case "title_broadcast":
+    case "actionbar_broadcast":
+    case "sound_broadcast":
+      return `Broadcast: ${String(payload.title || "Announcement")} — ${String(payload.message || "No message")}`;
+
+    case "approved_command":
+      return `Approved Command: ${String(payload.commandKey || "N/A")}`;
+
+    default:
+      return "No extra payload.";
+  }
 }
 
 async function notifyDiscordMinecraftAction({

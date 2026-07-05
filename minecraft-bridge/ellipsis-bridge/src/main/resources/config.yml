@@ -19,25 +19,39 @@ bridge:
   log-http-errors: true
 
 commands:
-  # Payload: {"rank":"ascendant"}
   give-rank: "lp user {player} parent add {rank}"
-
-  # Payload: {"amount":500}
   give-coins: "cmi money give {player} {amount}"
+  give-crate-key: "excellentcrates key give {player} {crate} {amount}"
+  give-item: "minecraft:give {player} {item} {amount}"
+  give-kit: "cmi kit {kit} {player}"
 
   jail: "cmi jail {player} jail"
   unjail: "cmi unjail {player}"
-
-  # Payload: {"duration":"7d","reason":"Reason here"}
   temp-ban: "cmi tempban {player} {duration} {reason}"
+  unban: "cmi unban {player}"
+  kick: "cmi kick {player} {reason}"
+  mute: "cmi mute {player} {duration} {reason}"
+  unmute: "cmi unmute {player}"
+  warn: "cmi warn {player} {reason}"
 
-  # Payload: {"command":"say hello {player}"}
-  # Keep disabled unless you intentionally want command-center freeform deliveries.
-  manual-delivery-allow-custom-command: false
-  manual-delivery-command: "say Manual delivery for {player}: {deliveryType}"
+  whitelist-add: "minecraft:whitelist add {player}"
+  whitelist-remove: "minecraft:whitelist remove {player}"
+  maintenance-enable: "cmi maintenance true"
+  maintenance-disable: "cmi maintenance false"
 
-  # Payload: {"title":"Ellipsis SMP","message":"Message here","style":"premium","audience":"all"}
   server-broadcast: "cmi broadcast &d&l{title} &8» &f{message}"
+  title-broadcast: "cmi titlemsg all &d&l{title} &f{message}"
+  actionbar-broadcast: "cmi actionbarmsg all &d{message}"
+  sound-broadcast: "minecraft:execute as @a run playsound {sound} master @s ~ ~ ~ {volume} {pitch}"
+
+  manual-delivery-allow-custom-command: false
+  manual-delivery-command: "say Manual delivery for {player}: {deliveryType} {productName}"
+
+# approved_command only executes keys listed here.
+# Future website buttons can use payload: {"commandKey":"example-broadcast"}
+approved-commands:
+  example-broadcast: "cmi broadcast &d&lEllipsis SMP &8» &fApproved command test."
+  example-reward: "cmi money give {player} {amount}"
 
 profile-sync:
   enabled: true
@@ -46,7 +60,6 @@ profile-sync:
   sync-online-players: true
   sync-offline-players-from-actions: true
 
-  # These use PlaceholderAPI if installed. Leave blank to skip a field.
   placeholders:
     current-rank: "%luckperms_primary_group_name%"
     balance: "%vault_eco_balance_fixed%"
@@ -65,5 +78,3 @@ profile-sync:
 
 messages:
   prefix: "[EllipsisBridge]"
-
-
