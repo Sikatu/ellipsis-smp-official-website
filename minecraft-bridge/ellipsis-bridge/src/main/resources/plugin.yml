@@ -1,0 +1,22 @@
+name: EllipsisBridge
+version: 1.0.0
+main: com.ellipsissmp.bridge.EllipsisBridgePlugin
+api-version: '1.21'
+authors: [Ellipsis SMP]
+description: Private bridge between Ellipsis SMP website, Supabase, and Minecraft server.
+softdepend:
+  - PlaceholderAPI
+  - LuckPerms
+  - Vault
+  - CMI
+  - VotingPlugin
+  - ajLeaderboards
+commands:
+  ellipsisbridge:
+    description: Manage the Ellipsis SMP bridge.
+    usage: /ellipsisbridge <reload|sync|poll|status>
+    permission: ellipsisbridge.admin
+permissions:
+  ellipsisbridge.admin:
+    description: Allows bridge management commands.
+    default: op

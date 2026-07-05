@@ -1,0 +1,60 @@
+# EllipsisBridge private server config
+# Never paste the Supabase service role key into the website or public GitHub.
+
+supabase:
+  url: "https://jcesknevzbhgrnbuuzre.supabase.co"
+  service-role-key: "PASTE_SUPABASE_SERVICE_ROLE_KEY_HERE"
+  request-timeout-seconds: 15
+
+bridge:
+  enabled: false
+  poll-actions-seconds: 5
+  sync-online-players-seconds: 60
+  action-batch-size: 5
+  mark-processing-before-execute: true
+  log-http-errors: true
+
+commands:
+  # Payload: {"rank":"ascendant"}
+  give-rank: "lp user {player} parent add {rank}"
+
+  # Payload: {"amount":500}
+  give-coins: "cmi money give {player} {amount}"
+
+  jail: "cmi jail {player} jail"
+  unjail: "cmi unjail {player}"
+
+  # Payload: {"duration":"7d","reason":"Reason here"}
+  temp-ban: "cmi tempban {player} {duration} {reason}"
+
+  # Payload: {"command":"say hello {player}"}
+  # Keep disabled unless you intentionally want command-center freeform deliveries.
+  manual-delivery-allow-custom-command: false
+  manual-delivery-command: "say Manual delivery for {player}: {deliveryType}"
+
+profile-sync:
+  enabled: true
+  sync-on-join: true
+  sync-on-quit: true
+  sync-online-players: true
+  sync-offline-players-from-actions: true
+
+  # These use PlaceholderAPI if installed. Leave blank to skip a field.
+  placeholders:
+    current-rank: "%luckperms_primary_group_name%"
+    balance: "%vault_eco_balance_fixed%"
+    votes: "%votingplugin_total%"
+    leaderboard-position: ""
+    leaderboard-score: ""
+    jobs-level: ""
+    auraskills-power: ""
+
+  raw-placeholders:
+    luckperms-prefix: "%luckperms_prefix%"
+    cmi-playtime: "%cmi_user_playtime%"
+    jobs-current: ""
+    auraskills-power: ""
+    voting-total: "%votingplugin_total%"
+
+messages:
+  prefix: "[EllipsisBridge]"
