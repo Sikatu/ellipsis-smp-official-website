@@ -2,6 +2,8 @@ package com.ellipsissmp.bridge;
 
 import com.google.gson.JsonObject;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
@@ -105,6 +107,73 @@ public class ProfileSyncService {
         return profile;
     }
 
+
+    public List<String> diagnosePlayer(OfflinePlayer player) {
+        List<String> lines = new ArrayList<>();
+
+        if (player == null) {
+            lines.add("Profile Diagnose: target player not found.");
+            return lines;
+        }
+
+        String username = player.getName() == null ? player.getUniqueId().toString() : player.getName();
+        Player onlinePlayer = player.getPlayer();
+
+        String rankPlaceholder = plugin.getConfig().getString("profile-sync.placeholders.current-rank", "");
+        String balancePlaceholder = plugin.getConfig().getString("profile-sync.placeholders.balance", "");
+        String votesPlaceholder = plugin.getConfig().getString("profile-sync.placeholders.votes", "");
+        String jobsPlaceholder = plugin.getConfig().getString("profile-sync.placeholders.jobs-level", "");
+        String auraPlaceholder = plugin.getConfig().getString("profile-sync.placeholders.auraskills-power", "");
+
+        String rankValue = readPlaceholder(player, "profile-sync.placeholders.current-rank");
+        String balanceValue = readPlaceholder(player, "profile-sync.placeholders.balance");
+        String votesValue = readPlaceholder(player, "profile-sync.placeholders.votes");
+        String jobsValue = readPlaceholder(player, "profile-sync.placeholders.jobs-level");
+        String auraValue = readPlaceholder(player, "profile-sync.placeholders.auraskills-power");
+
+        JsonObject profile = buildProfile(player);
+
+        lines.add("Profile Diagnose: " + username);
+        lines.add("UUID: " + player.getUniqueId());
+        lines.add("Online: " + (onlinePlayer != null && onlinePlayer.isOnline()));
+        lines.add("Supabase: " + (supabase.isConfigured() ? "configured" : "not configured"));
+        lines.add("Rank: " + diagnosePlaceholder(rankPlaceholder, rankValue));
+        lines.add("Balance: " + diagnosePlaceholder(balancePlaceholder, balanceValue)
+            + " | parsed=" + profile.get("balance").getAsDouble());
+        lines.add("Playtime: " + profile.get("total_playtime_minutes").getAsInt()
+            + " minutes from Bukkit statistic");
+        lines.add("Votes: " + diagnosePlaceholder(votesPlaceholder, votesValue)
+            + " | parsed=" + profile.get("votes").getAsInt());
+        lines.add("Jobs Level: " + diagnosePlaceholder(jobsPlaceholder, jobsValue));
+        lines.add("AuraSkills Power: " + diagnosePlaceholder(auraPlaceholder, auraValue));
+        lines.add("Kills/Deaths: " + profile.get("kills").getAsInt()
+            + "/" + profile.get("deaths").getAsInt());
+
+        if (onlinePlayer != null) {
+            lines.add("World: " + onlinePlayer.getWorld().getName());
+            lines.add("Location: " + locationSummary(onlinePlayer.getLocation()));
+        }
+
+        lines.add("Profile upload: queued after diagnose.");
+
+        return lines;
+    }
+
+    private String diagnosePlaceholder(String placeholder, String value) {
+        if (placeholder == null || placeholder.isBlank()) {
+            return "not configured";
+        }
+
+        if (value == null || value.isBlank()) {
+            return placeholder + " => blank";
+        }
+
+        if (value.equals(placeholder)) {
+            return placeholder + " => unresolved";
+        }
+
+        return placeholder + " => " + value;
+    }
     private String readPlaceholder(OfflinePlayer player, String configPath) {
         String placeholder = plugin.getConfig().getString(configPath, "");
         return placeholders.read(player, placeholder);
