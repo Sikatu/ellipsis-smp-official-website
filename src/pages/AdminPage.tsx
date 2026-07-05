@@ -24,6 +24,7 @@ import { AdminPlayersPanel } from "../components/admin/AdminPlayersPanel";
 import { AdminMinecraftActionCenter } from "../components/admin/AdminMinecraftActionCenter";
 import { AdminSettingsPanel } from "../components/admin/AdminSettingsPanel";
 import { AdminStaffPanel } from "../components/admin/AdminStaffPanel";
+import { AdminStaffActivityPanel } from "../components/admin/AdminStaffActivityPanel";
 import {
   fetchOrders,
   getReceiptUrl,
@@ -522,6 +523,10 @@ function AdminPage() {
           <AdminMinecraftActionCenter canManagePlayers={hasManageRights} />
         )}
 
+        {activeTab === "activity" && (
+          <AdminStaffActivityPanel />
+        )}
+
         {activeTab === "staff" && (
           <AdminStaffPanel profile={adminProfile} />
         )}
@@ -561,6 +566,7 @@ function AdminPage() {
 }
 
 export default AdminPage;
+
 
 
 
