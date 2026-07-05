@@ -22,6 +22,12 @@ import type { Order, StatusFilter } from "../../types/admin";
 import type { MinecraftAdminAction } from "../../types/minecraftActions";
 import { useServerStatus } from "../../hooks/useServerStatus";
 import { supabase } from "../../lib/supabase";
+import type { MinecraftPlayerProfile } from "../../types/playerProfiles";
+import {
+  fetchMinecraftPlayerProfiles,
+  getFormattedPlaytime,
+  getPlayerProfileSummary,
+} from "../../services/playerProfiles";
 import {
   getMinecraftActionPayloadSummary,
   minecraftActionLabels,
@@ -125,6 +131,7 @@ export function AdminCommandCenter({
 }: AdminCommandCenterProps) {
   const serverStatus = useServerStatus();
   const [minecraftActions, setMinecraftActions] = useState<MinecraftAdminAction[]>([]);
+  const [serverProfiles, setServerProfiles] = useState<MinecraftPlayerProfile[]>([]);
   const [loadingActions, setLoadingActions] = useState(false);
   const [actionError, setActionError] = useState("");
 
@@ -348,6 +355,11 @@ export function AdminCommandCenter({
     stats.verified,
   ]);
 
+  const syncedProfileSummary = useMemo(
+    () => getPlayerProfileSummary(serverProfiles),
+    [serverProfiles],
+  );
+
   async function loadMinecraftActions() {
     setLoadingActions(true);
     setActionError("");
@@ -367,8 +379,14 @@ export function AdminCommandCenter({
     setLoadingActions(false);
   }
 
+  async function loadServerProfiles() {
+    const { data, error } = await fetchMinecraftPlayerProfiles(500);
+    if (!error) setServerProfiles(data);
+  }
+
   useEffect(() => {
     void loadMinecraftActions();
+    void loadServerProfiles();
   }, []);
 
   function openOrders(filter: StatusFilter) {
@@ -398,6 +416,7 @@ export function AdminCommandCenter({
             onClick={() => {
               onRefresh();
               void loadMinecraftActions();
+              void loadServerProfiles();
             }}
             className="inline-flex items-center justify-center gap-2 rounded-2xl border border-purple-400/25 bg-purple-500/10 px-5 py-3 text-sm font-black text-purple-100 transition hover:bg-purple-500/20"
           >
@@ -563,7 +582,7 @@ export function AdminCommandCenter({
           />
           <CommandStat
             label="Unique Supporters"
-            value={serverIntelligence.uniquePlayers}
+            value={syncedProfileSummary.linked || serverIntelligence.uniquePlayers}
             icon={<UsersRound className="h-5 w-5" />}
             tone="purple"
           />
@@ -596,6 +615,30 @@ export function AdminCommandCenter({
             value={serverIntelligence.repeatPlayers}
             icon={<Activity className="h-5 w-5" />}
             tone="cyan"
+          />
+          <CommandStat
+            label="Synced Profiles"
+            value={serverProfiles.length}
+            icon={<UsersRound className="h-5 w-5" />}
+            tone="cyan"
+          />
+          <CommandStat
+            label="Synced Online"
+            value={syncedProfileSummary.online}
+            icon={<Radio className="h-5 w-5" />}
+            tone={syncedProfileSummary.online > 0 ? "emerald" : "blue"}
+          />
+          <CommandStat
+            label="Avg Playtime"
+            value={getFormattedPlaytime(syncedProfileSummary.averagePlaytime)}
+            icon={<Activity className="h-5 w-5" />}
+            tone="purple"
+          />
+          <CommandStat
+            label="Avg Balance"
+            value={syncedProfileSummary.averageBalance}
+            icon={<Coins className="h-5 w-5" />}
+            tone="yellow"
           />
         </div>
 
