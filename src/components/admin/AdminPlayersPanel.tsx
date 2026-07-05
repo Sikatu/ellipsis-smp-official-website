@@ -2,6 +2,7 @@
 import {
   BadgeCheck,
   Coins,
+  Eye,
   MessageSquare,
   Search,
   ShieldAlert,
@@ -11,6 +12,10 @@ import type { Order } from "../../types/admin";
 import type { MinecraftActionType } from "../../types/minecraftActions";
 import { AdminMinecraftActionModal } from "./AdminMinecraftActionModal";
 import { AdminPlayerNotesModal } from "./AdminPlayerNotesModal";
+import {
+  AdminPlayerProfileModal,
+  type AdminPlayerProfile,
+} from "./AdminPlayerProfileModal";
 
 type AdminPlayersPanelProps = {
   orders: Order[];
@@ -37,19 +42,18 @@ function normalize(value: string | null | undefined) {
   return value?.trim() || "N/A";
 }
 
+function getDiscordValue(player: { discord: string }) {
+  return player.discord === "N/A" ? null : player.discord;
+}
+
 export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPanelProps) {
   const [search, setSearch] = useState("");
   const [selectedNotesPlayer, setSelectedNotesPlayer] = useState<SelectedNotesPlayer | null>(null);
   const [selectedActionPlayer, setSelectedActionPlayer] = useState<SelectedActionPlayer | null>(null);
+  const [selectedProfilePlayer, setSelectedProfilePlayer] = useState<AdminPlayerProfile | null>(null);
 
   const players = useMemo(() => {
-    const map = new Map<string, {
-      ign: string;
-      discord: string;
-      orders: Order[];
-      totalSpent: number;
-      latestOrder: string;
-    }>();
+    const map = new Map<string, AdminPlayerProfile>();
 
     for (const order of orders) {
       const ign = normalize(order.minecraft_username);
@@ -89,8 +93,15 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
   function openAction(player: { ign: string; discord: string }, actionType: MinecraftActionType) {
     setSelectedActionPlayer({
       ign: player.ign,
-      discord: player.discord === "N/A" ? null : player.discord,
+      discord: getDiscordValue(player),
       actionType,
+    });
+  }
+
+  function openNotes(player: { ign: string; discord: string }) {
+    setSelectedNotesPlayer({
+      ign: player.ign,
+      discord: getDiscordValue(player),
     });
   }
 
@@ -104,8 +115,8 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
           Players Dashboard
         </h2>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-300">
-          This section builds player control from order history. Minecraft actions are now queued safely
-          and will be executable once the secure server bridge is connected.
+          This section builds player control from order history. Open a player profile to review orders,
+          Minecraft actions, notes, and quick controls in one place.
         </p>
       </div>
 
@@ -126,7 +137,6 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
           const delivered = player.orders.filter((order) => order.status === "delivered").length;
           const verified = player.orders.filter((order) => order.status === "verified").length;
           const pending = player.orders.filter((order) => order.status === "pending").length;
-          const discordValue = player.discord === "N/A" ? null : player.discord;
 
           return (
             <article
@@ -177,6 +187,15 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
               <div className="mt-5 grid gap-2 sm:grid-cols-2">
                 <button
                   type="button"
+                  onClick={() => setSelectedProfilePlayer(player)}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-purple-400/25 bg-purple-500/10 px-4 py-3 text-sm font-black text-purple-100 transition hover:bg-purple-500/20 sm:col-span-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  View Profile
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => openAction(player, "give_rank")}
                   disabled={!canManagePlayers}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blue-400/25 bg-blue-500/10 px-4 py-3 text-sm font-black text-blue-100 transition hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.03] disabled:text-gray-500"
@@ -210,12 +229,7 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setSelectedNotesPlayer({
-                      ign: player.ign,
-                      discord: discordValue,
-                    })
-                  }
+                  onClick={() => openNotes(player)}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm font-black text-emerald-100 transition hover:bg-emerald-500/20"
                 >
                   <MessageSquare className="h-4 w-4" />
@@ -236,6 +250,21 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
           </div>
         )}
       </div>
+
+      <AdminPlayerProfileModal
+        isOpen={selectedProfilePlayer !== null}
+        player={selectedProfilePlayer}
+        canManagePlayers={canManagePlayers}
+        onClose={() => setSelectedProfilePlayer(null)}
+        onOpenNotes={(player) => {
+          setSelectedProfilePlayer(null);
+          openNotes(player);
+        }}
+        onOpenAction={(player, actionType) => {
+          setSelectedProfilePlayer(null);
+          openAction(player, actionType);
+        }}
+      />
 
       <AdminPlayerNotesModal
         isOpen={selectedNotesPlayer !== null}
