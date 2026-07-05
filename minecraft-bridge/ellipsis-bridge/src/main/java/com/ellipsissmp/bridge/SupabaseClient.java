@@ -119,6 +119,62 @@ public class SupabaseClient {
         }
     }
 
+
+    public ClaimLinkResult completeMinecraftProfileClaim(
+        String claimCode,
+        String playerKey,
+        String minecraftUuid,
+        String minecraftUsername
+    ) throws IOException, InterruptedException {
+        JsonObject payload = new JsonObject();
+        payload.addProperty("p_claim_code", claimCode);
+        payload.addProperty("p_player_key", playerKey);
+        payload.addProperty("p_minecraft_uuid", minecraftUuid);
+        payload.addProperty("p_minecraft_username", minecraftUsername);
+
+        HttpResponse<String> response = send(
+            "POST",
+            "/rest/v1/rpc/complete_minecraft_profile_claim",
+            gson.toJson(payload),
+            "return=representation"
+        );
+
+        if (!isOk(response.statusCode())) {
+            logError("complete profile claim", response);
+            return new ClaimLinkResult(false, "Website link failed: HTTP " + response.statusCode(), "", "");
+        }
+
+        JsonArray array = gson.fromJson(response.body(), JsonArray.class);
+        if (array == null || array.size() == 0 || !array.get(0).isJsonObject()) {
+            return new ClaimLinkResult(false, "Website link failed: no result returned.", "", "");
+        }
+
+        JsonObject result = array.get(0).getAsJsonObject();
+
+        return new ClaimLinkResult(
+            jsonBoolean(result, "success"),
+            jsonString(result, "message", "Website link completed."),
+            jsonString(result, "linked_player_key", playerKey),
+            jsonString(result, "linked_minecraft_username", minecraftUsername)
+        );
+    }
+
+    private static String jsonString(JsonObject object, String key, String fallback) {
+        if (object == null || !object.has(key) || object.get(key).isJsonNull()) return fallback;
+        return object.get(key).getAsString();
+    }
+
+    private static boolean jsonBoolean(JsonObject object, String key) {
+        return object != null && object.has(key) && !object.get(key).isJsonNull() && object.get(key).getAsBoolean();
+    }
+
+    public record ClaimLinkResult(
+        boolean success,
+        String message,
+        String playerKey,
+        String minecraftUsername
+    ) {
+    }
     private void patchAction(String actionId, JsonObject updates) throws IOException, InterruptedException {
         String encodedId = URLEncoder.encode(actionId, StandardCharsets.UTF_8);
         HttpResponse<String> response = send(
