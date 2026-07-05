@@ -19,6 +19,7 @@ import { StaffNotesModal } from "../components/admin/StaffNotesModal";
 import { ReceiptPreviewModal } from "../components/admin/ReceiptPreviewModal";
 import { AdminAuditLog } from "../components/admin/AdminAuditLog";
 import { AdminDashboardTabs } from "../components/admin/AdminDashboardTabs";
+import { AdminCommandCenter } from "../components/admin/AdminCommandCenter";
 import type { AdminTab } from "../components/admin/AdminDashboardTabs";
 import { AdminPlayersPanel } from "../components/admin/AdminPlayersPanel";
 import { AdminMinecraftActionCenter } from "../components/admin/AdminMinecraftActionCenter";
@@ -100,7 +101,7 @@ function AdminPage() {
   const [realtimeStatus, setRealtimeStatus] = useState<"connecting" | "live" | "error">("connecting");
   const [editingNotesOrder, setEditingNotesOrder] = useState<Order | null>(null);
 
-  const [activeTab, setActiveTab] = useState<AdminTab>("orders");
+  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
 
   const hasManageRights = canManageOrders(adminProfile?.role);
 
@@ -371,7 +372,7 @@ function AdminPage() {
             <p className="text-xs font-black uppercase tracking-[0.25em] text-purple-300">
               Ellipsis SMP Admin
             </p>
-            <h1 className="mt-3 text-4xl font-black">Orders Dashboard</h1>
+            <h1 className="mt-3 text-4xl font-black">Admin Dashboard</h1>
 
             <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
               <span className="text-sm font-bold text-gray-300">
@@ -455,6 +456,19 @@ function AdminPage() {
         <AdminStaffApproval userRole={adminProfile?.role} />
 
         <AdminDashboardTabs activeTab={activeTab} onChange={setActiveTab} />
+
+        {activeTab === "overview" && (
+          <AdminCommandCenter
+            orders={orders}
+            stats={stats}
+            needsAttentionOrders={orders.filter(orderNeedsAttention)}
+            realtimeStatus={realtimeStatus}
+            lastUpdated={lastUpdated}
+            onNavigate={setActiveTab}
+            onSetOrderFilter={setActiveFilter}
+            onRefresh={handleRefresh}
+          />
+        )}
 
         {activeTab === "orders" && (
           <>
@@ -566,6 +580,8 @@ function AdminPage() {
 }
 
 export default AdminPage;
+
+
 
 
 
