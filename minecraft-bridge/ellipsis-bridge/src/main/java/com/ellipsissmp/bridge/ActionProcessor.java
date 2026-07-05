@@ -57,8 +57,18 @@ public class ActionProcessor {
                     : action.payloadString("reason"))
             ));
             case "manual_delivery" -> manualDeliveryCommand(action);
+            case "server_broadcast" -> serverBroadcastCommand(action);
             default -> "";
         };
+    }
+
+    private String serverBroadcastCommand(BridgeAction action) {
+        return template("commands.server-broadcast", action, Map.of(
+            "title", safeReason(action.payloadString("title")),
+            "message", safeReason(action.payloadString("message")),
+            "style", safeToken(action.payloadString("style")),
+            "audience", safeToken(action.payloadString("audience"))
+        ));
     }
 
     private String manualDeliveryCommand(BridgeAction action) {
@@ -127,3 +137,4 @@ public class ActionProcessor {
         }
     }
 }
+

@@ -1,4 +1,4 @@
-﻿import { supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase";
 import { getAutomatedMinecraftActionForOrder } from "../lib/orderMinecraftAutomation";
 import type { Order } from "../types/admin";
 import type {
@@ -18,6 +18,7 @@ export const minecraftActionLabels: Record<MinecraftActionType, string> = {
   unjail: "Unjail Player",
   temp_ban: "Temp Ban Player",
   manual_delivery: "Manual Delivery",
+  server_broadcast: "Server Broadcast",
 };
 
 export const minecraftActionStatusLabels: Record<MinecraftActionStatus, string> = {
@@ -45,6 +46,10 @@ export function getMinecraftActionPayloadSummary(action: MinecraftAdminAction) {
 
   if (action.action_type === "manual_delivery") {
     return `Delivery: ${String(payload.deliveryType || payload.productName || "Manual review")}`;
+  }
+
+  if (action.action_type === "server_broadcast") {
+    return `Broadcast: ${String(payload.title || "Announcement")} — ${String(payload.message || "No message")}`;
   }
 
   return "No extra payload.";
@@ -346,6 +351,74 @@ export async function updateMinecraftAdminActionStatus({
     error: null,
     warning: notifyResult.error
       ? `Minecraft action updated, but Discord notification failed: ${notifyResult.error.message}`
+      : null,
+  };
+}
+export async function createServerBroadcastAction({
+  title,
+  message,
+  style,
+  audience,
+}: {
+  title: string;
+  message: string;
+  style: "premium" | "event" | "warning" | "maintenance";
+  audience: "all";
+}): Promise<{
+  data: MinecraftAdminAction | null;
+  error: Error | null;
+  warning: string | null;
+}> {
+  const cleanTitle = title.trim() || "Ellipsis SMP";
+  const cleanMessage = message.trim();
+
+  if (!cleanMessage) {
+    return {
+      data: null,
+      error: new Error("Announcement message is required."),
+      warning: null,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("minecraft_admin_actions")
+    .insert({
+      player_key: "server",
+      minecraft_username: "SERVER",
+      discord_username: null,
+      action_type: "server_broadcast",
+      payload: {
+        title: cleanTitle,
+        message: cleanMessage,
+        style,
+        audience,
+      },
+      reason: `Owner announcement: ${cleanTitle}`,
+      status: "queued",
+      automated: false,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    return {
+      data: null,
+      error: new Error(error.message),
+      warning: null,
+    };
+  }
+
+  const action = data as MinecraftAdminAction;
+  const notifyResult = await notifyDiscordMinecraftAction({
+    action,
+    previousStatus: "new",
+  });
+
+  return {
+    data: action,
+    error: null,
+    warning: notifyResult.error
+      ? `Announcement queued, but Discord notification failed: ${notifyResult.error.message}`
       : null,
   };
 }

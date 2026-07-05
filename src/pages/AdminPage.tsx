@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import {
   Clock3,
@@ -23,6 +23,7 @@ import { AdminCommandCenter } from "../components/admin/AdminCommandCenter";
 import type { AdminTab } from "../components/admin/AdminDashboardTabs";
 import { AdminPlayersPanel } from "../components/admin/AdminPlayersPanel";
 import { AdminMinecraftActionCenter } from "../components/admin/AdminMinecraftActionCenter";
+import { AdminAnnouncementCenter } from "../components/admin/AdminAnnouncementCenter";
 import { AdminSettingsPanel } from "../components/admin/AdminSettingsPanel";
 import { AdminStaffPanel } from "../components/admin/AdminStaffPanel";
 import { AdminStaffActivityPanel } from "../components/admin/AdminStaffActivityPanel";
@@ -535,6 +536,10 @@ function AdminPage() {
 
         {activeTab === "minecraft" && (
           <AdminMinecraftActionCenter canManagePlayers={hasManageRights} />
+        )}
+
+        {activeTab === "announcements" && (
+          <AdminAnnouncementCenter />
         )}
 
         {activeTab === "activity" && (

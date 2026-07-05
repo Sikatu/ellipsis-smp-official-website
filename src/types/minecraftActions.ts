@@ -1,10 +1,11 @@
-﻿export type MinecraftActionType =
+export type MinecraftActionType =
   | "give_rank"
   | "give_coins"
   | "jail"
   | "unjail"
   | "temp_ban"
-  | "manual_delivery";
+  | "manual_delivery"
+  | "server_broadcast";
 
 export type MinecraftActionStatus =
   | "queued"
@@ -32,3 +33,4 @@ export type MinecraftAdminAction = {
   updated_at: string;
   processed_at: string | null;
 };
+

@@ -1,4 +1,4 @@
-﻿# EllipsisBridge private server config
+# EllipsisBridge private server config
 # Never paste the Supabase service role key into the website or public GitHub.
 
 supabase:
@@ -8,6 +8,10 @@ supabase:
 
 bridge:
   enabled: false
+  server-key: "ellipsis-main"
+  server-name: "Ellipsis SMP"
+  heartbeat-enabled: true
+  heartbeat-seconds: 30
   poll-actions-seconds: 5
   sync-online-players-seconds: 60
   action-batch-size: 5
@@ -31,6 +35,9 @@ commands:
   # Keep disabled unless you intentionally want command-center freeform deliveries.
   manual-delivery-allow-custom-command: false
   manual-delivery-command: "say Manual delivery for {player}: {deliveryType}"
+
+  # Payload: {"title":"Ellipsis SMP","message":"Message here","style":"premium","audience":"all"}
+  server-broadcast: "cmi broadcast &d&l{title} &8» &f{message}"
 
 profile-sync:
   enabled: true
@@ -58,4 +65,5 @@ profile-sync:
 
 messages:
   prefix: "[EllipsisBridge]"
+
 
