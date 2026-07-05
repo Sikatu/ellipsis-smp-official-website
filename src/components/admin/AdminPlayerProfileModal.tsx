@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BadgeCheck,
   Coins,
@@ -381,4 +381,3 @@ function MiniStat({ label, value }: { label: string; value: number }) {
     </div>
   );
 }
-
