@@ -1,5 +1,7 @@
 package com.ellipsissmp.bridge;
 
+import com.google.gson.JsonObject;
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.bukkit.Bukkit;
@@ -21,6 +23,9 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
     private ProfileSyncService profileSyncService;
     private BukkitTask actionPollTask;
     private BukkitTask profileSyncTask;
+    private BukkitTask heartbeatTask;
+    private Instant lastActionPollAt;
+    private Instant lastProfileSyncAt;
 
     @Override
     public void onEnable() {
@@ -32,6 +37,7 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
+        sendHeartbeat("Plugin disabled.");
         stopTasks();
         getLogger().info("EllipsisBridge disabled.");
     }
@@ -52,11 +58,13 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
 
         if (!getConfig().getBoolean("bridge.enabled", false)) {
             getLogger().warning("Bridge is disabled. Set bridge.enabled: true after adding the service role key.");
+            startHeartbeatTask("Bridge disabled in config.");
             return;
         }
 
         if (!supabase.isConfigured()) {
             getLogger().warning("Supabase service role key is missing. Bridge tasks were not started.");
+            startHeartbeatTask("Supabase is not configured.");
             return;
         }
 
@@ -73,15 +81,33 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
         if (getConfig().getBoolean("profile-sync.sync-online-players", true)) {
             profileSyncTask = Bukkit.getScheduler().runTaskTimer(
                 this,
-                () -> profileSyncService.syncOnlinePlayersAsync(),
+                () -> {
+                    lastProfileSyncAt = Instant.now();
+                    profileSyncService.syncOnlinePlayersAsync();
+                },
                 100L,
                 syncTicks
             );
         }
 
+        startHeartbeatTask("Bridge tasks running.");
+
         getLogger().info("Bridge tasks started. Polling every "
             + getConfig().getInt("bridge.poll-actions-seconds", 5)
             + " seconds.");
+    }
+
+    private void startHeartbeatTask(String statusMessage) {
+        if (!getConfig().getBoolean("bridge.heartbeat-enabled", true)) return;
+
+        long heartbeatTicks = Math.max(15, getConfig().getInt("bridge.heartbeat-seconds", 30)) * 20L;
+
+        heartbeatTask = Bukkit.getScheduler().runTaskTimer(
+            this,
+            () -> sendHeartbeat(statusMessage),
+            40L,
+            heartbeatTicks
+        );
     }
 
     private void stopTasks() {
@@ -93,6 +119,10 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
             profileSyncTask.cancel();
             profileSyncTask = null;
         }
+        if (heartbeatTask != null) {
+            heartbeatTask.cancel();
+            heartbeatTask = null;
+        }
     }
 
     private void pollActions() {
@@ -100,6 +130,7 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
         if (!polling.compareAndSet(false, true)) return;
 
         try {
+            lastActionPollAt = Instant.now();
             int batchSize = getConfig().getInt("bridge.action-batch-size", 5);
             List<BridgeAction> actions = supabase.fetchQueuedActions(batchSize);
 
@@ -131,7 +162,6 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
             try {
                 supabase.markActionFailed(action.id(), error.getMessage());
             } catch (Exception ignored) {
-                // Nothing else to do; the next poll will reveal the action state.
             }
         }
     }
@@ -142,6 +172,48 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
 
         OfflinePlayer player = Bukkit.getOfflinePlayer(action.minecraftUsername());
         profileSyncService.syncPlayerAsync(player);
+    }
+
+    private void sendHeartbeat(String statusMessage) {
+        if (supabase == null || !supabase.isConfigured()) return;
+
+        JsonObject heartbeat = new JsonObject();
+        String now = Instant.now().toString();
+
+        heartbeat.addProperty("server_key", getConfig().getString("bridge.server-key", "ellipsis-main"));
+        heartbeat.addProperty("server_name", getConfig().getString("bridge.server-name", "Ellipsis SMP"));
+        heartbeat.addProperty("plugin_version", getDescription().getVersion());
+        heartbeat.addProperty("online_players", Bukkit.getOnlinePlayers().size());
+        heartbeat.addProperty("max_players", Bukkit.getMaxPlayers());
+        heartbeat.addProperty("bridge_enabled", getConfig().getBoolean("bridge.enabled", false));
+        heartbeat.addProperty("supabase_configured", supabase.isConfigured());
+        heartbeat.addProperty("action_task_running", actionPollTask != null && !actionPollTask.isCancelled());
+        heartbeat.addProperty("profile_task_running", profileSyncTask != null && !profileSyncTask.isCancelled());
+        heartbeat.addProperty("last_heartbeat_at", now);
+        heartbeat.addProperty("updated_at", now);
+        heartbeat.addProperty("status_message", statusMessage);
+
+        if (lastActionPollAt != null) {
+            heartbeat.addProperty("last_action_poll_at", lastActionPollAt.toString());
+        }
+
+        if (lastProfileSyncAt != null) {
+            heartbeat.addProperty("last_profile_sync_at", lastProfileSyncAt.toString());
+        }
+
+        JsonObject metadata = new JsonObject();
+        metadata.addProperty("bukkit_version", Bukkit.getBukkitVersion());
+        metadata.addProperty("minecraft_version", Bukkit.getMinecraftVersion());
+        metadata.addProperty("server_version", Bukkit.getVersion());
+        heartbeat.add("metadata", metadata);
+
+        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+            try {
+                supabase.upsertBridgeHeartbeat(heartbeat);
+            } catch (Exception error) {
+                getLogger().warning("Failed to send bridge heartbeat: " + error.getMessage());
+            }
+        });
     }
 
     @EventHandler
@@ -179,12 +251,19 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
         }
 
         if (args[0].equalsIgnoreCase("sync")) {
+            lastProfileSyncAt = Instant.now();
             profileSyncService.syncOnlinePlayersAsync();
             sender.sendMessage("Online player sync started.");
             return true;
         }
 
-        sender.sendMessage("Usage: /ellipsisbridge <status|reload|poll|sync>");
+        if (args[0].equalsIgnoreCase("heartbeat")) {
+            sendHeartbeat("Manual heartbeat requested.");
+            sender.sendMessage("Bridge heartbeat sent.");
+            return true;
+        }
+
+        sender.sendMessage("Usage: /ellipsisbridge <status|reload|poll|sync|heartbeat>");
         return true;
     }
 
@@ -194,6 +273,7 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
         return "EllipsisBridge status: enabled=" + enabled
             + ", configured=" + configured
             + ", actionTask=" + (actionPollTask != null)
-            + ", profileTask=" + (profileSyncTask != null);
+            + ", profileTask=" + (profileSyncTask != null)
+            + ", heartbeatTask=" + (heartbeatTask != null);
     }
 }

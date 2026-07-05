@@ -1,4 +1,4 @@
-# EllipsisBridge private server config
+﻿# EllipsisBridge private server config
 # Never paste the Supabase service role key into the website or public GitHub.
 
 supabase:
@@ -58,3 +58,4 @@ profile-sync:
 
 messages:
   prefix: "[EllipsisBridge]"
+
