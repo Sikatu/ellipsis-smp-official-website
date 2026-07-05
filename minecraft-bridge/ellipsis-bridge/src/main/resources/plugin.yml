@@ -14,7 +14,7 @@ softdepend:
 commands:
   ellipsisbridge:
     description: Manage the Ellipsis SMP bridge.
-    usage: /ellipsisbridge <reload|sync|poll|status>
+    usage: /ellipsisbridge <status|reload|poll|sync|heartbeat>
     permission: ellipsisbridge.admin
 permissions:
   ellipsisbridge.admin:

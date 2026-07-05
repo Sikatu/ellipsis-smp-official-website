@@ -106,6 +106,19 @@ public class SupabaseClient {
         }
     }
 
+    public void upsertBridgeHeartbeat(JsonObject heartbeat) throws IOException, InterruptedException {
+        HttpResponse<String> response = send(
+            "POST",
+            "/rest/v1/minecraft_bridge_heartbeats?on_conflict=server_key",
+            gson.toJson(heartbeat),
+            "resolution=merge-duplicates,return=minimal"
+        );
+
+        if (!isOk(response.statusCode())) {
+            logError("upsert bridge heartbeat", response);
+        }
+    }
+
     private void patchAction(String actionId, JsonObject updates) throws IOException, InterruptedException {
         String encodedId = URLEncoder.encode(actionId, StandardCharsets.UTF_8);
         HttpResponse<String> response = send(
