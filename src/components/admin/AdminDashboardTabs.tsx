@@ -1,4 +1,5 @@
 ﻿import {
+  BarChart3,
   History,
   PackageCheck,
   Settings,
@@ -8,7 +9,14 @@
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export type AdminTab = "orders" | "players" | "minecraft" | "staff" | "logs" | "settings";
+export type AdminTab =
+  | "orders"
+  | "players"
+  | "minecraft"
+  | "activity"
+  | "staff"
+  | "logs"
+  | "settings";
 
 type AdminDashboardTabsProps = {
   activeTab: AdminTab;
@@ -24,6 +32,7 @@ const tabs: Array<{
   { label: "Orders", value: "orders", accent: "purple", icon: PackageCheck },
   { label: "Players", value: "players", accent: "emerald", icon: UsersRound },
   { label: "Minecraft Queue", value: "minecraft", accent: "yellow", icon: Terminal },
+  { label: "Staff Activity", value: "activity", accent: "cyan", icon: BarChart3 },
   { label: "Staff", value: "staff", accent: "blue", icon: ShieldCheck },
   { label: "Logs", value: "logs", accent: "amber", icon: History },
   { label: "Settings", value: "settings", accent: "gray", icon: Settings },
@@ -32,6 +41,7 @@ const tabs: Array<{
 function activeClass(accent: string) {
   if (accent === "emerald") return "border-emerald-400 text-emerald-300";
   if (accent === "yellow") return "border-yellow-400 text-yellow-300";
+  if (accent === "cyan") return "border-cyan-400 text-cyan-300";
   if (accent === "blue") return "border-blue-400 text-blue-300";
   if (accent === "amber") return "border-amber-400 text-amber-300";
   if (accent === "gray") return "border-gray-300 text-gray-200";
