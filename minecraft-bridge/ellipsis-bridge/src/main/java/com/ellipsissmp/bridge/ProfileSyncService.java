@@ -2,7 +2,6 @@ package com.ellipsissmp.bridge;
 
 import com.google.gson.JsonObject;
 import java.time.Instant;
-import java.util.List;
 import java.util.Locale;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
@@ -24,8 +23,7 @@ public class ProfileSyncService {
     public void syncOnlinePlayersAsync() {
         if (!plugin.getConfig().getBoolean("profile-sync.enabled", true)) return;
 
-        List<Player> players = Bukkit.getOnlinePlayers().stream().toList();
-        for (Player player : players) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
             syncPlayerAsync(player);
         }
     }
