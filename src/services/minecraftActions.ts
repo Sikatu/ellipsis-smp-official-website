@@ -28,6 +28,74 @@ export const minecraftActionStatusLabels: Record<MinecraftActionStatus, string> 
   cancelled: "Cancelled",
 };
 
+export function getMinecraftActionPayloadSummary(action: MinecraftAdminAction) {
+  const payload = action.payload || {};
+
+  if (action.action_type === "give_rank") {
+    return `Rank: ${String(payload.rank || "N/A")}`;
+  }
+
+  if (action.action_type === "give_coins") {
+    return `Coins: ${String(payload.amount || "N/A")}`;
+  }
+
+  if (action.action_type === "temp_ban") {
+    return `Duration: ${String(payload.duration || "N/A")}`;
+  }
+
+  if (action.action_type === "manual_delivery") {
+    return `Delivery: ${String(payload.deliveryType || payload.productName || "Manual review")}`;
+  }
+
+  return "No extra payload.";
+}
+
+async function notifyDiscordMinecraftAction({
+  action,
+  previousStatus,
+}: {
+  action: MinecraftAdminAction;
+  previousStatus: MinecraftActionStatus | "new";
+}): Promise<{ error: Error | null }> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData.session?.access_token;
+
+  if (!token) {
+    return { error: new Error("Missing admin session token.") };
+  }
+
+  const response = await fetch("/api/admin-minecraft-action-notification", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      actionId: action.id,
+      actionType: action.action_type,
+      actionLabel: minecraftActionLabels[action.action_type],
+      minecraftUsername: action.minecraft_username,
+      discordUsername: action.discord_username || "N/A",
+      payloadSummary: getMinecraftActionPayloadSummary(action),
+      reason: action.reason || "No reason provided.",
+      resultMessage: action.result_message || "",
+      source: action.automated ? "Automated" : "Manual",
+      sourceOrderReference: action.source_order_reference || "N/A",
+      previousStatus,
+      status: action.status,
+    }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    return {
+      error: new Error(data?.error || "Discord notification failed."),
+    };
+  }
+
+  return { error: null };
+}
+
 export async function fetchMinecraftAdminActions(minecraftUsername: string): Promise<{
   data: MinecraftAdminAction[];
   error: Error | null;
@@ -85,6 +153,7 @@ export async function createMinecraftAdminAction({
 }): Promise<{
   data: MinecraftAdminAction | null;
   error: Error | null;
+  warning: string | null;
 }> {
   const playerKey = getPlayerKey(minecraftUsername);
 
@@ -92,6 +161,7 @@ export async function createMinecraftAdminAction({
     return {
       data: null,
       error: new Error("Missing Minecraft username."),
+      warning: null,
     };
   }
 
@@ -110,9 +180,26 @@ export async function createMinecraftAdminAction({
     .select("*")
     .single();
 
+  if (error) {
+    return {
+      data: null,
+      error: new Error(error.message),
+      warning: null,
+    };
+  }
+
+  const action = data as MinecraftAdminAction;
+  const notifyResult = await notifyDiscordMinecraftAction({
+    action,
+    previousStatus: "new",
+  });
+
   return {
-    data: data as MinecraftAdminAction | null,
-    error: error ? new Error(error.message) : null,
+    data: action,
+    error: null,
+    warning: notifyResult.error
+      ? `Minecraft action queued, but Discord notification failed: ${notifyResult.error.message}`
+      : null,
   };
 }
 
@@ -173,10 +260,26 @@ export async function createMinecraftActionForVerifiedOrder(order: Order): Promi
     .select("*")
     .single();
 
+  if (error) {
+    return {
+      data: null,
+      error: new Error(error.message),
+      warning: null,
+    };
+  }
+
+  const action = data as MinecraftAdminAction;
+  const notifyResult = await notifyDiscordMinecraftAction({
+    action,
+    previousStatus: "new",
+  });
+
   return {
-    data: data as MinecraftAdminAction | null,
-    error: error ? new Error(error.message) : null,
-    warning: null,
+    data: action,
+    error: null,
+    warning: notifyResult.error
+      ? `Minecraft action queued, but Discord notification failed: ${notifyResult.error.message}`
+      : null,
   };
 }
 
@@ -191,7 +294,22 @@ export async function updateMinecraftAdminActionStatus({
 }): Promise<{
   data: MinecraftAdminAction | null;
   error: Error | null;
+  warning: string | null;
 }> {
+  const { data: currentAction, error: currentError } = await supabase
+    .from("minecraft_admin_actions")
+    .select("*")
+    .eq("id", actionId)
+    .maybeSingle();
+
+  if (currentError) {
+    return {
+      data: null,
+      error: new Error(currentError.message),
+      warning: null,
+    };
+  }
+
   const { data: userData } = await supabase.auth.getUser();
 
   const terminalStatuses: MinecraftActionStatus[] = ["completed", "failed", "cancelled"];
@@ -209,8 +327,25 @@ export async function updateMinecraftAdminActionStatus({
     .select("*")
     .single();
 
+  if (error) {
+    return {
+      data: null,
+      error: new Error(error.message),
+      warning: null,
+    };
+  }
+
+  const action = data as MinecraftAdminAction;
+  const notifyResult = await notifyDiscordMinecraftAction({
+    action,
+    previousStatus: (currentAction?.status as MinecraftActionStatus | undefined) || "new",
+  });
+
   return {
-    data: data as MinecraftAdminAction | null,
-    error: error ? new Error(error.message) : null,
+    data: action,
+    error: null,
+    warning: notifyResult.error
+      ? `Minecraft action updated, but Discord notification failed: ${notifyResult.error.message}`
+      : null,
   };
 }
