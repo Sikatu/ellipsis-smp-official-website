@@ -305,6 +305,8 @@ export function AdminMinecraftActionCenter({
                       <p><strong>IGN:</strong> <span className="font-mono text-white">{action.minecraft_username}</span></p>
                       <p><strong>Discord:</strong> <span className="text-white">{action.discord_username || "N/A"}</span></p>
                       <p><strong>Payload:</strong> <span className="text-white">{getPayloadSummary(action)}</span></p>
+                      <p><strong>Source:</strong> <span className="text-white">{action.automated ? "Automated" : "Manual"}</span></p>
+                      <p><strong>Order:</strong> <span className="font-mono text-white">{action.source_order_reference || "N/A"}</span></p>
                       <p className="sm:col-span-2 lg:col-span-3">
                         <strong>Reason:</strong> <span className="text-white">{action.reason || "No reason provided."}</span>
                       </p>
@@ -410,3 +412,4 @@ export function AdminMinecraftActionCenter({
     </section>
   );
 }
+

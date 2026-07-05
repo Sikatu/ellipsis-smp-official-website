@@ -3,7 +3,8 @@
   | "give_coins"
   | "jail"
   | "unjail"
-  | "temp_ban";
+  | "temp_ban"
+  | "manual_delivery";
 
 export type MinecraftActionStatus =
   | "queued"
@@ -22,6 +23,9 @@ export type MinecraftAdminAction = {
   reason: string;
   status: MinecraftActionStatus;
   result_message: string | null;
+  source_order_id: string | null;
+  source_order_reference: string | null;
+  automated: boolean;
   created_by: string | null;
   processed_by: string | null;
   created_at: string;

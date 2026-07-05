@@ -32,6 +32,7 @@ import {
   updateStaffNotesDb,
   notifyDiscordOrderAction,
 } from "../services/admin";
+import { createMinecraftActionForVerifiedOrder } from "../services/minecraftActions";
 import type {
   AccessState,
   AdminProfile,
@@ -197,6 +198,17 @@ function AdminPage() {
       setMessage(error.message);
       return { error, warning };
     }
+    let minecraftWarning: string | null = null;
+
+    if (status === "verified" && previousStatus !== "verified") {
+      const automationResult = await createMinecraftActionForVerifiedOrder(currentOrder);
+
+      if (automationResult.error) {
+        minecraftWarning = `Order verified, but Minecraft action automation failed: ${automationResult.error.message}`;
+      } else if (automationResult.warning) {
+        minecraftWarning = automationResult.warning;
+      }
+    }
 
     const notifyResult = await notifyDiscordOrderAction(
       currentOrder,
@@ -210,10 +222,10 @@ function AdminPage() {
       ? `Order updated, but Discord notification failed: ${notifyResult.error.message}`
       : null;
 
-    const finalWarning =
-      warning && discordWarning
-        ? `${warning} ${discordWarning}`
-        : warning || discordWarning;
+    const warnings = [warning, minecraftWarning, discordWarning].filter(
+      (item): item is string => Boolean(item),
+    );
+    const finalWarning = warnings.length > 0 ? warnings.join(" ") : null;
 
     if (finalWarning) {
       setMessage(finalWarning);
@@ -549,6 +561,11 @@ function AdminPage() {
 }
 
 export default AdminPage;
+
+
+
+
+
 
 
 
