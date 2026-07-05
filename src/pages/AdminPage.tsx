@@ -10,7 +10,6 @@ import {
   XCircle,
   RefreshCcw,
   AlertOctagon,
-  History,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { AdminAuth } from "../components/admin/AdminAuth";
@@ -19,6 +18,12 @@ import { AdminOrderCard } from "../components/admin/AdminOrderCard";
 import { StaffNotesModal } from "../components/admin/StaffNotesModal";
 import { ReceiptPreviewModal } from "../components/admin/ReceiptPreviewModal";
 import { AdminAuditLog } from "../components/admin/AdminAuditLog";
+import { AdminDashboardTabs } from "../components/admin/AdminDashboardTabs";
+import type { AdminTab } from "../components/admin/AdminDashboardTabs";
+import { AdminPlayersPanel } from "../components/admin/AdminPlayersPanel";
+import { AdminMinecraftActionCenter } from "../components/admin/AdminMinecraftActionCenter";
+import { AdminSettingsPanel } from "../components/admin/AdminSettingsPanel";
+import { AdminStaffPanel } from "../components/admin/AdminStaffPanel";
 import {
   fetchOrders,
   getReceiptUrl,
@@ -93,7 +98,7 @@ function AdminPage() {
   const [realtimeStatus, setRealtimeStatus] = useState<"connecting" | "live" | "error">("connecting");
   const [editingNotesOrder, setEditingNotesOrder] = useState<Order | null>(null);
 
-  const [activeTab, setActiveTab] = useState<"orders" | "audit">("orders");
+  const [activeTab, setActiveTab] = useState<AdminTab>("orders");
 
   const hasManageRights = canManageOrders(adminProfile?.role);
 
@@ -436,32 +441,9 @@ function AdminPage() {
 
         <AdminStaffApproval userRole={adminProfile?.role} />
 
-        <div className="mt-8 mb-4 border-b border-white/10">
-          <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveTab("orders")}
-              className={`flex items-center gap-2 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-bold ${activeTab === "orders"
-                ? "border-purple-400 text-purple-400"
-                : "border-transparent text-gray-400 hover:border-gray-300 hover:text-gray-300"
-                }`}
-            >
-              <PackageCheck className="h-5 w-5" />
-              Orders View
-            </button>
-            <button
-              onClick={() => setActiveTab("audit")}
-              className={`flex items-center gap-2 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-bold ${activeTab === "audit"
-                ? "border-blue-400 text-blue-400"
-                : "border-transparent text-gray-400 hover:border-gray-300 hover:text-gray-300"
-                }`}
-            >
-              <History className="h-5 w-5" />
-              Global Audit Log
-            </button>
-          </nav>
-        </div>
+        <AdminDashboardTabs activeTab={activeTab} onChange={setActiveTab} />
 
-        {activeTab === "orders" ? (
+        {activeTab === "orders" && (
           <>
             <div className="grid gap-3 rounded-[1.75rem] border border-purple-500/20 bg-white/[0.045] p-4 lg:grid-cols-[1fr_auto] lg:items-center">
               <div className="relative">
@@ -518,12 +500,33 @@ function AdminPage() {
                 </div>
               )}
             </div>
-          </>
-        ) : (
+          </>        )}
+
+        {activeTab === "players" && (
+          <AdminPlayersPanel orders={orders} canManagePlayers={hasManageRights} />
+        )}
+
+        {activeTab === "minecraft" && (
+          <AdminMinecraftActionCenter canManagePlayers={hasManageRights} />
+        )}
+
+        {activeTab === "staff" && (
+          <AdminStaffPanel profile={adminProfile} />
+        )}
+
+        {activeTab === "logs" && (
           <div className="mt-6">
-            <h2 className="text-2xl font-black mb-4">Global Audit Log</h2>
+            <h2 className="mb-4 text-2xl font-black">Global Audit Log</h2>
             <AdminAuditLog isGlobal={true} />
           </div>
+        )}
+
+        {activeTab === "settings" && (
+          <AdminSettingsPanel
+            realtimeStatus={realtimeStatus}
+            lastUpdated={lastUpdated}
+            orderCount={orders.length}
+          />
         )}
       </div>
 
@@ -546,6 +549,9 @@ function AdminPage() {
 }
 
 export default AdminPage;
+
+
+
 
 
 
