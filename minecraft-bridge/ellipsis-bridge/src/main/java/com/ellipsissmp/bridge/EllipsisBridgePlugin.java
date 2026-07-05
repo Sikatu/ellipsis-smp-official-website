@@ -231,6 +231,10 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (command.getName().equalsIgnoreCase("ellipsis")) {
+            return handlePlayerCommand(sender, args);
+        }
+
         if (!command.getName().equalsIgnoreCase("ellipsisbridge")) return false;
 
         if (args.length == 0 || args[0].equalsIgnoreCase("status")) {
@@ -275,5 +279,84 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
             + ", actionTask=" + (actionPollTask != null)
             + ", profileTask=" + (profileSyncTask != null)
             + ", heartbeatTask=" + (heartbeatTask != null);
+    }
+
+    private boolean handlePlayerCommand(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("This command is only available in-game.");
+            return true;
+        }
+
+        if (args.length == 0) {
+            player.sendMessage("Usage: /ellipsis <link|profile|unlink>");
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("link")) {
+            if (args.length < 2) {
+                player.sendMessage("Usage: /ellipsis link <code>");
+                return true;
+            }
+
+            linkWebsiteAccount(player, args[1]);
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("profile")) {
+            player.sendMessage("Open your Ellipsis SMP profile: https://www.ellipsissmp.com/account");
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("unlink")) {
+            player.sendMessage("Website unlink support is coming in the next bridge update.");
+            return true;
+        }
+
+        player.sendMessage("Usage: /ellipsis <link|profile|unlink>");
+        return true;
+    }
+
+    private void linkWebsiteAccount(Player player, String code) {
+        if (supabase == null || !supabase.isConfigured()) {
+            player.sendMessage("Website linking is temporarily unavailable. Please contact staff.");
+            return;
+        }
+
+        String cleanCode = code == null ? "" : code.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
+        if (cleanCode.length() < 4 || cleanCode.length() > 16) {
+            player.sendMessage("Invalid claim code. Generate a new code on the website.");
+            return;
+        }
+
+        String playerKey = player.getName().toLowerCase();
+        String uuid = player.getUniqueId().toString();
+        String username = player.getName();
+
+        player.sendMessage("Checking your website claim code...");
+
+        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+            try {
+                SupabaseClient.ClaimLinkResult result = supabase.completeMinecraftProfileClaim(
+                    cleanCode,
+                    playerKey,
+                    uuid,
+                    username
+                );
+
+                Bukkit.getScheduler().runTask(this, () -> {
+                    if (result.success()) {
+                        player.sendMessage("Success! " + result.message());
+                        player.sendMessage("You can now refresh your website profile.");
+                    } else {
+                        player.sendMessage(result.message());
+                    }
+                });
+            } catch (Exception error) {
+                getLogger().warning("Failed to link website account for " + username + ": " + error.getMessage());
+                Bukkit.getScheduler().runTask(this, () ->
+                    player.sendMessage("Website linking failed. Please try again or contact staff.")
+                );
+            }
+        });
     }
 }

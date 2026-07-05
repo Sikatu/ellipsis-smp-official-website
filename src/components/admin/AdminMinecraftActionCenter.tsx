@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   BadgeCheck,
@@ -19,11 +19,11 @@ import type {
 } from "../../types/minecraftActions";
 import {
   fetchAllMinecraftAdminActions,
+  getMinecraftActionPayloadSummary,
   minecraftActionLabels,
   minecraftActionStatusLabels,
   updateMinecraftAdminActionStatus,
 } from "../../services/minecraftActions";
-
 type AdminMinecraftActionCenterProps = {
   canManagePlayers: boolean;
 };
@@ -52,24 +52,6 @@ function getActionIcon(actionType: MinecraftActionType) {
   if (actionType === "give_coins") return <Coins className="h-4 w-4" />;
   if (actionType === "temp_ban") return <TimerReset className="h-4 w-4" />;
   return <ShieldAlert className="h-4 w-4" />;
-}
-
-function getPayloadSummary(action: MinecraftAdminAction) {
-  const payload = action.payload || {};
-
-  if (action.action_type === "give_rank") {
-    return `Rank: ${String(payload.rank || "N/A")}`;
-  }
-
-  if (action.action_type === "give_coins") {
-    return `Coins: ${String(payload.amount || "N/A")}`;
-  }
-
-  if (action.action_type === "temp_ban") {
-    return `Duration: ${String(payload.duration || "N/A")}`;
-  }
-
-  return "No extra payload.";
 }
 
 function canUpdateStatus(status: MinecraftActionStatus) {
@@ -122,7 +104,7 @@ export function AdminMinecraftActionCenter({
         action.action_type,
         action.reason,
         action.result_message,
-        getPayloadSummary(action),
+        getMinecraftActionPayloadSummary(action),
       ]
         .filter(Boolean)
         .join(" ")
@@ -304,7 +286,7 @@ export function AdminMinecraftActionCenter({
                     <div className="mt-4 grid gap-3 text-sm text-gray-300 sm:grid-cols-2 lg:grid-cols-3">
                       <p><strong>IGN:</strong> <span className="font-mono text-white">{action.minecraft_username}</span></p>
                       <p><strong>Discord:</strong> <span className="text-white">{action.discord_username || "N/A"}</span></p>
-                      <p><strong>Payload:</strong> <span className="text-white">{getPayloadSummary(action)}</span></p>
+                      <p><strong>Payload:</strong> <span className="text-white">{getMinecraftActionPayloadSummary(action)}</span></p>
                       <p><strong>Source:</strong> <span className="text-white">{action.automated ? "Automated" : "Manual"}</span></p>
                       <p><strong>Order:</strong> <span className="font-mono text-white">{action.source_order_reference || "N/A"}</span></p>
                       <p className="sm:col-span-2 lg:col-span-3">

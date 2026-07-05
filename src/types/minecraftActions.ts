@@ -1,10 +1,27 @@
-﻿export type MinecraftActionType =
+export type MinecraftActionType =
   | "give_rank"
   | "give_coins"
+  | "give_crate_key"
+  | "give_item"
+  | "give_kit"
   | "jail"
   | "unjail"
   | "temp_ban"
-  | "manual_delivery";
+  | "unban"
+  | "kick"
+  | "mute"
+  | "unmute"
+  | "warn"
+  | "whitelist_add"
+  | "whitelist_remove"
+  | "maintenance_enable"
+  | "maintenance_disable"
+  | "manual_delivery"
+  | "server_broadcast"
+  | "title_broadcast"
+  | "actionbar_broadcast"
+  | "sound_broadcast"
+  | "approved_command";
 
 export type MinecraftActionStatus =
   | "queued"

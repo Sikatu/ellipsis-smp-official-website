@@ -12,6 +12,9 @@ softdepend:
   - VotingPlugin
   - ajLeaderboards
 commands:
+  ellipsis:
+    description: Player website profile link commands.
+    usage: /ellipsis <link|profile|unlink>
   ellipsisbridge:
     description: Manage the Ellipsis SMP bridge.
     usage: /ellipsisbridge <status|reload|poll|sync|heartbeat>

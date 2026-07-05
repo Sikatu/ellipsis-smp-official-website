@@ -1,7 +1,8 @@
-﻿import {
+import {
   BarChart3,
   History,
   LayoutDashboard,
+  Megaphone,
   PackageCheck,
   Settings,
   ShieldCheck,
@@ -15,6 +16,8 @@ export type AdminTab =
   | "orders"
   | "players"
   | "minecraft"
+  | "announcements"
+  | "server_ops"
   | "activity"
   | "staff"
   | "logs"
@@ -35,6 +38,8 @@ const tabs: Array<{
   { label: "Orders", value: "orders", accent: "purple", icon: PackageCheck },
   { label: "Players", value: "players", accent: "emerald", icon: UsersRound },
   { label: "Minecraft Queue", value: "minecraft", accent: "yellow", icon: Terminal },
+  { label: "Announcements", value: "announcements", accent: "pink", icon: Megaphone },
+  { label: "Server Ops", value: "server_ops", accent: "cyan", icon: Terminal },
   { label: "Staff Activity", value: "activity", accent: "cyan", icon: BarChart3 },
   { label: "Staff", value: "staff", accent: "blue", icon: ShieldCheck },
   { label: "Logs", value: "logs", accent: "amber", icon: History },
@@ -80,3 +85,4 @@ export function AdminDashboardTabs({ activeTab, onChange }: AdminDashboardTabsPr
     </div>
   );
 }
+

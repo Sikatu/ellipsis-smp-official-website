@@ -81,6 +81,7 @@ function Footer() {
                 <Link to="/vote" className="block transition hover:translate-x-1 hover:text-purple-300">Vote</Link>
                 <Link to="/discord" className="block transition hover:translate-x-1 hover:text-purple-300">Discord</Link>
                 <Link to="/about" className="block transition hover:translate-x-1 hover:text-purple-300">About</Link>
+                <Link to="/account" className="block transition hover:translate-x-1 hover:text-purple-300">Player Account</Link>
               </div>
             </div>
 

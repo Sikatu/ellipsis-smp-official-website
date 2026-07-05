@@ -10,6 +10,7 @@ const AboutPage = lazy(() => import("./pages/AboutPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
 const PlayerProfilePage = lazy(() => import("./pages/PlayerProfilePage"));
+const PlayerAccountPage = lazy(() => import("./pages/PlayerAccountPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/track" element={<TrackOrderPage />} />
           <Route path="/profile" element={<PlayerProfilePage />} />
+          <Route path="/account" element={<PlayerAccountPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
