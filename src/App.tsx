@@ -9,6 +9,7 @@ const DiscordPage = lazy(() => import("./pages/DiscordPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
+const PlayerProfilePage = lazy(() => import("./pages/PlayerProfilePage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/track" element={<TrackOrderPage />} />
+          <Route path="/profile" element={<PlayerProfilePage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

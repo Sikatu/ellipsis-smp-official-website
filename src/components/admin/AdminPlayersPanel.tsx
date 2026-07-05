@@ -1,15 +1,25 @@
-﻿import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  Activity,
   BadgeCheck,
   Coins,
+  Crown,
   Eye,
+  Gamepad2,
   MessageSquare,
   Search,
   ShieldAlert,
+  Trophy,
   UserRound,
 } from "lucide-react";
 import type { Order } from "../../types/admin";
 import type { MinecraftActionType } from "../../types/minecraftActions";
+import type { MinecraftPlayerProfile } from "../../types/playerProfiles";
+import {
+  fetchMinecraftPlayerProfiles,
+  getFormattedPlaytime,
+  getPlayerProfileSummary,
+} from "../../services/playerProfiles";
 import { AdminMinecraftActionModal } from "./AdminMinecraftActionModal";
 import { AdminPlayerNotesModal } from "./AdminPlayerNotesModal";
 import {
@@ -51,6 +61,30 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
   const [selectedNotesPlayer, setSelectedNotesPlayer] = useState<SelectedNotesPlayer | null>(null);
   const [selectedActionPlayer, setSelectedActionPlayer] = useState<SelectedActionPlayer | null>(null);
   const [selectedProfilePlayer, setSelectedProfilePlayer] = useState<AdminPlayerProfile | null>(null);
+  const [serverProfiles, setServerProfiles] = useState<MinecraftPlayerProfile[]>([]);
+  const [profileError, setProfileError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadServerProfiles() {
+      const { data, error } = await fetchMinecraftPlayerProfiles(500);
+      if (!isMounted) return;
+
+      if (error) {
+        setProfileError(error.message);
+      } else {
+        setProfileError("");
+        setServerProfiles(data);
+      }
+    }
+
+    void loadServerProfiles();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const players = useMemo(() => {
     const map = new Map<string, AdminPlayerProfile>();
@@ -90,6 +124,19 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
     return haystack.includes(search.toLowerCase());
   });
 
+  const serverProfileSummary = useMemo(
+    () => getPlayerProfileSummary(serverProfiles),
+    [serverProfiles],
+  );
+
+  const serverProfileMap = useMemo(() => {
+    const map = new Map<string, MinecraftPlayerProfile>();
+    serverProfiles.forEach((profile) => {
+      map.set(profile.player_key, profile);
+    });
+    return map;
+  }, [serverProfiles]);
+
   function openAction(player: { ign: string; discord: string }, actionType: MinecraftActionType) {
     setSelectedActionPlayer({
       ign: player.ign,
@@ -115,8 +162,8 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
           Players Dashboard
         </h2>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-300">
-          This section builds player control from order history. Open a player profile to review orders,
-          Minecraft actions, notes, and quick controls in one place.
+          Order history, synced Minecraft profiles, player controls, notes, and manual
+          command-center actions all live here.
         </p>
       </div>
 
@@ -132,11 +179,73 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
         </div>
       </div>
 
+      <div className="mt-5 rounded-[2rem] border border-cyan-500/20 bg-cyan-500/[0.055] p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">
+              Synced Minecraft Profiles
+            </p>
+            <h3 className="mt-2 text-2xl font-black text-white">
+              Server progress database
+            </h3>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-300">
+              These stats come from the Minecraft bridge once connected. Until then, the
+              dashboard still builds player profiles from order history.
+            </p>
+          </div>
+
+          {profileError && (
+            <div className="rounded-2xl border border-yellow-400/25 bg-yellow-500/10 px-4 py-3 text-sm font-bold text-yellow-100">
+              {profileError}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <ServerStat label="Synced Players" value={serverProfiles.length} icon={<UserRound className="h-5 w-5" />} />
+          <ServerStat label="Online" value={serverProfileSummary.online} icon={<Activity className="h-5 w-5" />} />
+          <ServerStat label="Linked Accounts" value={serverProfileSummary.linked} icon={<BadgeCheck className="h-5 w-5" />} />
+          <ServerStat label="Ranked" value={serverProfileSummary.ranked} icon={<Crown className="h-5 w-5" />} />
+          <ServerStat label="Avg Playtime" value={getFormattedPlaytime(serverProfileSummary.averagePlaytime)} icon={<Gamepad2 className="h-5 w-5" />} />
+        </div>
+
+        <div className="mt-5 grid gap-3 lg:grid-cols-2">
+          {serverProfiles.slice(0, 4).map((profile) => (
+            <article
+              key={profile.id}
+              className="rounded-2xl border border-white/10 bg-black/20 p-4"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="font-black text-white">{profile.minecraft_username}</p>
+                  <p className="mt-1 text-sm text-gray-400">
+                    {profile.current_rank} • {getFormattedPlaytime(profile.total_playtime_minutes)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-black text-yellow-200">
+                    {profile.leaderboard_position ? `#${profile.leaderboard_position}` : "Unranked"}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">Score {profile.leaderboard_score}</p>
+                </div>
+              </div>
+            </article>
+          ))}
+
+          {serverProfiles.length === 0 && (
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-6 text-center text-sm text-gray-400 lg:col-span-2">
+              No synced Minecraft profiles yet. The bridge will populate this table.
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
         {filteredPlayers.map((player) => {
           const delivered = player.orders.filter((order) => order.status === "delivered").length;
           const verified = player.orders.filter((order) => order.status === "verified").length;
           const pending = player.orders.filter((order) => order.status === "pending").length;
+          const serverProfile = serverProfileMap.get(player.ign.toLowerCase());
 
           return (
             <article
@@ -177,6 +286,34 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
                   <p className="text-xl font-black text-emerald-200">{delivered}</p>
                 </div>
               </div>
+
+              {serverProfile && (
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-yellow-400/20 bg-yellow-500/10 p-3">
+                    <p className="flex items-center gap-2 text-xs text-yellow-200">
+                      <Crown className="h-4 w-4" />
+                      Rank
+                    </p>
+                    <p className="mt-1 text-lg font-black text-white">{serverProfile.current_rank}</p>
+                  </div>
+                  <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-3">
+                    <p className="flex items-center gap-2 text-xs text-emerald-200">
+                      <Coins className="h-4 w-4" />
+                      Balance
+                    </p>
+                    <p className="mt-1 text-lg font-black text-white">{serverProfile.balance}</p>
+                  </div>
+                  <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-3">
+                    <p className="flex items-center gap-2 text-xs text-cyan-200">
+                      <Trophy className="h-4 w-4" />
+                      Board
+                    </p>
+                    <p className="mt-1 text-lg font-black text-white">
+                      {serverProfile.leaderboard_position ? `#${serverProfile.leaderboard_position}` : "N/A"}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {pending > 0 && (
                 <div className="mt-4 rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-3 text-sm font-bold text-yellow-100">
@@ -283,5 +420,25 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
         onClose={() => setSelectedActionPlayer(null)}
       />
     </section>
+  );
+}
+
+function ServerStat({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-cyan-400/20 bg-black/20 p-4">
+      <div className="text-cyan-300">{icon}</div>
+      <p className="mt-3 text-xs font-black uppercase tracking-widest text-gray-400">
+        {label}
+      </p>
+      <p className="mt-2 text-xl font-black text-white">{value}</p>
+    </div>
   );
 }
