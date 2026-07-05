@@ -1,4 +1,6 @@
 ﻿import { supabase } from "../lib/supabase";
+import { getAutomatedMinecraftActionForOrder } from "../lib/orderMinecraftAutomation";
+import type { Order } from "../types/admin";
 import type {
   MinecraftAdminAction,
   MinecraftActionStatus,
@@ -15,6 +17,7 @@ export const minecraftActionLabels: Record<MinecraftActionType, string> = {
   jail: "Jail Player",
   unjail: "Unjail Player",
   temp_ban: "Temp Ban Player",
+  manual_delivery: "Manual Delivery",
 };
 
 export const minecraftActionStatusLabels: Record<MinecraftActionStatus, string> = {
@@ -102,6 +105,7 @@ export async function createMinecraftAdminAction({
       payload,
       reason: reason.trim() || "No reason provided.",
       status: "queued",
+      automated: false,
     })
     .select("*")
     .single();
@@ -109,6 +113,70 @@ export async function createMinecraftAdminAction({
   return {
     data: data as MinecraftAdminAction | null,
     error: error ? new Error(error.message) : null,
+  };
+}
+
+export async function createMinecraftActionForVerifiedOrder(order: Order): Promise<{
+  data: MinecraftAdminAction | null;
+  error: Error | null;
+  warning: string | null;
+}> {
+  const playerKey = getPlayerKey(order.minecraft_username);
+
+  if (!playerKey) {
+    return {
+      data: null,
+      error: null,
+      warning: "Order verified, but Minecraft action was not queued because IGN is missing.",
+    };
+  }
+
+  const { data: existingAction, error: existingError } = await supabase
+    .from("minecraft_admin_actions")
+    .select("id,status")
+    .eq("source_order_id", order.id)
+    .eq("automated", true)
+    .maybeSingle();
+
+  if (existingError) {
+    return {
+      data: null,
+      error: new Error(existingError.message),
+      warning: null,
+    };
+  }
+
+  if (existingAction) {
+    return {
+      data: null,
+      error: null,
+      warning: "Minecraft action already exists for this verified order.",
+    };
+  }
+
+  const automation = getAutomatedMinecraftActionForOrder(order);
+
+  const { data, error } = await supabase
+    .from("minecraft_admin_actions")
+    .insert({
+      player_key: playerKey,
+      minecraft_username: order.minecraft_username,
+      discord_username: order.discord_username,
+      action_type: automation.actionType,
+      payload: automation.payload,
+      reason: automation.reason,
+      status: "queued",
+      source_order_id: order.id,
+      source_order_reference: automation.sourceOrderReference,
+      automated: true,
+    })
+    .select("*")
+    .single();
+
+  return {
+    data: data as MinecraftAdminAction | null,
+    error: error ? new Error(error.message) : null,
+    warning: null,
   };
 }
 
