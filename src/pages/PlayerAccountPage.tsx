@@ -323,7 +323,7 @@ function ProfilePanel({ profile }: { profile: PlayerPortalProfile }) {
             </h2>
 
             <p className="mt-2 text-sm text-gray-300">
-              {profile.is_online ? "Online now" : "Offline"} Ã‚Â· Linked{" "}
+              {profile.is_online ? "Online now" : "Offline"}  -  Linked{" "}
               {formatDate(profile.linked_at)}
             </p>
           </div>
@@ -368,7 +368,7 @@ function ProfilePanel({ profile }: { profile: PlayerPortalProfile }) {
         </div>
 
         <p className="mt-5 break-all rounded-2xl border border-white/10 bg-black/35 p-4 font-mono text-sm text-gray-200">
-          {showUuid ? uuidText : "Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢-Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢-Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢-Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢-Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"}
+          {showUuid ? uuidText : "----"}
         </p>
       </div>
     </div>
