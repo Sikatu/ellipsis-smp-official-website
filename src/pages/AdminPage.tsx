@@ -24,6 +24,7 @@ import type { AdminTab } from "../components/admin/AdminDashboardTabs";
 import { AdminPlayersPanel } from "../components/admin/AdminPlayersPanel";
 import { AdminMinecraftActionCenter } from "../components/admin/AdminMinecraftActionCenter";
 import { AdminAnnouncementCenter } from "../components/admin/AdminAnnouncementCenter";
+import { AdminServerOperationsPanel } from "../components/admin/AdminServerOperationsPanel";
 import { AdminSettingsPanel } from "../components/admin/AdminSettingsPanel";
 import { AdminStaffPanel } from "../components/admin/AdminStaffPanel";
 import { AdminStaffActivityPanel } from "../components/admin/AdminStaffActivityPanel";
@@ -540,6 +541,10 @@ function AdminPage() {
 
         {activeTab === "announcements" && (
           <AdminAnnouncementCenter />
+        )}
+
+        {activeTab === "server_ops" && (
+          <AdminServerOperationsPanel canManageServer={hasManageRights} />
         )}
 
         {activeTab === "activity" && (
