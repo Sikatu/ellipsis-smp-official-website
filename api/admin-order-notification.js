@@ -28,15 +28,17 @@ function safeText(value, fallback = "N/A") {
   return text || fallback;
 }
 
-async function verifySupabaseUser(token) {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const publishableKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+function getDisplayName(profile) {
+  const rawName = profile?.display_name ? String(profile.display_name).trim() : "";
 
-  if (!supabaseUrl || !publishableKey || !serviceRoleKey) {
-    throw new Error("Missing Supabase server environment variables.");
+  if (rawName && !rawName.includes("@")) {
+    return rawName;
   }
 
+  return String(profile?.email || "Staff").split("@")[0] || "Staff";
+}
+
+async function getSupabaseUser({ supabaseUrl, publishableKey, token }) {
   const userResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
     headers: {
       apikey: publishableKey,
@@ -45,52 +47,171 @@ async function verifySupabaseUser(token) {
   });
 
   if (!userResponse.ok) {
-    return null;
+    const detail = await userResponse.text();
+    return {
+      user: null,
+      error: `Supabase user verification failed: ${detail.slice(0, 250)}`,
+    };
   }
 
   const user = await userResponse.json();
-  const email = user.email ? String(user.email).toLowerCase() : "";
 
-  if (!user.id || !email) {
-    return null;
+  if (!user?.id || !user?.email) {
+    return {
+      user: null,
+      error: "Supabase user verification returned no user id or email.",
+    };
   }
 
-  const profileUrl =
-    `${supabaseUrl}/rest/v1/admin_profiles` +
-    `?select=id,user_id,email,display_name,role,status` +
-    `&or=(user_id.eq.${encodeURIComponent(user.id)},email.eq.${encodeURIComponent(email)})` +
-    `&limit=1`;
+  return {
+    user: {
+      id: user.id,
+      email: String(user.email).toLowerCase(),
+    },
+    error: null,
+  };
+}
 
-  const profileResponse = await fetch(profileUrl, {
+async function fetchAdminProfileWithUserToken({ supabaseUrl, publishableKey, token, user }) {
+  const params = new URLSearchParams();
+  params.set("select", "id,user_id,email,display_name,role,status");
+  params.set("user_id", `eq.${user.id}`);
+  params.set("limit", "1");
+
+  const byUserIdResponse = await fetch(`${supabaseUrl}/rest/v1/admin_profiles?${params.toString()}`, {
+    headers: {
+      apikey: publishableKey,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (byUserIdResponse.ok) {
+    const profiles = await byUserIdResponse.json();
+    if (profiles[0]) return { profile: profiles[0], error: null };
+  }
+
+  const emailParams = new URLSearchParams();
+  emailParams.set("select", "id,user_id,email,display_name,role,status");
+  emailParams.set("email", `eq.${user.email}`);
+  emailParams.set("limit", "1");
+
+  const byEmailResponse = await fetch(`${supabaseUrl}/rest/v1/admin_profiles?${emailParams.toString()}`, {
+    headers: {
+      apikey: publishableKey,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!byEmailResponse.ok) {
+    const detail = await byEmailResponse.text();
+    return {
+      profile: null,
+      error: `Admin profile lookup failed with user token: ${detail.slice(0, 250)}`,
+    };
+  }
+
+  const profiles = await byEmailResponse.json();
+  return { profile: profiles[0] || null, error: null };
+}
+
+async function fetchAdminProfileWithServiceRole({ supabaseUrl, serviceRoleKey, user }) {
+  if (!serviceRoleKey) {
+    return { profile: null, error: "No service role key configured for fallback lookup." };
+  }
+
+  const params = new URLSearchParams();
+  params.set("select", "id,user_id,email,display_name,role,status");
+  params.set("email", `eq.${user.email}`);
+  params.set("limit", "1");
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/admin_profiles?${params.toString()}`, {
     headers: {
       apikey: serviceRoleKey,
       Authorization: `Bearer ${serviceRoleKey}`,
     },
   });
 
-  if (!profileResponse.ok) {
-    throw new Error("Unable to verify admin profile.");
+  if (!response.ok) {
+    const detail = await response.text();
+    return {
+      profile: null,
+      error: `Admin profile fallback lookup failed: ${detail.slice(0, 250)}`,
+    };
   }
 
-  const profiles = await profileResponse.json();
-  const profile = profiles[0];
+  const profiles = await response.json();
+  return { profile: profiles[0] || null, error: null };
+}
 
-  if (!profile || profile.status !== "approved") {
-    return null;
+async function verifyAdmin({ token }) {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const publishableKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !publishableKey) {
+    throw new Error("Missing Supabase URL or publishable key.");
+  }
+
+  const { user, error: userError } = await getSupabaseUser({
+    supabaseUrl,
+    publishableKey,
+    token,
+  });
+
+  if (!user) {
+    return { admin: null, error: userError || "Unable to verify Supabase user." };
+  }
+
+  const userTokenLookup = await fetchAdminProfileWithUserToken({
+    supabaseUrl,
+    publishableKey,
+    token,
+    user,
+  });
+
+  let profile = userTokenLookup.profile;
+  let lookupError = userTokenLookup.error;
+
+  if (!profile) {
+    const fallbackLookup = await fetchAdminProfileWithServiceRole({
+      supabaseUrl,
+      serviceRoleKey,
+      user,
+    });
+
+    profile = fallbackLookup.profile;
+    lookupError = fallbackLookup.error || lookupError;
+  }
+
+  if (!profile) {
+    return {
+      admin: null,
+      error: lookupError || "No admin profile found for this user.",
+    };
+  }
+
+  if (profile.status !== "approved") {
+    return {
+      admin: null,
+      error: "Admin profile is not approved.",
+    };
   }
 
   if (profile.role !== "owner" && profile.role !== "manager") {
-    return null;
+    return {
+      admin: null,
+      error: "Admin role cannot send order notifications.",
+    };
   }
 
   return {
-    id: profile.id,
-    email: profile.email,
-    displayName:
-      profile.display_name && !String(profile.display_name).includes("@")
-        ? profile.display_name
-        : String(profile.email || "Staff").split("@")[0],
-    role: profile.role,
+    admin: {
+      id: profile.id,
+      email: profile.email,
+      displayName: getDisplayName(profile),
+      role: profile.role,
+    },
+    error: null,
   };
 }
 
@@ -113,10 +234,12 @@ export default async function handler(req, res) {
       return json(res, 401, { error: "Missing authorization token." });
     }
 
-    const admin = await verifySupabaseUser(token);
+    const { admin, error: adminError } = await verifyAdmin({ token });
 
     if (!admin) {
-      return json(res, 403, { error: "Not authorized to send admin notifications." });
+      return json(res, 403, {
+        error: adminError || "Unable to verify admin profile.",
+      });
     }
 
     const body = req.body || {};
