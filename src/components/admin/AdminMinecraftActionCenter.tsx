@@ -85,7 +85,7 @@ export function AdminMinecraftActionCenter({
   const [loading, setLoading] = useState(false);
   const [updatingActionId, setUpdatingActionId] = useState<string | null>(null);
   const [resultMessages, setResultMessages] = useState<Record<string, string>>({});
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [feedback, setFeedback] = useState<{ type: "success" | "error" | "warning"; text: string } | null>(null);
 
   async function loadActions() {
     setLoading(true);
@@ -178,8 +178,8 @@ export function AdminMinecraftActionCenter({
         current.map((item) => (item.id === result.data?.id ? result.data : item)),
       );
       setFeedback({
-        type: "success",
-        text: `Action marked as ${minecraftActionStatusLabels[status]}.`,
+        type: result.warning ? "warning" : "success",
+        text: result.warning || `Action marked as ${minecraftActionStatusLabels[status]}.`,
       });
     }
 
@@ -412,4 +412,5 @@ export function AdminMinecraftActionCenter({
     </section>
   );
 }
+
 
