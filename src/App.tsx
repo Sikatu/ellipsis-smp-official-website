@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import RouteScrollToTop from "./components/ui/RouteScrollToTop";
+import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
 const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
@@ -27,10 +28,11 @@ function LoadingScreen() {
   );
 }
 
-export default function App() {
+function AppRoutes() {
+  const location = useLocation();
+
   return (
-    <BrowserRouter>
-      <RouteScrollToTop />
+    <ErrorBoundary key={location.pathname}>
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -46,6 +48,15 @@ export default function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
+    </ErrorBoundary>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <RouteScrollToTop />
+      <AppRoutes />
     </BrowserRouter>
   );
 }

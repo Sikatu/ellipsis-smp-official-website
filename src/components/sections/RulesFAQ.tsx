@@ -114,7 +114,7 @@ function RulesFAQ() {
     const [openRule, setOpenRule] = useState<number | null>(0);
 
     return (
-        <section id="rules" className="bg-transparent px-6 py-24 text-white">
+        <section id="rules" className="bg-transparent px-4 py-14 text-white sm:px-6 sm:py-20 md:py-24">
             <div className="mx-auto max-w-7xl">
                 <SectionTitle
                     label="Ellipsis SMP"

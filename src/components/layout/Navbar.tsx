@@ -41,7 +41,7 @@ function Navbar() {
           </span>
         </NavLink>
 
-        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-2 lg:flex" aria-label="Primary navigation">
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-2 xl:flex" aria-label="Primary navigation">
           {navigation.map((item) => (
             <NavLink key={item.label} to={item.href} className={linkClass}>
               {item.label}
@@ -49,7 +49,7 @@ function Navbar() {
           ))}
         </nav>
 
-        <div className="hidden shrink-0 items-center gap-3 lg:flex">
+        <div className="hidden shrink-0 items-center gap-3 xl:flex">
           <div className="flex items-center gap-2 rounded-full border border-purple-400/25 bg-white/[0.07] px-4 py-2 text-xs font-black text-white">
             <span className={`h-2.5 w-2.5 rounded-full ${status.loading ? "bg-yellow-300" : status.online ? "bg-green-400" : "bg-red-400"}`} />
             <span className="tracking-[0.18em] text-purple-200">{serverLabel}</span>
@@ -70,7 +70,7 @@ function Navbar() {
         <button
           type="button"
           onClick={() => setIsOpen((current) => !current)}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-purple-500/30 transition hover:bg-white/10 lg:hidden"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-purple-500/30 transition hover:bg-white/10 xl:hidden"
           aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
           aria-expanded={isOpen}
           aria-controls="mobile-navigation"
@@ -79,7 +79,7 @@ function Navbar() {
         </button>
       </div>
 
-      <div className="border-t border-purple-500/10 bg-black/30 px-3 py-2 lg:hidden">
+      <div className="border-t border-purple-500/10 bg-black/30 px-3 py-2 xl:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 rounded-full border border-purple-400/20 bg-white/[0.07] px-3 py-2 text-[11px] font-black sm:text-xs">
           <Server className="h-3.5 w-3.5 shrink-0 text-purple-300" />
           <span className={`h-2 w-2 shrink-0 rounded-full ${status.loading ? "bg-yellow-300" : status.online ? "bg-green-400" : "bg-red-400"}`} />
@@ -98,7 +98,7 @@ function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.22 }}
-            className="max-h-[calc(100vh-96px)] overflow-y-auto border-t border-purple-500/20 bg-black/90 px-4 py-4 shadow-[0_18px_45px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:px-6 sm:py-5 lg:hidden"
+            className="max-h-[calc(100vh-96px)] overflow-y-auto border-t border-purple-500/20 bg-black/90 px-4 py-4 shadow-[0_18px_45px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:px-6 sm:py-5 xl:hidden"
           >
             <nav className="grid gap-3 sm:grid-cols-2" aria-label="Mobile navigation">
               {navigation.map((item) => (
