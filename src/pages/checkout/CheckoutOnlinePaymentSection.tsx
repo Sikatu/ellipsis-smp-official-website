@@ -69,15 +69,16 @@ function CheckoutOnlinePaymentSection({
             Instant &amp; Automatic
           </p>
           <p className="mt-0.5 text-lg font-black text-white">
-            Pay with GCash, Maya, or Card
+            Pay with QR Ph
           </p>
         </div>
       </div>
 
       <div className="p-5">
         <p className="text-sm leading-6 text-gray-300">
-          Pay securely through PayMongo and your order is verified and
-          delivered automatically -- no receipt upload, no waiting for staff.
+          Scan the QR Ph code with GCash, Maya, ShopeePay, or your bank app
+          (BPI, GoTyme, and most others) -- your order is verified and
+          delivered automatically, no receipt upload, no waiting for staff.
         </p>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">

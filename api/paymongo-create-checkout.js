@@ -66,7 +66,7 @@ async function createPaymongoCheckoutSession({ secretKey, lineItemName, amount, 
               quantity: 1,
             },
           ],
-          payment_method_types: ["gcash", "card", "paymaya"],
+          payment_method_types: ["qrph"],
           success_url: successUrl,
           cancel_url: cancelUrl,
           metadata: {
