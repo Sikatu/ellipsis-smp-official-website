@@ -1,3 +1,84 @@
+// Canonical catalog, mirrored from src/pages/checkout/checkoutData.ts and
+// src/data/storeItems.ts. The client sends productName/productCategory/
+// productPrice for display, but the actual charge amount is always derived
+// from this list -- a client-supplied price is never trusted.
+const RANK_PRICES = {
+  NEON: "PHP 99",
+  AETHER: "PHP 199",
+  TITAN: "PHP 299",
+  OVERCLOCK: "PHP 399",
+  ASCENDANT: "PHP 499",
+};
+
+const CRATE_CATALOG = [
+  {
+    name: "MonsterHunter Pineapple KPOP Crate",
+    options: [
+      { keys: "1 key", price: "PHP 59" },
+      { keys: "3 keys", price: "PHP 149" },
+      { keys: "5 keys", price: "PHP 249" },
+      { keys: "10 keys", price: "PHP 499" },
+    ],
+  },
+  {
+    name: "Stellar Vanguard Crate",
+    options: [
+      { keys: "1 key", price: "PHP 69" },
+      { keys: "3 keys", price: "PHP 179" },
+      { keys: "5 keys", price: "PHP 299" },
+      { keys: "10 keys", price: "PHP 579" },
+    ],
+  },
+  {
+    name: "Phoenix Mecha Sovereign Crate",
+    options: [
+      { keys: "1 key", price: "PHP 79" },
+      { keys: "3 keys", price: "PHP 219" },
+      { keys: "5 keys", price: "PHP 349" },
+      { keys: "10 keys", price: "PHP 679" },
+    ],
+  },
+  {
+    name: "Mariposa Requiem Crate",
+    options: [
+      { keys: "1 key", price: "PHP 79" },
+      { keys: "3 keys", price: "PHP 219" },
+      { keys: "5 keys", price: "PHP 349" },
+      { keys: "10 keys", price: "PHP 679" },
+    ],
+  },
+];
+
+const FIXED_CATEGORY_PRICES = {
+  Furnitures: "PHP 50",
+  Plushies: "PHP 50",
+};
+
+// Resolves the true price for a requested product from the canonical
+// catalog above. Returns null if the product/category/quantity combination
+// doesn't match anything real, which the caller treats as a rejected request.
+function resolveCanonicalPrice({ productCategory, productName, quantity }) {
+  const name = String(productName || "").trim();
+
+  if (productCategory === "Premium Rank") {
+    return RANK_PRICES[name] || null;
+  }
+
+  if (productCategory === "Premium Crate") {
+    const crate = CRATE_CATALOG.find((entry) => name.startsWith(entry.name));
+    if (!crate) return null;
+
+    const option = crate.options.find((entry) => entry.keys === quantity);
+    return option?.price || null;
+  }
+
+  if (productCategory === "Furnitures" || productCategory === "Plushies") {
+    return FIXED_CATEGORY_PRICES[productCategory];
+  }
+
+  return null;
+}
+
 function json(res, statusCode, body) {
   res.statusCode = statusCode;
   res.setHeader("Content-Type", "application/json");
@@ -126,7 +207,13 @@ export default async function handler(req, res) {
       return json(res, 400, { error: "Missing site URL for payment redirect." });
     }
 
-    const amount = parseAmountToCentavos(productPrice);
+    const canonicalPrice = resolveCanonicalPrice({ productCategory, productName, quantity });
+
+    if (!canonicalPrice) {
+      return json(res, 400, { error: "Could not validate this product. Please refresh and try again." });
+    }
+
+    const amount = parseAmountToCentavos(canonicalPrice);
 
     if (!amount) {
       return json(res, 400, { error: "Could not parse a valid amount from the product price." });
@@ -144,7 +231,7 @@ export default async function handler(req, res) {
         product_id: productId || null,
         product_name: productName,
         product_category: productCategory || null,
-        product_price: productPrice,
+        product_price: canonicalPrice,
         quantity,
         payment_method: "PayMongo (Online)",
         payment_reference: orderReference,
