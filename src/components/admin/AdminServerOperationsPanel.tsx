@@ -11,6 +11,7 @@ import {
   Lock,
   Megaphone,
   Radio,
+  Search,
   Send,
   ShieldAlert,
   ShieldCheck,
@@ -466,6 +467,15 @@ const riskStyles: Record<RiskLevel, string> = {
   Critical: "border-red-300/25 bg-red-400/10 text-red-100",
 };
 
+type StatusTone = "emerald" | "amber" | "red" | "cyan";
+
+const statusToneClasses: Record<StatusTone, { text: string; dot: string }> = {
+  emerald: { text: "text-emerald-300", dot: "bg-emerald-400" },
+  amber: { text: "text-amber-300", dot: "bg-amber-400" },
+  red: { text: "text-red-300", dot: "bg-red-400" },
+  cyan: { text: "text-cyan-300", dot: "bg-cyan-400" },
+};
+
 const fieldLabels: Record<FieldKey, string> = {
   title: "Title",
   subtitle: "Subtitle",
@@ -479,6 +489,10 @@ const fieldLabels: Record<FieldKey, string> = {
   duration: "Duration",
   reason: "Operator Reason / Audit Note",
 };
+
+const inputClass =
+  "w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/50 focus:bg-black/40 focus:shadow-[0_0_0_3px_rgba(34,211,238,0.12)]";
+const textareaClass = `${inputClass} resize-none`;
 
 function requiresOperatorConfirmation(risk: RiskLevel) {
   return risk === "High" || risk === "Critical";
@@ -552,6 +566,7 @@ export function AdminServerOperationsPanel({
   canManageServer,
 }: AdminServerOperationsPanelProps) {
   const [operationId, setOperationId] = useState("actionbar_broadcast");
+  const [commandSearch, setCommandSearch] = useState("");
   const [targetUsername, setTargetUsername] = useState("");
   const [title, setTitle] = useState("Ellipsis SMP");
   const [subtitle, setSubtitle] = useState("");
@@ -581,11 +596,29 @@ export function AdminServerOperationsPanel({
   }, [operationId]);
 
   const groupedOperations = useMemo(() => {
-    return categoryOrder.map((category) => ({
-      category,
-      items: operations.filter((item) => item.category === category),
-    }));
-  }, []);
+    const query = commandSearch.trim().toLowerCase();
+
+    return categoryOrder
+      .map((category) => ({
+        category,
+        items: operations.filter((item) => {
+          if (item.category !== category) return false;
+          if (!query) return true;
+
+          return (
+            item.label.toLowerCase().includes(query) ||
+            item.helper.toLowerCase().includes(query) ||
+            item.risk.toLowerCase().includes(query)
+          );
+        }),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [commandSearch]);
+
+  const visibleOperationCount = groupedOperations.reduce(
+    (total, group) => total + group.items.length,
+    0
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -990,10 +1023,19 @@ export function AdminServerOperationsPanel({
     : intelLoading
       ? "Syncing"
       : "No heartbeat";
+  const bridgeModeTone: StatusTone =
+    bridgeModeLabel === "Online"
+      ? "emerald"
+      : bridgeModeLabel === "Degraded"
+        ? "amber"
+        : bridgeModeLabel === "Warning" || bridgeModeLabel === "No Signal"
+          ? "red"
+          : "cyan";
 
   return (
     <section className="mt-6">
       <div className="relative overflow-hidden rounded-[2rem] border border-cyan-300/20 bg-[#020817]/90 p-6 shadow-[0_0_60px_rgba(34,211,238,0.08)]">
+        <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-yellow-400 via-purple-500 to-blue-500" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.18),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.14),transparent_34%)]" />
         <div className="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.2)_1px,transparent_1px)] [background-size:42px_42px]" />
 
@@ -1002,6 +1044,7 @@ export function AdminServerOperationsPanel({
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-cyan-100">
               <Terminal className="h-4 w-4" />
               Operator Console
+              <span className="h-px w-6 bg-gradient-to-r from-yellow-400/70 to-transparent" />
             </div>
 
             <h2 className="mt-4 max-w-3xl text-3xl font-black leading-tight text-white md:text-4xl">
@@ -1019,11 +1062,14 @@ export function AdminServerOperationsPanel({
               icon={<Activity className="h-4 w-4" />}
               label="Bridge Mode"
               value={bridgeModeLabel}
+              tone={bridgeModeTone}
+              pulse={bridgeModeTone === "emerald"}
             />
             <StatusChip
               icon={<ShieldCheck className="h-4 w-4" />}
               label="Command Safety"
               value={`${operationMetrics.queued} Queued`}
+              tone={operationMetrics.queued > 0 ? "amber" : "emerald"}
             />
             <StatusChip
               icon={<Zap className="h-4 w-4" />}
@@ -1034,16 +1080,68 @@ export function AdminServerOperationsPanel({
         </div>
       </div>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)_330px]">
+      {!canManageServer && (
+        <div className="mt-5 flex flex-col gap-3 rounded-[1.75rem] border border-amber-300/25 bg-amber-400/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <Crown className="mt-0.5 h-5 w-5 shrink-0 text-amber-200" />
+            <div>
+              <p className="text-sm font-black text-white">Owner Access Required</p>
+              <p className="mt-1 text-xs leading-5 text-amber-100/80">
+                The Operator Console is restricted to the owner role. You can review
+                commands, presets, and live telemetry, but queueing is disabled for
+                your account.
+              </p>
+            </div>
+          </div>
+
+          <span className="w-fit shrink-0 rounded-full border border-amber-300/30 bg-black/25 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-amber-200">
+            View Only
+          </span>
+        </div>
+      )}
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_320px]">
         <aside className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 shadow-[0_0_35px_rgba(168,85,247,0.06)]">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">
-              Command Deck
-            </p>
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">
+                Command Deck
+              </p>
+              <p className="mt-0.5 text-[11px] text-slate-500">
+                {visibleOperationCount} of {operations.length} operations
+              </p>
+            </div>
             <Radio className="h-4 w-4 text-cyan-200" />
           </div>
 
+          <div className="relative mt-3">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+            <input
+              value={commandSearch}
+              onChange={(event) => setCommandSearch(event.target.value)}
+              placeholder="Search commands..."
+              className={`${inputClass} !py-2.5 !pl-9 !text-xs`}
+            />
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {(Object.keys(riskStyles) as RiskLevel[]).map((risk) => (
+              <span
+                key={risk}
+                className={`rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.1em] ${riskStyles[risk]}`}
+              >
+                {risk}
+              </span>
+            ))}
+          </div>
+
           <div className="mt-4 space-y-5">
+            {groupedOperations.length === 0 && (
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-center text-xs leading-5 text-slate-500">
+                No commands match &quot;{commandSearch}&quot;.
+              </div>
+            )}
+
             {groupedOperations.map(({ category, items }) => {
               const Icon = categoryIcon(category);
 
@@ -1132,7 +1230,7 @@ export function AdminServerOperationsPanel({
                   value={targetUsername}
                   onChange={(event) => setTargetUsername(event.target.value)}
                   placeholder="Player IGN"
-                  className="input"
+                  className={inputClass}
                 />
               </Field>
             )}
@@ -1142,7 +1240,7 @@ export function AdminServerOperationsPanel({
                 <input
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
-                  className="input"
+                  className={inputClass}
                   placeholder="Ellipsis SMP"
                 />
               </Field>
@@ -1153,7 +1251,7 @@ export function AdminServerOperationsPanel({
                 <input
                   value={subtitle}
                   onChange={(event) => setSubtitle(event.target.value)}
-                  className="input"
+                  className={inputClass}
                   placeholder="Prepare for the next phase."
                 />
               </Field>
@@ -1166,7 +1264,7 @@ export function AdminServerOperationsPanel({
                   onChange={(event) => setMessage(event.target.value)}
                   rows={4}
                   maxLength={220}
-                  className="input resize-none"
+                  className={textareaClass}
                   placeholder="Write the live transmission message here..."
                 />
                 <div className="mt-2 text-right text-xs text-slate-500">
@@ -1180,7 +1278,7 @@ export function AdminServerOperationsPanel({
                 <input
                   value={sound}
                   onChange={(event) => setSound(event.target.value)}
-                  className="input"
+                  className={inputClass}
                   placeholder="minecraft:entity.player.levelup"
                 />
               </Field>
@@ -1193,7 +1291,7 @@ export function AdminServerOperationsPanel({
                     <input
                       value={volume}
                       onChange={(event) => setVolume(event.target.value)}
-                      className="input"
+                      className={inputClass}
                       placeholder="1"
                     />
                   </Field>
@@ -1204,7 +1302,7 @@ export function AdminServerOperationsPanel({
                     <input
                       value={pitch}
                       onChange={(event) => setPitch(event.target.value)}
-                      className="input"
+                      className={inputClass}
                       placeholder="1"
                     />
                   </Field>
@@ -1217,7 +1315,7 @@ export function AdminServerOperationsPanel({
                 <input
                   value={rank}
                   onChange={(event) => setRank(event.target.value)}
-                  className="input"
+                  className={inputClass}
                   placeholder="sovereign"
                 />
               </Field>
@@ -1228,7 +1326,7 @@ export function AdminServerOperationsPanel({
                 <input
                   value={crate}
                   onChange={(event) => setCrate(event.target.value)}
-                  className="input"
+                  className={inputClass}
                   placeholder="stellar"
                 />
               </Field>
@@ -1239,7 +1337,7 @@ export function AdminServerOperationsPanel({
                 <input
                   value={amount}
                   onChange={(event) => setAmount(event.target.value)}
-                  className="input"
+                  className={inputClass}
                   placeholder="1"
                 />
               </Field>
@@ -1250,7 +1348,7 @@ export function AdminServerOperationsPanel({
                 <input
                   value={duration}
                   onChange={(event) => setDuration(event.target.value)}
-                  className="input"
+                  className={inputClass}
                   placeholder="1h"
                 />
               </Field>
@@ -1262,7 +1360,7 @@ export function AdminServerOperationsPanel({
                   value={reason}
                   onChange={(event) => setReason(event.target.value)}
                   rows={4}
-                  className="input resize-none"
+                  className={textareaClass}
                   placeholder="Document why this operation is being queued..."
                 />
               </Field>
@@ -1274,7 +1372,7 @@ export function AdminServerOperationsPanel({
                   value={reason}
                   onChange={(event) => setReason(event.target.value)}
                   rows={3}
-                  className="input resize-none"
+                  className={textareaClass}
                   placeholder="Optional note for audit context..."
                 />
               </Field>
@@ -1298,12 +1396,6 @@ export function AdminServerOperationsPanel({
               }}
             />
 
-            {!canManageServer && (
-              <Feedback tone="warning">
-                Your role can view this console but cannot queue server operations.
-              </Feedback>
-            )}
-
             {error && <Feedback tone="error">{error}</Feedback>}
             {notice && <Feedback tone="success">{notice}</Feedback>}
 
@@ -1314,12 +1406,18 @@ export function AdminServerOperationsPanel({
                 disabled={!canManageServer || isSubmitting}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-300/35 bg-cyan-400/15 px-5 py-3 text-sm font-black text-cyan-100 transition hover:bg-cyan-400/25 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isSubmitting ? (
+                {!canManageServer ? (
+                  <Lock className="h-4 w-4" />
+                ) : isSubmitting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Send className="h-4 w-4" />
                 )}
-                Deploy Through Bridge
+                {!canManageServer
+                  ? "Owner Access Required"
+                  : isSubmitting
+                    ? "Deploying..."
+                    : "Deploy Through Bridge"}
               </button>
             </div>
           </div>
@@ -1548,18 +1646,34 @@ function StatusChip({
   icon,
   label,
   value,
+  tone,
+  pulse = false,
 }: {
   icon: ReactNode;
   label: string;
   value: string;
+  tone?: StatusTone;
+  pulse?: boolean;
 }) {
+  const toneStyle = tone ? statusToneClasses[tone] : null;
+
   return (
     <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
       <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">
         {icon}
         {label}
       </div>
-      <div className="mt-1 text-sm font-black text-white">{value}</div>
+      <div className={`mt-1 flex items-center gap-2 text-sm font-black ${toneStyle?.text || "text-white"}`}>
+        {tone && (
+          <span className="relative flex h-2 w-2 shrink-0">
+            {pulse && (
+              <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-60 ${toneStyle?.dot}`} />
+            )}
+            <span className={`relative inline-flex h-2 w-2 rounded-full ${toneStyle?.dot}`} />
+          </span>
+        )}
+        {value}
+      </div>
     </div>
   );
 }
