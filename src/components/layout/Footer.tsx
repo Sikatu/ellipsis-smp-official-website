@@ -28,7 +28,7 @@ function Footer() {
       <div className="relative mx-auto max-w-7xl">
         <div className="relative overflow-hidden rounded-[2.5rem] border border-purple-500/20 bg-white/[0.05] p-6 shadow-[0_0_70px_rgba(168,85,247,0.16)] backdrop-blur-xl md:p-8">
           <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-yellow-400 via-purple-500 to-blue-500" />
-          <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr_0.7fr_1fr]">
+          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.9fr_1fr]">
             <div>
               <div className="flex items-center gap-4">
                 <img
@@ -86,19 +86,6 @@ function Footer() {
                 <Link to="/discord" className="block transition hover:translate-x-1 hover:text-purple-300">Discord</Link>
                 <Link to="/about" className="block transition hover:translate-x-1 hover:text-purple-300">About</Link>
                 <Link to="/account" className="block transition hover:translate-x-1 hover:text-purple-300">Player Account</Link>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="mb-3 inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em] text-white">
-                Store
-                <span className="h-px w-6 bg-yellow-400/60" />
-              </h3>
-              <div className="space-y-2.5 text-sm">
-                <Link to="/marketplace" className="block transition hover:translate-x-1 hover:text-yellow-300">Premium Ranks</Link>
-                <Link to="/marketplace" className="block transition hover:translate-x-1 hover:text-yellow-300">Premium Crates</Link>
-                <Link to="/marketplace" className="block transition hover:translate-x-1 hover:text-yellow-300">Furnitures</Link>
-                <Link to="/marketplace" className="block transition hover:translate-x-1 hover:text-yellow-300">Plushies</Link>
               </div>
             </div>
 
