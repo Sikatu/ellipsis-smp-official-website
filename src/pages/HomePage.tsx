@@ -119,7 +119,7 @@ const systemCards = [
         title: "Ranks and Cosmetics",
         description:
             "Optional supporter perks, cosmetics, crates, plushies, and furniture for players who want more.",
-        image: "/ranks/ascendant.png",
+        image: "/images/showcase/market.webp",
         tone: "from-cyan-500/20 via-purple-500/10 to-black/20",
     },
     {

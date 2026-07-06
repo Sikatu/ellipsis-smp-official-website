@@ -14,7 +14,7 @@ function About() {
     }
 
     return (
-        <section id="about" className="bg-transparent px-6 py-24 text-white">
+        <section id="about" className="bg-transparent px-4 py-14 text-white sm:px-6 sm:py-20 md:py-24">
             <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_0.9fr]">
                 <div className="rounded-3xl border border-purple-500/20 bg-white/5 p-8 backdrop-blur">
                     <p className="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-purple-400">

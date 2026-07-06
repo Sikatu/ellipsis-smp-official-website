@@ -114,7 +114,7 @@ function AnimatedNumber({
 
 function ServerStats() {
     return (
-        <section id="stats" className="relative overflow-hidden px-6 py-24 text-white">
+        <section id="stats" className="relative overflow-hidden px-4 py-14 text-white sm:px-6 sm:py-20 md:py-24">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.1),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.14),transparent_35%)]" />
 
             <div className="relative mx-auto max-w-7xl">

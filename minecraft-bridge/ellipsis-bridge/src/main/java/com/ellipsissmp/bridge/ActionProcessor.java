@@ -165,7 +165,11 @@ public class ActionProcessor {
 
     private String safeReason(String value) {
         if (value == null) return "";
-        return value.replaceAll("[\\r\\n\\t]", " ").trim();
+        String cleaned = value
+            .replaceAll("[\\r\\n\\t]", " ")
+            .replaceAll("[\"'`@{}\\\\]", "")
+            .trim();
+        return cleaned.length() > 200 ? cleaned.substring(0, 200) : cleaned;
     }
 
     public record ActionResult(boolean success, String message) {
