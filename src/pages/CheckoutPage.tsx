@@ -20,6 +20,7 @@ function CheckoutPage() {
     selectedRank,
     selectedCrate,
     selectedKeyQuantity,
+    quantityForOrder,
     method,
     setMethod,
     minecraftIgn,
@@ -130,6 +131,7 @@ function CheckoutPage() {
             <CheckoutPaymentSection
               mobileStep={mobileStep}
               selectedProduct={selectedProduct}
+              quantity={quantityForOrder}
               method={method}
               setMethod={setMethod}
               copiedRecipient={copiedRecipient}

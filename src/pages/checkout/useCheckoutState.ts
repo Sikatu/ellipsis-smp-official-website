@@ -209,6 +209,9 @@ export function useCheckoutState() {
     selectedKeyQuantity,
   ]);
 
+  const quantityForOrder =
+    selectedCategory === "Premium Crates" ? selectedKeyQuantity : null;
+
   const canSubmit = useMemo(() => {
     return Boolean(
       minecraftIgn.trim() &&
@@ -443,8 +446,7 @@ export function useCheckoutState() {
         productName: selectedProduct.name,
         productCategory: selectedProduct.type,
         productPrice: selectedProduct.price,
-        quantity:
-          selectedCategory === "Premium Crates" ? selectedKeyQuantity : null,
+        quantity: quantityForOrder,
         paymentMethod: method.label,
         receiptFile,
       });
@@ -470,6 +472,7 @@ export function useCheckoutState() {
     selectedRank,
     selectedCrate,
     selectedKeyQuantity,
+    quantityForOrder,
     method,
     setMethod,
     minecraftIgn,

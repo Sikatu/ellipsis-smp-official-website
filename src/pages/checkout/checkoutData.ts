@@ -2,6 +2,12 @@ import type { Category, KeyQuantity, MobileCheckoutStep } from "./checkoutTypes"
 
 export const paymentMethods = [
   {
+    id: "PayMongo",
+    label: "Pay Online",
+    qr: "",
+    color: "from-emerald-400 to-teal-500",
+  },
+  {
     id: "GCash",
     label: "GCash",
     qr: "/payment/payment-gcash-qr.jpg",
