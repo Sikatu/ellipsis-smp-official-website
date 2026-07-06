@@ -293,6 +293,97 @@ const operations: OperationDefinition[] = [
     fields: ["reason"],
     templateHint: "approved command: player_warn -> cmi warn {player} {reason}",
   },
+  {
+    id: "player_kick",
+    label: "Kick Player",
+    helper: "Immediately removes a player from the server.",
+    operatorNote: "Use for disruptive behavior that needs an immediate stop.",
+    category: "Moderation",
+    actionType: "kick",
+    risk: "Medium",
+    requiresPlayer: true,
+    requiresReason: true,
+    fields: ["reason"],
+    templateHint: "bridge template: kick -> configured safe command",
+  },
+  {
+    id: "player_mute",
+    label: "Mute Player",
+    helper: "Temporarily mutes chat for a player.",
+    operatorNote: "Set a clear duration and document the reason.",
+    category: "Moderation",
+    actionType: "mute",
+    risk: "Medium",
+    requiresPlayer: true,
+    requiresReason: true,
+    fields: ["duration", "reason"],
+    templateHint: "bridge template: mute -> configured safe command",
+  },
+  {
+    id: "player_unmute",
+    label: "Unmute Player",
+    helper: "Lifts an active chat mute.",
+    operatorNote: "Use once a mute period is over or was issued in error.",
+    category: "Moderation",
+    actionType: "unmute",
+    risk: "Low",
+    requiresPlayer: true,
+    requiresReason: true,
+    fields: ["reason"],
+    templateHint: "bridge template: unmute -> configured safe command",
+  },
+  {
+    id: "player_jail",
+    label: "Jail Player",
+    helper: "Sends a player to the configured jail.",
+    operatorNote: "Owner-grade containment action. Confirm before queueing.",
+    category: "Moderation",
+    actionType: "jail",
+    risk: "High",
+    requiresPlayer: true,
+    requiresReason: true,
+    fields: ["reason"],
+    templateHint: "bridge template: jail -> configured safe command",
+  },
+  {
+    id: "player_unjail",
+    label: "Unjail Player",
+    helper: "Releases a player from jail.",
+    operatorNote: "Use once the jail period has been served.",
+    category: "Moderation",
+    actionType: "unjail",
+    risk: "Medium",
+    requiresPlayer: true,
+    requiresReason: true,
+    fields: ["reason"],
+    templateHint: "bridge template: unjail -> configured safe command",
+  },
+  {
+    id: "player_temp_ban",
+    label: "Temporary Ban",
+    helper: "Bans a player from the server for a set duration.",
+    operatorNote: "Critical-impact action. Confirm the duration and reason before queueing.",
+    category: "Moderation",
+    actionType: "temp_ban",
+    risk: "Critical",
+    requiresPlayer: true,
+    requiresReason: true,
+    fields: ["duration", "reason"],
+    templateHint: "bridge template: temp_ban -> configured safe command",
+  },
+  {
+    id: "player_unban",
+    label: "Unban Player",
+    helper: "Lifts an active ban.",
+    operatorNote: "Use once a ban period is over or was issued in error.",
+    category: "Moderation",
+    actionType: "unban",
+    risk: "Medium",
+    requiresPlayer: true,
+    requiresReason: true,
+    fields: ["reason"],
+    templateHint: "bridge template: unban -> configured safe command",
+  },
 ];
 
 const operatorPresets: OperatorPreset[] = [
@@ -767,6 +858,13 @@ export function AdminServerOperationsPanel({
       };
     }
 
+    if (actionType === "temp_ban" || actionType === "mute") {
+      return {
+        duration,
+        reason,
+      };
+    }
+
     return {
       reason,
     };
@@ -803,6 +901,10 @@ export function AdminServerOperationsPanel({
 
     if (selectedOperation.fields.includes("crate") && !crate.trim()) {
       return "Crate ID is required.";
+    }
+
+    if (selectedOperation.fields.includes("duration") && !duration.trim()) {
+      return "Duration is required.";
     }
 
     if (selectedOperation.fields.includes("reason") && !reason.trim()) {

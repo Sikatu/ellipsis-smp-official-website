@@ -48,6 +48,7 @@ import type {
 import {
   roleDescriptions,
   canManageOrders,
+  hasFullAccess,
   getAdminDisplayName,
 } from "../lib/adminPermissions";
 
@@ -106,6 +107,7 @@ function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
 
   const hasManageRights = canManageOrders(adminProfile?.role);
+  const hasServerOpsAccess = hasFullAccess(adminProfile?.role);
 
   async function verifyAdminAccess(activeSession: Session) {
     setAccessState("checking");
@@ -544,7 +546,7 @@ function AdminPage() {
         )}
 
         {activeTab === "server_ops" && (
-          <AdminServerOperationsPanel canManageServer={hasManageRights} />
+          <AdminServerOperationsPanel canManageServer={hasServerOpsAccess} />
         )}
 
         {activeTab === "activity" && (
