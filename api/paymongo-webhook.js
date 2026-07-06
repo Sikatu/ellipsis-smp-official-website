@@ -22,9 +22,13 @@ async function readRawBody(req) {
   return Buffer.concat(chunks).toString("utf8");
 }
 
+const MAX_SIGNATURE_AGE_SECONDS = 5 * 60;
+
 // Verifies the `Paymongo-Signature` header per PayMongo's own signing scheme:
 // header format "t=<timestamp>,te=<test_sig>,li=<live_sig>", HMAC-SHA256 of
-// "<timestamp>.<raw_body>" using the webhook secret, hex digest.
+// "<timestamp>.<raw_body>" using the webhook secret, hex digest. Also rejects
+// stale timestamps so a captured request/signature pair can't be replayed
+// indefinitely.
 function verifyPaymongoSignature({ rawBody, signatureHeader, webhookSecret }) {
   if (!signatureHeader) return false;
 
@@ -39,6 +43,12 @@ function verifyPaymongoSignature({ rawBody, signatureHeader, webhookSecret }) {
   const comparisonSignature = parts.li || parts.te;
 
   if (!timestamp || !comparisonSignature) return false;
+
+  const timestampSeconds = Number(timestamp);
+  if (!Number.isFinite(timestampSeconds)) return false;
+
+  const ageSeconds = Math.abs(Date.now() / 1000 - timestampSeconds);
+  if (ageSeconds > MAX_SIGNATURE_AGE_SECONDS) return false;
 
   const expected = crypto
     .createHmac("sha256", webhookSecret)
@@ -185,17 +195,26 @@ function extractPaidResource(event) {
 async function notifyDiscord({ webhookUrl, order, automation }) {
   if (!webhookUrl) return;
 
+  const paidAt = new Date().toLocaleString("en-PH", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Manila",
+  });
+
   const embed = {
-    title: "✅ Order Verified (PayMongo)",
-    color: 3447003,
+    title: "🧾 Order Receipt -- Payment Verified",
+    description: "Paid automatically via PayMongo and verified without staff review.",
+    color: 3066993,
     timestamp: new Date().toISOString(),
     fields: [
-      { name: "Order Reference", value: order.payment_reference || order.id, inline: true },
-      { name: "IGN", value: order.minecraft_username || "N/A", inline: true },
+      { name: "Order ID", value: order.payment_reference || order.id, inline: true },
+      { name: "Paid At (PH Time)", value: paidAt, inline: true },
+      { name: "Payment Method", value: order.payment_method || "PayMongo", inline: true },
+      { name: "Minecraft IGN", value: order.minecraft_username || "N/A", inline: true },
       { name: "Discord", value: order.discord_username || "N/A", inline: true },
       { name: "Product", value: order.product_name || "N/A", inline: true },
-      { name: "Price", value: order.product_price || "N/A", inline: true },
-      { name: "Automated Action", value: automation.reason, inline: false },
+      { name: "Amount Paid", value: order.product_price || "N/A", inline: true },
+      { name: "Automated Delivery Action", value: automation.reason, inline: false },
     ],
     footer: { text: "Ellipsis SMP - PayMongo Webhook" },
   };
