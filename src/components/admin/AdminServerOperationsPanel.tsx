@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Activity,
@@ -24,9 +24,60 @@ import {
   createMinecraftAdminAction,
   minecraftActionLabels,
 } from "../../services/minecraftActions";
+import { supabase } from "../../lib/supabase";
 
 type AdminServerOperationsPanelProps = {
   canManageServer: boolean;
+};
+
+type BridgeHeartbeat = {
+  server_key: string | null;
+  server_name: string | null;
+  online_players: number | null;
+  max_players: number | null;
+  bridge_enabled: boolean | null;
+  supabase_configured: boolean | null;
+  action_task_running: boolean | null;
+  profile_task_running: boolean | null;
+  status_message: string | null;
+  last_heartbeat_at: string | null;
+  last_action_poll_at: string | null;
+  last_profile_sync_at: string | null;
+  updated_at: string | null;
+};
+
+type OperationMetrics = {
+  queued: number;
+  processing: number;
+  failed: number;
+  completedToday: number;
+};
+
+type RecentOperation = {
+  id: string;
+  action_type: MinecraftActionType | string | null;
+  minecraft_username: string | null;
+  status: string | null;
+  result_message: string | null;
+  created_at: string | null;
+  processed_at: string | null;
+};
+
+
+type OperatorPreset = {
+  label: string;
+  helper: string;
+  operationId: string;
+  tone: "cyan" | "purple" | "amber" | "emerald" | "pink";
+  values: Partial<Record<FieldKey, string>> & {
+    targetUsername?: string;
+  };
+};
+const emptyOperationMetrics: OperationMetrics = {
+  queued: 0,
+  processing: 0,
+  failed: 0,
+  completedToday: 0,
 };
 
 type OperationCategory =
@@ -243,6 +294,71 @@ const operations: OperationDefinition[] = [
   },
 ];
 
+const operatorPresets: OperatorPreset[] = [
+  {
+    label: "Universal Test",
+    helper: "Safe bridge test after updates.",
+    operationId: "test_say",
+    tone: "cyan",
+    values: {
+      message: "Universal command library live test.",
+      reason: "Safe operator console smoke test.",
+    },
+  },
+  {
+    label: "Vote Pulse",
+    helper: "Quick vote reminder for online players.",
+    operationId: "actionbar_broadcast",
+    tone: "emerald",
+    values: {
+      message: "Vote for Ellipsis SMP and claim your rewards. Use /vote.",
+      reason: "Scheduled vote reminder.",
+    },
+  },
+  {
+    label: "Restart Warning",
+    helper: "Soft restart notice for players.",
+    operationId: "server_broadcast",
+    tone: "amber",
+    values: {
+      title: "Ellipsis SMP",
+      message: "Server restart in 10 minutes. Please secure your items and finish risky actions.",
+      reason: "Owner restart notice.",
+    },
+  },
+  {
+    label: "Event Start",
+    helper: "Premium title signal for live events.",
+    operationId: "title_broadcast",
+    tone: "purple",
+    values: {
+      title: "Ellipsis Event",
+      subtitle: "Prepare for the next phase.",
+      reason: "Event start announcement.",
+    },
+  },
+  {
+    label: "Maintenance Advisory",
+    helper: "Prepare maintenance message before locking.",
+    operationId: "maintenance_enable",
+    tone: "amber",
+    values: {
+      reason: "Maintenance mode enabled for server work. Players should wait for staff updates.",
+    },
+  },
+  {
+    label: "Key-All Hype",
+    helper: "Hype broadcast for reward moments.",
+    operationId: "server_broadcast",
+    tone: "pink",
+    values: {
+      title: "Ellipsis SMP",
+      message: "Key-All incoming. Stay online and watch announcements for the reward drop.",
+      reason: "Key-All event announcement.",
+    },
+  },
+];
+
 const categoryOrder: OperationCategory[] = [
   "Broadcasting",
   "Safe Commands",
@@ -272,6 +388,10 @@ const fieldLabels: Record<FieldKey, string> = {
   reason: "Operator Reason / Audit Note",
 };
 
+function requiresOperatorConfirmation(risk: RiskLevel) {
+  return risk === "High" || risk === "Critical";
+}
+
 function isBroadcast(actionType: MinecraftActionType) {
   return [
     "server_broadcast",
@@ -279,6 +399,44 @@ function isBroadcast(actionType: MinecraftActionType) {
     "actionbar_broadcast",
     "sound_broadcast",
   ].includes(actionType);
+}
+
+function isHeartbeatOnline(heartbeat: BridgeHeartbeat | null) {
+  if (!heartbeat) return false;
+
+  const heartbeatTime = heartbeat.updated_at || heartbeat.last_heartbeat_at;
+  if (!heartbeatTime) return false;
+
+  const ageMs = Date.now() - new Date(heartbeatTime).getTime();
+  const isFresh = ageMs < 90000;
+
+  return Boolean(
+    isFresh &&
+      heartbeat.bridge_enabled &&
+      heartbeat.supabase_configured &&
+      heartbeat.action_task_running
+  );
+}
+
+function formatRelativeTime(value?: string | null) {
+  if (!value) return "Not reported";
+
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) return "Invalid time";
+
+  const seconds = Math.max(0, Math.round((Date.now() - time) / 1000));
+
+  if (seconds < 10) return "just now";
+  if (seconds < 60) return `${seconds}s ago`;
+
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.round(hours / 24);
+  return `${days}d ago`;
 }
 
 function categoryIcon(category: OperationCategory) {
@@ -314,9 +472,16 @@ export function AdminServerOperationsPanel({
   const [crate, setCrate] = useState("stellar");
   const [duration, setDuration] = useState("1h");
   const [reason, setReason] = useState("");
+  const [confirmationPhrase, setConfirmationPhrase] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [heartbeat, setHeartbeat] = useState<BridgeHeartbeat | null>(null);
+  const [operationMetrics, setOperationMetrics] =
+    useState<OperationMetrics>(emptyOperationMetrics);
+  const [recentOperations, setRecentOperations] = useState<RecentOperation[]>([]);
+  const [intelLoading, setIntelLoading] = useState(false);
+  const [intelError, setIntelError] = useState<string | null>(null);
 
   const selectedOperation = useMemo(() => {
     return operations.find((item) => item.id === operationId) || operations[0];
@@ -329,6 +494,102 @@ export function AdminServerOperationsPanel({
     }));
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function countActions(status: string, sinceIso?: string) {
+      let query = supabase
+        .from("minecraft_admin_actions")
+        .select("id", { count: "exact", head: true })
+        .eq("status", status);
+
+      if (sinceIso) {
+        query = query.gte("created_at", sinceIso);
+      }
+
+      const { count, error: countError } = await query;
+
+      if (countError) {
+        throw countError;
+      }
+
+      return count ?? 0;
+    }
+
+    async function loadOperatorIntelligence() {
+      try {
+        setIntelLoading(true);
+        setIntelError(null);
+
+        const { data: heartbeatData, error: heartbeatError } = await supabase
+          .from("minecraft_bridge_heartbeats")
+          .select(
+            "server_key, server_name, online_players, max_players, bridge_enabled, supabase_configured, action_task_running, profile_task_running, status_message, last_heartbeat_at, last_action_poll_at, last_profile_sync_at, updated_at"
+          )
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (heartbeatError) {
+          throw heartbeatError;
+        }
+
+        const { data: recentActionData, error: recentActionError } = await supabase
+          .from("minecraft_admin_actions")
+          .select("id, action_type, minecraft_username, status, result_message, created_at, processed_at")
+          .order("created_at", { ascending: false })
+          .limit(6);
+
+        if (recentActionError) {
+          throw recentActionError;
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayIso = today.toISOString();
+
+        const [queued, processing, failed, completedToday] = await Promise.all([
+          countActions("queued"),
+          countActions("processing"),
+          countActions("failed"),
+          countActions("completed", todayIso),
+        ]);
+
+        if (!isMounted) return;
+
+        setHeartbeat((heartbeatData as BridgeHeartbeat | null) ?? null);
+        setOperationMetrics({
+          queued,
+          processing,
+          failed,
+          completedToday,
+        });
+        setRecentOperations((recentActionData as RecentOperation[] | null) ?? []);
+      } catch (loadError) {
+        if (!isMounted) return;
+
+        const message =
+          loadError instanceof Error
+            ? loadError.message
+            : "Unable to load live operator intelligence.";
+
+        setIntelError(message);
+      } finally {
+        if (isMounted) {
+          setIntelLoading(false);
+        }
+      }
+    }
+
+    loadOperatorIntelligence();
+    const intervalId = window.setInterval(loadOperatorIntelligence, 30000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
   const target = selectedOperation.requiresPlayer ? targetUsername.trim() : "SERVER";
   const actionType = selectedOperation.actionType;
 
@@ -336,8 +597,63 @@ export function AdminServerOperationsPanel({
     setOperationId(nextOperationId);
     setError(null);
     setNotice(null);
+    setConfirmationPhrase("");
   }
 
+  function applyPreset(preset: OperatorPreset) {
+    setOperationId(preset.operationId);
+    setError(null);
+    setNotice(null);
+    setConfirmationPhrase("");
+
+    if (preset.values.targetUsername !== undefined) {
+      setTargetUsername(preset.values.targetUsername);
+    }
+
+    if (preset.values.title !== undefined) {
+      setTitle(preset.values.title);
+    }
+
+    if (preset.values.subtitle !== undefined) {
+      setSubtitle(preset.values.subtitle);
+    }
+
+    if (preset.values.message !== undefined) {
+      setMessage(preset.values.message);
+    }
+
+    if (preset.values.sound !== undefined) {
+      setSound(preset.values.sound);
+    }
+
+    if (preset.values.volume !== undefined) {
+      setVolume(preset.values.volume);
+    }
+
+    if (preset.values.pitch !== undefined) {
+      setPitch(preset.values.pitch);
+    }
+
+    if (preset.values.rank !== undefined) {
+      setRank(preset.values.rank);
+    }
+
+    if (preset.values.amount !== undefined) {
+      setAmount(preset.values.amount);
+    }
+
+    if (preset.values.crate !== undefined) {
+      setCrate(preset.values.crate);
+    }
+
+    if (preset.values.duration !== undefined) {
+      setDuration(preset.values.duration);
+    }
+
+    if (preset.values.reason !== undefined) {
+      setReason(preset.values.reason);
+    }
+  }
   function getPayload(): Record<string, unknown> {
     if (actionType === "server_broadcast" || actionType === "actionbar_broadcast") {
       return {
@@ -430,6 +746,13 @@ export function AdminServerOperationsPanel({
       return "Approved command key is missing from this operation.";
     }
 
+    if (
+      requiresOperatorConfirmation(selectedOperation.risk) &&
+      confirmationPhrase.trim().toUpperCase() !== "DEPLOY"
+    ) {
+      return "Type DEPLOY to confirm this high-risk operation.";
+    }
+
     return null;
   }
 
@@ -472,7 +795,28 @@ export function AdminServerOperationsPanel({
     if (isBroadcast(actionType) || selectedOperation.fields.includes("message")) {
       setMessage("");
     }
+
+    setConfirmationPhrase("");
   }
+
+  const bridgeOnline = isHeartbeatOnline(heartbeat);
+  const bridgeModeLabel = intelError
+    ? "Warning"
+    : bridgeOnline
+      ? "Online"
+      : heartbeat
+        ? "Degraded"
+        : intelLoading
+          ? "Syncing"
+          : "No Signal";
+  const playerLoadLabel = heartbeat
+    ? `${heartbeat.online_players ?? 0}/${heartbeat.max_players ?? "?"} Online`
+    : "Unknown";
+  const heartbeatLabel = heartbeat
+    ? formatRelativeTime(heartbeat.updated_at || heartbeat.last_heartbeat_at)
+    : intelLoading
+      ? "Syncing"
+      : "No heartbeat";
 
   return (
     <section className="mt-6">
@@ -501,17 +845,17 @@ export function AdminServerOperationsPanel({
             <StatusChip
               icon={<Activity className="h-4 w-4" />}
               label="Bridge Mode"
-              value="Live Queue"
+              value={bridgeModeLabel}
             />
             <StatusChip
               icon={<ShieldCheck className="h-4 w-4" />}
               label="Command Safety"
-              value="Allowlist"
+              value={`${operationMetrics.queued} Queued`}
             />
             <StatusChip
               icon={<Zap className="h-4 w-4" />}
               label="Config Reload"
-              value="No Restart"
+              value={playerLoadLabel}
             />
           </div>
         </div>
@@ -521,7 +865,7 @@ export function AdminServerOperationsPanel({
         <aside className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 shadow-[0_0_35px_rgba(168,85,247,0.06)]">
           <div className="flex items-center justify-between">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">
-              Operation Library
+              Command Deck
             </p>
             <Radio className="h-4 w-4 text-cyan-200" />
           </div>
@@ -584,7 +928,7 @@ export function AdminServerOperationsPanel({
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-purple-300/20 bg-purple-400/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-purple-100">
                 <Crown className="h-3.5 w-3.5" />
-                Active Operation
+                Mission Brief
               </div>
 
               <h3 className="mt-3 text-3xl font-black text-white">
@@ -603,6 +947,8 @@ export function AdminServerOperationsPanel({
               <div className="mt-1 text-lg font-black">{selectedOperation.risk}</div>
             </div>
           </div>
+
+          <PresetDeck presets={operatorPresets} onApply={applyPreset} />
 
           <div className="mt-6 grid gap-4">
             {selectedOperation.requiresPlayer && (
@@ -646,7 +992,7 @@ export function AdminServerOperationsPanel({
                   rows={4}
                   maxLength={220}
                   className="input resize-none"
-                  placeholder="Example: Universal command library live test."
+                  placeholder="Write the live transmission message here..."
                 />
                 <div className="mt-2 text-right text-xs text-slate-500">
                   {message.length}/220
@@ -798,19 +1144,45 @@ export function AdminServerOperationsPanel({
                 ) : (
                   <Send className="h-4 w-4" />
                 )}
-                Queue Safe Operation
+                Deploy Through Bridge
               </button>
             </div>
           </div>
         </main>
 
-        <aside className="space-y-5">
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
+        <aside className="space-y-5 xl:sticky xl:top-24 xl:self-start">
+          <RecentOperationStream operations={recentOperations} />
+<div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">
               System Intelligence
             </p>
 
             <div className="mt-4 space-y-3">
+              <IntelRow
+                icon={<Activity className="h-4 w-4" />}
+                label="Bridge Heartbeat"
+                value={heartbeatLabel}
+              />
+              <IntelRow
+                icon={<Radio className="h-4 w-4" />}
+                label="Queue State"
+                value={`${operationMetrics.queued} queued - ${operationMetrics.processing} processing`}
+              />
+              <IntelRow
+                icon={<AlertTriangle className="h-4 w-4" />}
+                label="Action Results"
+                value={`${operationMetrics.failed} failed - ${operationMetrics.completedToday} completed today`}
+              />
+              <IntelRow
+                icon={<Gauge className="h-4 w-4" />}
+                label="Last Action Poll"
+                value={formatRelativeTime(heartbeat?.last_action_poll_at)}
+              />
+              <IntelRow
+                icon={<UsersRound className="h-4 w-4" />}
+                label="Last Profile Sync"
+                value={formatRelativeTime(heartbeat?.last_profile_sync_at)}
+              />
               <IntelRow
                 icon={<ShieldCheck className="h-4 w-4" />}
                 label="Execution Mode"
@@ -834,10 +1206,10 @@ export function AdminServerOperationsPanel({
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-purple-300/15 bg-purple-500/[0.06] p-5">
+          <div className="rounded-[2rem] border border-purple-300/15 bg-purple-500/[0.045] p-4">
             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-purple-200">
               <Sparkles className="h-4 w-4" />
-              Operator Guidance
+              Operator Doctrine
             </div>
 
             <div className="mt-4 space-y-4 text-sm leading-6 text-slate-300">
@@ -856,10 +1228,10 @@ export function AdminServerOperationsPanel({
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-emerald-300/15 bg-emerald-500/[0.06] p-5">
+          <div className="rounded-[2rem] border border-emerald-300/15 bg-emerald-500/[0.045] p-4">
             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
               <Lock className="h-4 w-4" />
-              Safety Rules
+              Safety Doctrine
             </div>
 
             <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-300">
@@ -872,6 +1244,60 @@ export function AdminServerOperationsPanel({
         </aside>
       </div>
     </section>
+  );
+}
+
+function PresetDeck({
+  presets,
+  onApply,
+}: {
+  presets: OperatorPreset[];
+  onApply: (preset: OperatorPreset) => void;
+}) {
+  const toneClasses: Record<OperatorPreset["tone"], string> = {
+    cyan: "border-cyan-300/20 bg-cyan-400/10 hover:border-cyan-300/45 hover:bg-cyan-400/15",
+    purple: "border-purple-300/20 bg-purple-400/10 hover:border-purple-300/45 hover:bg-purple-400/15",
+    amber: "border-amber-300/20 bg-amber-400/10 hover:border-amber-300/45 hover:bg-amber-400/15",
+    emerald: "border-emerald-300/20 bg-emerald-400/10 hover:border-emerald-300/45 hover:bg-emerald-400/15",
+    pink: "border-pink-300/20 bg-pink-400/10 hover:border-pink-300/45 hover:bg-pink-400/15",
+  };
+
+  return (
+    <div className="mb-5 rounded-2xl border border-white/10 bg-black/25 p-4">
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300">
+            Quick Protocols
+          </p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            Load common operator scenarios, then review before deployment.
+          </p>
+        </div>
+
+        <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
+          Presets
+        </span>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        {presets.map((preset) => (
+          <button
+            key={preset.label}
+            type="button"
+            onClick={() => onApply(preset)}
+            className={`rounded-2xl border p-3 text-left transition ${toneClasses[preset.tone]}`}
+          >
+            <div className="flex items-center gap-2 text-sm font-black text-white">
+              <Sparkles className="h-4 w-4 text-cyan-200" />
+              {preset.label}
+            </div>
+            <p className="mt-1 text-xs leading-5 text-slate-400">
+              {preset.helper}
+            </p>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -915,6 +1341,94 @@ function StatusChip({
   );
 }
 
+function operationStatusClass(status?: string | null) {
+  switch ((status || "").toLowerCase()) {
+    case "completed":
+      return "border-emerald-300/20 bg-emerald-400/10 text-emerald-100";
+    case "processing":
+      return "border-cyan-300/20 bg-cyan-400/10 text-cyan-100";
+    case "queued":
+      return "border-yellow-300/20 bg-yellow-400/10 text-yellow-100";
+    case "failed":
+      return "border-red-300/20 bg-red-400/10 text-red-100";
+    default:
+      return "border-slate-300/20 bg-slate-400/10 text-slate-100";
+  }
+}
+
+function RecentOperationStream({
+  operations,
+}: {
+  operations: RecentOperation[];
+}) {
+  return (
+    <div className="rounded-[2rem] border border-cyan-300/15 bg-cyan-500/[0.035] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-cyan-200">
+          <Terminal className="h-4 w-4" />
+          Telemetry Stream
+        </div>
+
+        <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
+          Live Feed
+        </span>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {operations.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-slate-400">
+            No recent bridge operations found.
+          </div>
+        ) : (
+          operations.map((operation) => {
+            const actionType = (operation.action_type || "") as MinecraftActionType;
+            const label =
+              minecraftActionLabels[actionType] ||
+              operation.action_type ||
+              "Unknown action";
+            const status = operation.status || "unknown";
+
+            return (
+              <div
+                key={operation.id}
+                className="rounded-2xl border border-white/10 bg-black/25 p-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-black text-white">{label}</div>
+                    <div className="mt-1 font-mono text-xs text-slate-500">
+                      Target: {operation.minecraft_username || "SERVER"}
+                    </div>
+                  </div>
+
+                  <span
+                    className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${operationStatusClass(status)}`}
+                  >
+                    {status}
+                  </span>
+                </div>
+
+                {operation.result_message && (
+                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-400">
+                    {operation.result_message}
+                  </p>
+                )}
+
+                <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-slate-500">
+                  <span>Queued {formatRelativeTime(operation.created_at)}</span>
+                  {operation.processed_at && (
+                    <span>Processed {formatRelativeTime(operation.processed_at)}</span>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
 function IntelRow({
   icon,
   label,
@@ -954,10 +1468,10 @@ function ExecutionPreview({
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300">
-            Execution Preview
+            Final Review
           </p>
           <p className="mt-1 text-xs text-slate-500">
-            Preview only. The bridge still validates and sanitizes before execution.
+            Operator-readable route. The bridge still validates and sanitizes before execution.
           </p>
         </div>
 
@@ -976,7 +1490,7 @@ function ExecutionPreview({
       {visibleFields.length > 0 && (
         <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
           <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-            Payload
+            Payload Matrix
           </p>
 
           <div className="mt-2 space-y-1 font-mono text-xs text-slate-300">
