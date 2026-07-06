@@ -1021,6 +1021,8 @@ export function AdminServerOperationsPanel({
 
           <PresetDeck presets={operatorPresets} onApply={applyPreset} />
 
+          <BridgeReadinessGuard telemetryStatus={telemetryStatus} />
+
           <div className="mt-6 grid gap-4">
             {selectedOperation.requiresPlayer && (
               <Field label="Target Minecraft Username" helper="Exact IGN. The bridge sanitizes the value before execution.">
@@ -1318,6 +1320,54 @@ export function AdminServerOperationsPanel({
   );
 }
 
+function BridgeReadinessGuard({
+  telemetryStatus,
+}: {
+  telemetryStatus: "syncing" | "live" | "offline";
+}) {
+  const statusLabel =
+    telemetryStatus === "live"
+      ? "Bridge Ready"
+      : telemetryStatus === "syncing"
+        ? "Syncing Bridge Feed"
+        : "Telemetry Offline";
+
+  const statusHelper =
+    telemetryStatus === "live"
+      ? "Realtime telemetry is connected. New bridge queue activity should appear without refreshing."
+      : telemetryStatus === "syncing"
+        ? "The console is connecting to realtime telemetry. You may still review operations while it syncs."
+        : "Realtime telemetry is offline. Review carefully before deploying and confirm the bridge is active in-game.";
+
+  const toneClass =
+    telemetryStatus === "live"
+      ? "border-emerald-300/20 bg-emerald-400/10 text-emerald-100"
+      : telemetryStatus === "syncing"
+        ? "border-cyan-300/20 bg-cyan-400/10 text-cyan-100"
+        : "border-amber-300/25 bg-amber-400/10 text-amber-100";
+
+  return (
+    <div className={`mb-5 rounded-2xl border p-4 ${toneClass}`}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.2em]">
+            Bridge Readiness Guard
+          </p>
+          <p className="mt-1 text-sm font-black text-white">
+            {statusLabel}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-slate-300">
+            {statusHelper}
+          </p>
+        </div>
+
+        <span className="w-fit rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em]">
+          {telemetryStatus}
+        </span>
+      </div>
+    </div>
+  );
+}
 function PresetDeck({
   presets,
   onApply,
