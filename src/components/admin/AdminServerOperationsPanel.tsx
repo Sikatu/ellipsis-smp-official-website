@@ -481,6 +481,7 @@ export function AdminServerOperationsPanel({
   const [operationMetrics, setOperationMetrics] =
     useState<OperationMetrics>(emptyOperationMetrics);
   const [recentOperations, setRecentOperations] = useState<RecentOperation[]>([]);
+  const [telemetryStatus, setTelemetryStatus] = useState<"syncing" | "live" | "offline">("syncing");
   const [intelLoading, setIntelLoading] = useState(false);
   const [intelError, setIntelError] = useState<string | null>(null);
 
@@ -591,6 +592,75 @@ export function AdminServerOperationsPanel({
     };
   }, []);
 
+  useEffect(() => {
+    setTelemetryStatus("syncing");
+
+    const channel = supabase
+      .channel("admin-server-operations-live")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "minecraft_admin_actions",
+        },
+        (payload) => {
+          const operation = payload.new as RecentOperation;
+
+          if (!operation.id) {
+            return;
+          }
+
+          setTelemetryStatus("live");
+          setRecentOperations((current) => [
+            operation,
+            ...current.filter((item) => item.id !== operation.id),
+          ].slice(0, 6));
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "minecraft_admin_actions",
+        },
+        (payload) => {
+          const operation = payload.new as RecentOperation;
+
+          if (!operation.id) {
+            return;
+          }
+
+          setTelemetryStatus("live");
+          setRecentOperations((current) => {
+            const existing = current.some((item) => item.id === operation.id);
+
+            if (!existing) {
+              return [operation, ...current].slice(0, 6);
+            }
+
+            return current.map((item) =>
+              item.id === operation.id ? { ...item, ...operation } : item
+            );
+          });
+        }
+      )
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          setTelemetryStatus("live");
+          return;
+        }
+
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          setTelemetryStatus("offline");
+        }
+      });
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, []);
   const target = selectedOperation.requiresPlayer ? targetUsername.trim() : "SERVER";
   const actionType = selectedOperation.actionType;
 
@@ -1152,7 +1222,7 @@ export function AdminServerOperationsPanel({
         </main>
 
         <aside className="space-y-5 xl:sticky xl:top-24 xl:self-start">
-          <RecentOperationStream operations={recentOperations} />
+          <RecentOperationStream operations={recentOperations} telemetryStatus={telemetryStatus} />
 <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">
               System Intelligence
@@ -1359,8 +1429,10 @@ function operationStatusClass(status?: string | null) {
 
 function RecentOperationStream({
   operations,
+  telemetryStatus,
 }: {
   operations: RecentOperation[];
+  telemetryStatus: "syncing" | "live" | "offline";
 }) {
   const [selectedOperation, setSelectedOperation] = useState<RecentOperation | null>(null);
 
@@ -1416,7 +1488,11 @@ function RecentOperationStream({
           </div>
 
           <span className="rounded-full border border-cyan-200/15 bg-cyan-300/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100">
-            Live Feed
+            {telemetryStatus === "live"
+              ? "Realtime"
+              : telemetryStatus === "syncing"
+                ? "Syncing"
+                : "Offline"}
           </span>
         </div>
 
