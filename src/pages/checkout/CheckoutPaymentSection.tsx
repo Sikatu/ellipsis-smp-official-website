@@ -7,14 +7,18 @@ import {
 import type { Dispatch, SetStateAction } from "react";
 import { paymentMethods } from "./checkoutData";
 import type { MobileCheckoutStep } from "./checkoutTypes";
+import CheckoutOnlinePaymentSection from "./CheckoutOnlinePaymentSection";
 
 type PaymentMethod = (typeof paymentMethods)[number];
 
 type CheckoutPaymentSectionProps = {
   mobileStep: MobileCheckoutStep;
   selectedProduct: {
+    name: string;
+    type: string;
     price: string;
   };
+  quantity: string | null;
   method: PaymentMethod;
   setMethod: Dispatch<SetStateAction<PaymentMethod>>;
   copiedRecipient: boolean;
@@ -27,6 +31,7 @@ type CheckoutPaymentSectionProps = {
 function CheckoutPaymentSection({
   mobileStep,
   selectedProduct,
+  quantity,
   method,
   setMethod,
   copiedRecipient,
@@ -35,6 +40,9 @@ function CheckoutPaymentSection({
   copyRecipientInfo,
   goToMobileStep,
 }: CheckoutPaymentSectionProps) {
+  const productId = `${selectedProduct.type}-${selectedProduct.name}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-");
   return (
     <>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -84,6 +92,16 @@ function CheckoutPaymentSection({
               ))}
             </div>
 
+            {method.id === "PayMongo" && (
+              <CheckoutOnlinePaymentSection
+                selectedProduct={selectedProduct}
+                productId={productId}
+                quantity={quantity}
+              />
+            )}
+
+            {method.id !== "PayMongo" && (
+            <>
             <div className="mt-6 overflow-hidden rounded-3xl border border-purple-500/20 bg-gradient-to-br from-black via-purple-950/30 to-black">
               <div className="flex items-center justify-between border-b border-purple-500/20 bg-white/[0.04] px-5 py-4">
                 <div>
@@ -194,6 +212,8 @@ function CheckoutPaymentSection({
               Continue to Submit Proof
               <ArrowRight className="h-4 w-4" />
             </button>
+            </>
+            )}
             </div>
 
     </>

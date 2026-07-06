@@ -209,6 +209,9 @@ export function useCheckoutState() {
     selectedKeyQuantity,
   ]);
 
+  const quantityForOrder =
+    selectedCategory === "Premium Crates" ? selectedKeyQuantity : null;
+
   const canSubmit = useMemo(() => {
     return Boolean(
       minecraftIgn.trim() &&
@@ -227,12 +230,15 @@ export function useCheckoutState() {
     return "Submit Payment Claim";
   }, [minecraftIgn, discordUsername, receiptFile, hasConfirmedPayment, status]);
 
+  const isOnlinePayment = method.id === "PayMongo";
+
   const activeCheckoutStep = useMemo(() => {
+    if (isOnlinePayment) return mobileStep === "review" ? 0 : 1;
     if (status === "success") return 3;
     if (mobileStep === "review") return 0;
     if (mobileStep === "pay") return 1;
     return 2;
-  }, [mobileStep, status]);
+  }, [mobileStep, status, isOnlinePayment]);
 
   const mobilePrimaryLabel =
     mobileStep === "review"
@@ -443,8 +449,7 @@ export function useCheckoutState() {
         productName: selectedProduct.name,
         productCategory: selectedProduct.type,
         productPrice: selectedProduct.price,
-        quantity:
-          selectedCategory === "Premium Crates" ? selectedKeyQuantity : null,
+        quantity: quantityForOrder,
         paymentMethod: method.label,
         receiptFile,
       });
@@ -465,11 +470,13 @@ export function useCheckoutState() {
     productSectionRef,
     paymentSectionRef,
     claimSectionRef,
+    isOnlinePayment,
     mobileStep,
     selectedCategory,
     selectedRank,
     selectedCrate,
     selectedKeyQuantity,
+    quantityForOrder,
     method,
     setMethod,
     minecraftIgn,

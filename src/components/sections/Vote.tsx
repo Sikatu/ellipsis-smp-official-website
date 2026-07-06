@@ -126,7 +126,7 @@ function Vote() {
                                     />
                                 </div>
 
-                                <h3 className="mt-5 text-xl font-black leading-tight text-white">
+                                <h3 className="mt-5 break-words text-xl font-black leading-tight text-white">
                                     {site.name}
                                 </h3>
 

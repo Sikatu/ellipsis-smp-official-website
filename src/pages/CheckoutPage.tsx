@@ -15,11 +15,13 @@ function CheckoutPage() {
     productSectionRef,
     paymentSectionRef,
     claimSectionRef,
+    isOnlinePayment,
     mobileStep,
     selectedCategory,
     selectedRank,
     selectedCrate,
     selectedKeyQuantity,
+    quantityForOrder,
     method,
     setMethod,
     minecraftIgn,
@@ -67,6 +69,10 @@ function CheckoutPage() {
     submitClaim,
   } = useCheckoutState();
 
+  const visibleMobileSteps = isOnlinePayment
+    ? mobileCheckoutSteps.filter((step) => step.id !== "claim")
+    : mobileCheckoutSteps;
+
   return (
     <main className="min-h-screen bg-[#030014] px-3 pb-[calc(env(safe-area-inset-bottom)+8rem)] pt-28 text-white sm:px-6 lg:pb-12">
       <div className="mx-auto max-w-6xl">
@@ -78,8 +84,10 @@ function CheckoutPage() {
           Back to Marketplace
         </Link>
 
-        <div className="mb-4 grid grid-cols-3 gap-2 lg:hidden">
-          {mobileCheckoutSteps.map((step, index) => {
+        <div
+          className={`mb-4 grid gap-2 lg:hidden ${visibleMobileSteps.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}
+        >
+          {visibleMobileSteps.map((step, index) => {
             const isActive = mobileStep === step.id;
 
             return (
@@ -106,6 +114,7 @@ function CheckoutPage() {
             productSectionRef={productSectionRef}
             mobileStep={mobileStep}
             activeCheckoutStep={activeCheckoutStep}
+            isOnlinePayment={isOnlinePayment}
             categoryBanner={categoryBanner}
             productBadge={productBadge}
             selectedProduct={selectedProduct}
@@ -130,6 +139,7 @@ function CheckoutPage() {
             <CheckoutPaymentSection
               mobileStep={mobileStep}
               selectedProduct={selectedProduct}
+              quantity={quantityForOrder}
               method={method}
               setMethod={setMethod}
               copiedRecipient={copiedRecipient}
@@ -138,38 +148,40 @@ function CheckoutPage() {
               copyRecipientInfo={copyRecipientInfo}
               goToMobileStep={goToMobileStep}
             />
-            <CheckoutClaimSection
-              claimSectionRef={claimSectionRef}
-              resultRef={resultRef}
-              fileInputRef={fileInputRef}
-              mobileStep={mobileStep}
-              selectedProduct={selectedProduct}
-              method={method}
-              minecraftIgn={minecraftIgn}
-              setMinecraftIgn={setMinecraftIgn}
-              discordUsername={discordUsername}
-              setDiscordUsername={setDiscordUsername}
-              receiptFile={receiptFile}
-              receiptPreviewUrl={receiptPreviewUrl}
-              fileError={fileError}
-              hasConfirmedPayment={hasConfirmedPayment}
-              setHasConfirmedPayment={setHasConfirmedPayment}
-              status={status}
-              setStatus={setStatus}
-              submitError={submitError}
-              orderId={orderId}
-              copiedOrderId={copiedOrderId}
-              copyOrderId={copyOrderId}
-              isDraggingReceipt={isDraggingReceipt}
-              setIsDraggingReceipt={setIsDraggingReceipt}
-              setIsReceiptZoomOpen={setIsReceiptZoomOpen}
-              processReceiptFile={processReceiptFile}
-              clearReceiptUpload={clearReceiptUpload}
-              canSubmit={Boolean(canSubmit)}
-              submitLabel={submitLabel}
-              submitClaim={submitClaim}
-              resetPurchase={resetPurchase}
-            />
+            {!isOnlinePayment && (
+              <CheckoutClaimSection
+                claimSectionRef={claimSectionRef}
+                resultRef={resultRef}
+                fileInputRef={fileInputRef}
+                mobileStep={mobileStep}
+                selectedProduct={selectedProduct}
+                method={method}
+                minecraftIgn={minecraftIgn}
+                setMinecraftIgn={setMinecraftIgn}
+                discordUsername={discordUsername}
+                setDiscordUsername={setDiscordUsername}
+                receiptFile={receiptFile}
+                receiptPreviewUrl={receiptPreviewUrl}
+                fileError={fileError}
+                hasConfirmedPayment={hasConfirmedPayment}
+                setHasConfirmedPayment={setHasConfirmedPayment}
+                status={status}
+                setStatus={setStatus}
+                submitError={submitError}
+                orderId={orderId}
+                copiedOrderId={copiedOrderId}
+                copyOrderId={copyOrderId}
+                isDraggingReceipt={isDraggingReceipt}
+                setIsDraggingReceipt={setIsDraggingReceipt}
+                setIsReceiptZoomOpen={setIsReceiptZoomOpen}
+                processReceiptFile={processReceiptFile}
+                clearReceiptUpload={clearReceiptUpload}
+                canSubmit={Boolean(canSubmit)}
+                submitLabel={submitLabel}
+                submitClaim={submitClaim}
+                resetPurchase={resetPurchase}
+              />
+            )}
           </section>
         </div>
 
@@ -180,7 +192,7 @@ function CheckoutPage() {
           />
         )}
 
-        {status !== "success" && (
+        {status !== "success" && !(isOnlinePayment && mobileStep !== "review") && (
           <CheckoutMobileActionBar
             selectedProduct={selectedProduct}
             mobileStep={mobileStep}
