@@ -114,7 +114,7 @@ const systemHighlights = [
     title: "Official Marketplace",
     description:
       "Ranks, crates, plushie keys, furniture coins, and staff-verified checkout.",
-    image: "/ranks/ascendant.png",
+    image: "/images/showcase/market.webp",
   },
 ];
 

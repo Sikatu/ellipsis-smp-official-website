@@ -117,7 +117,7 @@ function MarketplacePage() {
                   alt="ASCENDANT rank"
                   loading="lazy"
                   decoding="async"
-                  className="relative w-full max-w-[520px] scale-[1.85] object-contain drop-shadow-[0_0_45px_rgba(250,204,21,0.35)] [image-rendering:pixelated] sm:scale-[2.15] lg:scale-[2.35]"
+                  className="relative w-full max-w-[220px] object-contain drop-shadow-[0_0_45px_rgba(250,204,21,0.35)] [image-rendering:pixelated]"
                 />
               </div>
 
@@ -184,9 +184,7 @@ function MarketplacePage() {
                         alt={product.name}
                         loading="lazy"
                         decoding="async"
-                        className={`h-full w-full object-contain [image-rendering:pixelated] ${
-                          product.wideImage ? "scale-[1.75]" : ""
-                        }`}
+                        className="h-full w-full object-contain [image-rendering:pixelated]"
                       />
                     </div>
                     <div className="min-w-0">
