@@ -143,7 +143,15 @@ function AboutPage() {
     <PageShell>
       <PageHero
         eyebrow="Player Guide 3.0"
-        title="The official guide to joining and understanding Ellipsis SMP."
+        title={
+          <>
+            The official guide to joining and understanding{" "}
+            <span className="bg-gradient-to-r from-yellow-300 via-purple-300 to-blue-300 bg-clip-text text-transparent">
+              Ellipsis SMP
+            </span>
+            .
+          </>
+        }
         description="Learn how to start, what systems matter, where to get help, and how to become part of the server's long-term community."
       >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -242,6 +250,11 @@ function AboutPage() {
 
       <section className="mx-auto max-w-7xl px-4 py-12 text-white sm:px-6">
         <div className="mb-8 text-center">
+          <div className="mb-3 flex items-center justify-center gap-3">
+            <span className="h-px w-10 bg-gradient-to-r from-transparent to-yellow-400/70" />
+            <Gem className="h-4 w-4 text-yellow-300" />
+            <span className="h-px w-10 bg-gradient-to-l from-transparent to-yellow-400/70" />
+          </div>
           <p className="text-xs font-black uppercase text-purple-300">
             Choose Your Path
           </p>
@@ -286,6 +299,11 @@ function AboutPage() {
         className="mx-auto max-w-7xl px-4 py-12 text-white sm:px-6 sm:py-16"
       >
         <div className="mb-8 text-center">
+          <div className="mb-3 flex items-center justify-center gap-3">
+            <span className="h-px w-10 bg-gradient-to-r from-transparent to-blue-400/70" />
+            <Sparkles className="h-4 w-4 text-blue-300" />
+            <span className="h-px w-10 bg-gradient-to-l from-transparent to-blue-400/70" />
+          </div>
           <p className="text-xs font-black uppercase text-blue-300">
             Core Systems
           </p>
@@ -380,7 +398,8 @@ function AboutPage() {
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         <div className="grid gap-5 md:grid-cols-3">
           {ruleGroups.map(([title, description]) => (
-            <GlassPanel key={title} className="p-6">
+            <GlassPanel key={title} className="relative overflow-hidden p-6">
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow-400 via-purple-500 to-blue-500" />
               <p className="text-2xl font-black text-white">{title}</p>
               <p className="mt-3 text-sm leading-6 text-gray-300">
                 {description}
@@ -400,6 +419,11 @@ function AboutPage() {
 
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         <div className="mb-8 text-center">
+          <div className="mb-3 flex items-center justify-center gap-3">
+            <span className="h-px w-10 bg-gradient-to-r from-transparent to-yellow-400/70" />
+            <Crown className="h-4 w-4 text-yellow-300" />
+            <span className="h-px w-10 bg-gradient-to-l from-transparent to-yellow-400/70" />
+          </div>
           <p className="text-xs font-black uppercase text-blue-300">
             Staff Recognition
           </p>
@@ -412,8 +436,9 @@ function AboutPage() {
           {staffValues.map(([title, description]) => (
             <GlassPanel
               key={title}
-              className="p-6 transition hover:-translate-y-1 hover:border-blue-300/40 hover:bg-blue-400/[0.08]"
+              className="relative overflow-hidden p-6 transition hover:-translate-y-1 hover:border-blue-300/40 hover:bg-blue-400/[0.08]"
             >
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-yellow-400 via-purple-500 to-blue-500" />
               <p className="text-2xl font-black text-white">{title}</p>
               <p className="mt-3 text-sm leading-6 text-gray-300">
                 {description}

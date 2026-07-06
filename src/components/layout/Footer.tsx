@@ -26,7 +26,8 @@ function Footer() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.2),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.16),transparent_34%)]" />
 
       <div className="relative mx-auto max-w-7xl">
-        <div className="rounded-[2.5rem] border border-purple-500/20 bg-white/[0.05] p-8 shadow-[0_0_70px_rgba(168,85,247,0.16)] backdrop-blur-xl md:p-10">
+        <div className="relative overflow-hidden rounded-[2.5rem] border border-purple-500/20 bg-white/[0.05] p-8 shadow-[0_0_70px_rgba(168,85,247,0.16)] backdrop-blur-xl md:p-10">
+          <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-yellow-400 via-purple-500 to-blue-500" />
           <div className="grid gap-10 lg:grid-cols-[1.3fr_0.7fr_0.7fr_1fr]">
             <div>
               <div className="flex items-center gap-4">
@@ -41,7 +42,9 @@ function Footer() {
                 />
 
                 <div>
-                  <p className="text-xl font-black text-white">ELLIPSIS SMP</p>
+                  <p className="bg-gradient-to-r from-yellow-200 via-white to-purple-200 bg-clip-text text-xl font-black tracking-wide text-transparent">
+                    ELLIPSIS SMP
+                  </p>
                   <p className="text-sm font-bold text-purple-200">
                     Premium Minecraft Survival
                   </p>
@@ -72,8 +75,9 @@ function Footer() {
             </div>
 
             <div>
-              <h3 className="mb-4 text-sm font-black uppercase tracking-[0.2em] text-white">
+              <h3 className="mb-4 inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em] text-white">
                 Explore
+                <span className="h-px w-6 bg-purple-400/60" />
               </h3>
               <div className="space-y-3 text-sm">
                 <Link to="/" className="block transition hover:translate-x-1 hover:text-purple-300">Home</Link>
@@ -86,8 +90,9 @@ function Footer() {
             </div>
 
             <div>
-              <h3 className="mb-4 text-sm font-black uppercase tracking-[0.2em] text-white">
+              <h3 className="mb-4 inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em] text-white">
                 Store
+                <span className="h-px w-6 bg-yellow-400/60" />
               </h3>
               <div className="space-y-3 text-sm">
                 <Link to="/marketplace" className="block transition hover:translate-x-1 hover:text-yellow-300">Premium Ranks</Link>
@@ -98,8 +103,9 @@ function Footer() {
             </div>
 
             <div>
-              <h3 className="mb-4 text-sm font-black uppercase tracking-[0.2em] text-white">
+              <h3 className="mb-4 inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em] text-white">
                 Community
+                <span className="h-px w-6 bg-blue-400/60" />
               </h3>
 
               <div className="grid gap-3">

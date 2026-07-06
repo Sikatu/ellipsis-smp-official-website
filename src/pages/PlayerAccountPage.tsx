@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
+import { Link } from "react-router-dom";
 import {
   AlertTriangle,
+  ArrowRight,
   CheckCircle2,
   Copy,
   Eye,
@@ -9,6 +11,7 @@ import {
   KeyRound,
   Link2,
   LogOut,
+  ReceiptText,
   RefreshCcw,
   ShieldCheck,
   Sparkles,
@@ -345,6 +348,24 @@ function ProfilePanel({ profile }: { profile: PlayerPortalProfile }) {
         <StatCard label="Playtime" value={profile.playtime_text || "Not synced"} />
         <StatCard label="Last Seen" value={formatDate(profile.last_seen_at)} />
       </div>
+
+      <Link
+        to="/track"
+        className="group flex items-center justify-between gap-4 rounded-[2rem] border border-purple-500/20 bg-white/[0.05] p-6 transition hover:border-purple-300/50 hover:bg-white/[0.08]"
+      >
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-purple-500/15 text-purple-200">
+            <ReceiptText className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="font-black text-white">Track an order</p>
+            <p className="mt-1 text-sm text-gray-400">
+              Check the status of a payment claim or delivery.
+            </p>
+          </div>
+        </div>
+        <ArrowRight className="h-5 w-5 shrink-0 text-purple-300 transition group-hover:translate-x-1" />
+      </Link>
 
       <div className="rounded-[2rem] border border-purple-500/20 bg-white/[0.05] p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

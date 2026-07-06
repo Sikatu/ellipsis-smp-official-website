@@ -2,7 +2,7 @@ import { type ReactNode } from "react";
 
 type PageHeroProps = {
   eyebrow: string;
-  title: string;
+  title: ReactNode;
   description: string;
   children?: ReactNode;
 };
@@ -14,9 +14,12 @@ function PageHero({ eyebrow, title, description, children }: PageHeroProps) {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.22),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.18),transparent_35%)]" />
 
         <div className="relative max-w-4xl">
-          <p className="text-xs font-black uppercase tracking-[0.28em] text-purple-300">
-            {eyebrow}
-          </p>
+          <div className="flex items-center gap-3">
+            <span className="h-px w-8 bg-gradient-to-r from-yellow-400/80 to-transparent" />
+            <p className="text-xs font-black uppercase tracking-[0.28em] text-purple-300">
+              {eyebrow}
+            </p>
+          </div>
 
           <h1 className="mt-5 break-words text-3xl font-black leading-tight text-white sm:text-4xl md:text-6xl">
             {title}
