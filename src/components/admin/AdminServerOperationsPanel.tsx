@@ -61,6 +61,7 @@ type RecentOperation = {
   result_message: string | null;
   created_at: string | null;
   processed_at: string | null;
+  payload?: unknown | null;
 };
 
 
@@ -536,7 +537,7 @@ export function AdminServerOperationsPanel({
 
         const { data: recentActionData, error: recentActionError } = await supabase
           .from("minecraft_admin_actions")
-          .select("id, action_type, minecraft_username, status, result_message, created_at, processed_at")
+          .select("id, action_type, minecraft_username, status, result_message, created_at, processed_at, payload")
           .order("created_at", { ascending: false })
           .limit(6);
 
@@ -1361,74 +1362,221 @@ function RecentOperationStream({
 }: {
   operations: RecentOperation[];
 }) {
+  const [selectedOperation, setSelectedOperation] = useState<RecentOperation | null>(null);
+
+  function formatActionName(actionType?: string | null) {
+    return (actionType || "unknown_action")
+      .split("_")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+
+  function formatOperationDate(value?: string | null) {
+    if (!value) {
+      return "Not recorded";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "Invalid timestamp";
+    }
+
+    return date.toLocaleString();
+  }
+
+  function formatPayload(payload: unknown) {
+    if (!payload) {
+      return "No payload recorded.";
+    }
+
+    if (typeof payload === "string") {
+      return payload;
+    }
+
+    try {
+      return JSON.stringify(payload, null, 2);
+    } catch {
+      return "Payload could not be formatted.";
+    }
+  }
+
   return (
-    <div className="rounded-[2rem] border border-cyan-300/15 bg-cyan-500/[0.035] p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-cyan-200">
-          <Terminal className="h-4 w-4" />
-          Telemetry Stream
+    <>
+      <div className="rounded-[2rem] border border-cyan-300/15 bg-cyan-500/[0.035] p-4">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-cyan-200">
+              <Activity className="h-4 w-4" />
+              Telemetry Stream
+            </div>
+            <p className="mt-1 text-xs leading-5 text-slate-500">
+              Latest bridge operations from the admin queue.
+            </p>
+          </div>
+
+          <span className="rounded-full border border-cyan-200/15 bg-cyan-300/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100">
+            Live Feed
+          </span>
         </div>
 
-        <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
-          Live Feed
-        </span>
-      </div>
-
-      <div className="mt-4 space-y-3">
         {operations.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-slate-400">
-            No recent bridge operations found.
+          <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 text-slate-400">
+            No recent bridge operations yet.
           </div>
         ) : (
-          operations.map((operation) => {
-            const actionType = (operation.action_type || "") as MinecraftActionType;
-            const label =
-              minecraftActionLabels[actionType] ||
-              operation.action_type ||
-              "Unknown action";
-            const status = operation.status || "unknown";
-
-            return (
-              <div
+          <div className="space-y-2">
+            {operations.map((operation) => (
+              <button
                 key={operation.id}
-                className="rounded-2xl border border-white/10 bg-black/25 p-3"
+                type="button"
+                onClick={() => setSelectedOperation(operation)}
+                className="group w-full rounded-2xl border border-white/10 bg-black/20 p-3 text-left transition hover:border-cyan-300/30 hover:bg-cyan-300/10"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-black text-white">{label}</div>
-                    <div className="mt-1 font-mono text-xs text-slate-500">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black text-white">
+                      {formatActionName(operation.action_type)}
+                    </p>
+                    <p className="mt-1 truncate text-xs text-slate-500">
                       Target: {operation.minecraft_username || "SERVER"}
-                    </div>
+                    </p>
                   </div>
 
-                  <span
-                    className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${operationStatusClass(status)}`}
-                  >
-                    {status}
+                  <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${operationStatusClass(operation.status)}`}>
+                    {operation.status || "queued"}
                   </span>
                 </div>
 
-                {operation.result_message && (
-                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-400">
-                    {operation.result_message}
-                  </p>
-                )}
-
-                <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-slate-500">
-                  <span>Queued {formatRelativeTime(operation.created_at)}</span>
-                  {operation.processed_at && (
-                    <span>Processed {formatRelativeTime(operation.processed_at)}</span>
-                  )}
-                </div>
-              </div>
-            );
-          })
+                <p className="mt-2 truncate text-xs text-slate-500">
+                  {operation.result_message || "Awaiting bridge result."}
+                </p>
+              </button>
+            ))}
+          </div>
         )}
       </div>
-    </div>
+
+      {selectedOperation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm">
+          <div className="w-full max-w-2xl overflow-hidden rounded-[2rem] border border-cyan-300/20 bg-[#070719] shadow-[0_0_70px_rgba(34,211,238,0.14)]">
+            <div className="border-b border-white/10 bg-gradient-to-r from-cyan-400/[0.14] via-purple-400/[0.10] to-transparent p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-200">
+                    Bridge Operation Detail
+                  </p>
+                  <h3 className="mt-2 text-2xl font-black text-white">
+                    {formatActionName(selectedOperation.action_type)}
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Target: {selectedOperation.minecraft_username || "SERVER"}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedOperation(null)}
+                  className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm font-black text-slate-300 transition hover:border-white/25 hover:text-white"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            <div className="grid gap-3 p-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <DetailCell label="Status" value={selectedOperation.status} />
+                <DetailCell label="Target" value={selectedOperation.minecraft_username || "SERVER"} />
+                <DetailCell label="Created" value={formatOperationDate(selectedOperation.created_at)} />
+                <DetailCell label="Processed" value={formatOperationDate(selectedOperation.processed_at)} />
+              </div>
+
+              <DetailCell label="Operation ID" value={selectedOperation.id} mono />
+
+              <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+                  Bridge Result
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-200">
+                  {selectedOperation.result_message || "No result message has been returned by the bridge yet."}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.045] p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-200">
+                      Payload Inspector
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      Exact bridge command data sent into the queue.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(formatPayload(selectedOperation.payload));
+                    }}
+                    className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-xs font-black text-cyan-100 transition hover:border-cyan-300/45 hover:bg-cyan-300/15"
+                  >
+                    Copy Payload
+                  </button>
+                </div>
+
+                <pre className="mt-4 max-h-56 overflow-auto rounded-2xl border border-white/10 bg-black/35 p-4 text-xs leading-5 text-slate-300">
+{formatPayload(selectedOperation.payload)}
+                </pre>
+              </div>
+
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(selectedOperation.id);
+                  }}
+                  className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-2.5 text-sm font-black text-cyan-100 transition hover:border-cyan-300/45 hover:bg-cyan-300/15"
+                >
+                  Copy Operation ID
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedOperation(null)}
+                  className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-black text-white transition hover:border-white/25 hover:bg-white/[0.08]"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
+function DetailCell({
+  label,
+  value,
+  mono = false,
+}: {
+  label: string;
+  value?: string | null;
+  mono?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+        {label}
+      </p>
+      <p className={`mt-2 break-words text-sm text-slate-200 ${mono ? "font-mono" : ""}`}>
+        {value || "Not recorded"}
+      </p>
+    </div>
+  );
+}
 function IntelRow({
   icon,
   label,
