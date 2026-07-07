@@ -261,13 +261,46 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
             return true;
         }
 
+
+        if (args[0].equalsIgnoreCase("syncplayer")) {
+            if (args.length < 2) {
+                sender.sendMessage("Usage: /ellipsisbridge syncplayer <player>");
+                return true;
+            }
+
+            OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+            lastProfileSyncAt = Instant.now();
+            profileSyncService.syncPlayerAsync(target);
+            sender.sendMessage("Profile sync queued for " + args[1] + ".");
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("diagnose")) {
+            if (args.length < 2) {
+                sender.sendMessage("Usage: /ellipsisbridge diagnose <player>");
+                return true;
+            }
+
+            OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+            sender.sendMessage("Running profile diagnose for " + args[1] + "...");
+
+            List<String> diagnoseLines = profileSyncService.diagnosePlayer(target);
+            for (String line : diagnoseLines) {
+                sender.sendMessage(line);
+            }
+
+            lastProfileSyncAt = Instant.now();
+            profileSyncService.syncPlayerAsync(target);
+            return true;
+        }
+
         if (args[0].equalsIgnoreCase("heartbeat")) {
             sendHeartbeat("Manual heartbeat requested.");
             sender.sendMessage("Bridge heartbeat sent.");
             return true;
         }
 
-        sender.sendMessage("Usage: /ellipsisbridge <status|reload|poll|sync|heartbeat>");
+        sender.sendMessage("Usage: /ellipsisbridge <status|reload|poll|sync|syncplayer|diagnose|heartbeat>");
         return true;
     }
 
