@@ -349,7 +349,13 @@ function CheckoutProductReviewSection({
               {productBadge}
             </div>
 
-            <h2 className="mt-4 break-words text-2xl font-black leading-tight sm:text-4xl">
+            <h2
+              className={`mt-4 break-words font-black leading-tight ${
+                selectedProduct.name.length > 20
+                  ? "text-xl sm:text-2xl"
+                  : "text-2xl sm:text-4xl"
+              }`}
+            >
               {selectedProduct.name}
             </h2>
           </div>

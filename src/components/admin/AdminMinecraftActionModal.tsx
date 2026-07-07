@@ -64,8 +64,14 @@ const actionGroups: Array<{
 ];
 
 const approvedCommandOptions = [
-  { label: "Example Broadcast", value: "example-broadcast" },
-  { label: "Example Reward", value: "example-reward" },
+  { label: "Console Say Test", value: "test_say" },
+  { label: "Config Actionbar Test", value: "test_actionbar" },
+  { label: "Rank Authority", value: "rank_set" },
+  { label: "Economy Grant", value: "money_give" },
+  { label: "Crate Key Grant", value: "crate_key_give" },
+  { label: "Player Warning", value: "player_warn" },
+  { label: "Server Broadcast", value: "broadcast_server" },
+  { label: "Actionbar Broadcast", value: "broadcast_actionbar" },
 ];
 
 const inputClass =
@@ -134,7 +140,7 @@ export function AdminMinecraftActionModal({
 
   const [deliveryType, setDeliveryType] = useState("Manual Delivery");
   const [productName, setProductName] = useState("");
-  const [commandKey, setCommandKey] = useState("example-broadcast");
+  const [commandKey, setCommandKey] = useState("test_say");
 
   const [actions, setActions] = useState<MinecraftAdminAction[]>([]);
   const [loadingActions, setLoadingActions] = useState(false);
@@ -197,11 +203,11 @@ export function AdminMinecraftActionModal({
       return { reason };
     }
 
-    if (
-      actionType === "server_broadcast" ||
-      actionType === "title_broadcast" ||
-      actionType === "actionbar_broadcast"
-    ) {
+    if (actionType === "title_broadcast") {
+      return { title, subtitle: message, audience: "all" };
+    }
+
+    if (actionType === "server_broadcast" || actionType === "actionbar_broadcast") {
       return { title, message, audience: "all" };
     }
 
@@ -235,6 +241,10 @@ export function AdminMinecraftActionModal({
 
     if (needsReason(actionType) && !reason.trim()) {
       return "A reason is required for this action.";
+    }
+
+    if ((actionType === "temp_ban" || actionType === "mute") && !duration.trim()) {
+      return "Duration is required for this action.";
     }
 
     if (
@@ -432,7 +442,7 @@ export function AdminMinecraftActionModal({
                     <Field label="Title">
                       <input className={inputClass} value={title} onChange={(event) => setTitle(event.target.value)} />
                     </Field>
-                    <Field label="Message">
+                    <Field label={actionType === "title_broadcast" ? "Subtitle" : "Message"}>
                       <textarea className={`${inputClass} min-h-24 resize-none`} value={message} onChange={(event) => setMessage(event.target.value)} />
                     </Field>
                   </>

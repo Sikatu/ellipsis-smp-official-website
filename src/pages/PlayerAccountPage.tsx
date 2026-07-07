@@ -299,8 +299,8 @@ function ClaimCodeCard({ claim }: { claim: MinecraftProfileClaim }) {
           /ellipsis link {claim.claim_code}
         </p>
         <p className="mt-3 text-xs leading-6 text-gray-400">
-          The command will work after the Ultimate Bridge v2 plugin is deployed.
-          For now, this confirms the website claim system is ready.
+          Run this in-game while online on Ellipsis SMP to finish linking your
+          account. Your profile unlocks here automatically once it's confirmed.
         </p>
       </div>
     </div>

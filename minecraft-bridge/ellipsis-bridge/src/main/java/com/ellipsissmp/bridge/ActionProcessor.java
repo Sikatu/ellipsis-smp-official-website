@@ -107,6 +107,7 @@ public class ActionProcessor {
             ));
             case "maintenance_disable" -> commandFromTemplate("commands.maintenance-disable", action, Map.of());
             case "server_broadcast" -> commandFromTemplate("commands.server-broadcast", action, Map.of(
+                "title", safeText(action.payloadString("title")),
                 "message", safeText(action.payloadString("message"))
             ));
             case "title_broadcast" -> commandFromTemplate("commands.title-broadcast", action, Map.of(
@@ -290,7 +291,11 @@ public class ActionProcessor {
             return "Blocked DEOP command.";
         }
 
-        if (lower.contains("@a") || lower.contains("@e") || lower.contains("@r")) {
+        // playsound can't cause destructive behavior regardless of target scope,
+        // and the default sound-broadcast template needs @a to reach every player.
+        boolean isPlaysound = lower.contains("playsound");
+
+        if (!isPlaysound && (lower.contains("@a") || lower.contains("@e") || lower.contains("@r"))) {
             return "Blocked broad selector command.";
         }
 

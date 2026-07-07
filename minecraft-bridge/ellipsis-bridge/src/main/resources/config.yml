@@ -40,7 +40,7 @@ commands:
   maintenance-disable: "cmi maintenance false"
 
   server-broadcast: "cmi broadcast &d&l{title} &8» &f{message}"
-  title-broadcast: "cmi titlemsg all &d&l{title} &f{message}"
+  title-broadcast: "cmi titlemsg all &d&l{title} &f{subtitle}"
   actionbar-broadcast: "cmi actionbarmsg all &d{message}"
   sound-broadcast: "minecraft:execute as @a run playsound {sound} master @s ~ ~ ~ {volume} {pitch}"
 
