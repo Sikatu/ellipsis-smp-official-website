@@ -245,7 +245,7 @@ export default async function handler(req, res) {
       lineItemName: productName,
       amount,
       orderReference,
-      successUrl: `${siteUrl}/track?ref=${encodeURIComponent(orderReference)}`,
+      successUrl: `${siteUrl}/track?order=${encodeURIComponent(orderReference)}`,
       cancelUrl: `${siteUrl}/checkout`,
     });
 
