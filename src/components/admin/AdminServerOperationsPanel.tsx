@@ -1289,6 +1289,10 @@ export function AdminServerOperationsPanel({
                 {selectedOperation.fields.includes("volume") && (
                   <Field label={fieldLabels.volume}>
                     <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
                       value={volume}
                       onChange={(event) => setVolume(event.target.value)}
                       className={inputClass}
@@ -1298,8 +1302,12 @@ export function AdminServerOperationsPanel({
                 )}
 
                 {selectedOperation.fields.includes("pitch") && (
-                  <Field label={fieldLabels.pitch}>
+                  <Field label={`${fieldLabels.pitch} (0-2)`}>
                     <input
+                      type="number"
+                      min="0"
+                      max="2"
+                      step="0.1"
                       value={pitch}
                       onChange={(event) => setPitch(event.target.value)}
                       className={inputClass}

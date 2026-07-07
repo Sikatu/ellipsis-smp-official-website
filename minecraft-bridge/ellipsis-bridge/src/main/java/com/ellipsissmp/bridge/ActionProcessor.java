@@ -119,8 +119,8 @@ public class ActionProcessor {
             ));
             case "sound_broadcast" -> commandFromTemplate("commands.sound-broadcast", action, Map.of(
                 "sound", safeToken(action.payloadString("sound")),
-                "volume", safeDecimal(action.payloadString("volume"), "1"),
-                "pitch", safeDecimal(action.payloadString("pitch"), "1")
+                "volume", safeClampedDecimal(action.payloadString("volume"), "1", 0.0, 100.0),
+                "pitch", safeClampedDecimal(action.payloadString("pitch"), "1", 0.0, 2.0)
             ));
             case "approved_command" -> approvedCommand(action);
             case "manual_delivery" -> manualDeliveryCommand(action);
@@ -327,6 +327,28 @@ public class ActionProcessor {
         if (value == null) return fallback;
         String cleaned = value.replaceAll("[^0-9.]", "");
         return cleaned.isBlank() ? fallback : cleaned;
+    }
+
+    // Vanilla /playsound hard-rejects a pitch outside [0.0, 2.0] with a command
+    // syntax exception rather than clamping it, so out-of-range admin input
+    // (or a bad preset) would otherwise crash the whole action.
+    private String safeClampedDecimal(String value, String fallback, double min, double max) {
+        String cleaned = safeDecimal(value, fallback);
+
+        double parsed;
+        try {
+            parsed = Double.parseDouble(cleaned);
+        } catch (NumberFormatException error) {
+            return fallback;
+        }
+
+        double clamped = Math.max(min, Math.min(max, parsed));
+
+        if (clamped == Math.floor(clamped) && !Double.isInfinite(clamped)) {
+            return Long.toString((long) clamped);
+        }
+
+        return Double.toString(clamped);
     }
 
     private String safeText(String value) {
