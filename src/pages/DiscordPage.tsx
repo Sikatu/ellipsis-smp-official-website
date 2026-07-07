@@ -16,6 +16,7 @@ import {
   Ticket,
   Users,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import PageShell from "./PageShell";
 import Discord from "../components/sections/Discord";
 import PageHero from "../components/ui/PageHero";
@@ -24,7 +25,6 @@ import SectionDivider from "../components/ui/SectionDivider";
 import CallToAction from "../components/ui/CallToAction";
 import {
   discordInviteUrl,
-  discordTicketUrl,
   socialLinks,
 } from "../data/links";
 
@@ -41,7 +41,8 @@ const supportRoutes = [
     title: "Open a Ticket",
     description:
       "Use tickets for purchases, rank questions, crate support, furniture, plushies, rewards, and account help.",
-    href: discordTicketUrl,
+    href: "/tickets",
+    internal: true,
     action: "Open ticket",
     tone: "border-yellow-400/25 bg-yellow-400/10 text-yellow-100",
   },
@@ -51,6 +52,7 @@ const supportRoutes = [
     description:
       "Join the main server hub for announcements, community chat, support, and event updates.",
     href: discordInviteUrl,
+    internal: false,
     action: "Join now",
     tone: "border-purple-400/25 bg-purple-500/10 text-purple-100",
   },
@@ -154,6 +156,40 @@ function DiscordPage() {
             {supportRoutes.map((route) => {
               const Icon = route.icon;
 
+              const content = (
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex gap-4">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-black/35">
+                      <Icon className="h-7 w-7" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-black text-white">
+                        {route.title}
+                      </h2>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-200">
+                        {route.description}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center justify-center gap-2 rounded-2xl bg-black/35 px-5 py-3 text-sm font-black text-white">
+                    {route.action}
+                    {!route.internal && <ExternalLink className="h-4 w-4" />}
+                  </span>
+                </div>
+              );
+
+              if (route.internal) {
+                return (
+                  <Link
+                    key={route.title}
+                    to={route.href}
+                    className={`group rounded-[1.5rem] border p-6 transition hover:-translate-y-1 hover:bg-white/[0.08] ${route.tone}`}
+                  >
+                    {content}
+                  </Link>
+                );
+              }
+
               return (
                 <a
                   key={route.title}
@@ -162,25 +198,7 @@ function DiscordPage() {
                   rel="noreferrer"
                   className={`group rounded-[1.5rem] border p-6 transition hover:-translate-y-1 hover:bg-white/[0.08] ${route.tone}`}
                 >
-                  <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex gap-4">
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-black/35">
-                        <Icon className="h-7 w-7" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-black text-white">
-                          {route.title}
-                        </h2>
-                        <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-200">
-                          {route.description}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="inline-flex items-center justify-center gap-2 rounded-2xl bg-black/35 px-5 py-3 text-sm font-black text-white">
-                      {route.action}
-                      <ExternalLink className="h-4 w-4" />
-                    </span>
-                  </div>
+                  {content}
                 </a>
               );
             })}

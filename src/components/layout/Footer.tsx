@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { discordInviteUrl, discordTicketUrl } from "../../data/links";
+import { discordInviteUrl } from "../../data/links";
 
 const serverAddress = "ellipsismc.com:19213";
 
@@ -109,18 +109,15 @@ function Footer() {
                   <ExternalLink className="h-4 w-4" />
                 </a>
 
-                <a
-                  href={discordTicketUrl}
-                  target="_blank"
-                  rel="noreferrer"
+                <Link
+                  to="/tickets"
                   className="inline-flex items-center justify-between rounded-2xl border border-purple-500/25 bg-purple-500/10 px-4 py-2.5 text-sm font-bold text-purple-100 transition hover:border-purple-300/50 hover:bg-purple-500/20"
                 >
                   <span className="inline-flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4" />
                     Get Support
                   </span>
-                  <ExternalLink className="h-4 w-4" />
-                </a>
+                </Link>
 
                 <Link
                   to="/vote"

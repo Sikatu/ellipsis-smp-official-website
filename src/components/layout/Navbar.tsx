@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Menu, Server, UserRound, X } from "lucide-react";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { discordInviteUrl, discordTicketUrl } from "../../data/links";
+import { discordInviteUrl } from "../../data/links";
 import { navigation } from "../../data/navigation";
 import { useServerStatus } from "../../hooks/useServerStatus";
 
@@ -62,9 +62,9 @@ function Navbar() {
             Discord
           </a>
 
-          <a href={discordTicketUrl} target="_blank" rel="noreferrer" className="rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-2 text-xs font-bold transition hover:scale-105">
+          <NavLink to="/tickets" className="rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-2 text-xs font-bold transition hover:scale-105">
             Ticket
-          </a>
+          </NavLink>
 
           <NavLink
             to="/account"
@@ -158,15 +158,13 @@ function Navbar() {
                 Join Discord
               </a>
 
-              <a
-                href={discordTicketUrl}
-                target="_blank"
-                rel="noreferrer"
+              <NavLink
+                to="/tickets"
                 onClick={() => setIsOpen(false)}
                 className="flex min-h-12 items-center justify-center rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-3 text-center font-bold transition hover:scale-[1.02]"
               >
                 Open Ticket
-              </a>
+              </NavLink>
             </nav>
           </motion.div>
         )}

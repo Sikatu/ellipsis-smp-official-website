@@ -22,6 +22,7 @@ import { AdminDashboardTabs } from "../components/admin/AdminDashboardTabs";
 import { AdminCommandCenter } from "../components/admin/AdminCommandCenter";
 import type { AdminTab } from "../components/admin/AdminDashboardTabs";
 import { AdminPlayersPanel } from "../components/admin/AdminPlayersPanel";
+import { AdminTicketQueuePanel } from "../components/admin/AdminTicketQueuePanel";
 import { AdminMinecraftActionCenter } from "../components/admin/AdminMinecraftActionCenter";
 import { AdminAnnouncementCenter } from "../components/admin/AdminAnnouncementCenter";
 import { AdminServerOperationsPanel } from "../components/admin/AdminServerOperationsPanel";
@@ -532,6 +533,15 @@ function AdminPage() {
               )}
             </div>
           </>        )}
+
+        {activeTab === "tickets" && (
+          <AdminTicketQueuePanel
+            canManageTickets={hasManageRights}
+            userRole={adminProfile?.role}
+            session={session}
+            adminProfile={adminProfile}
+          />
+        )}
 
         {activeTab === "players" && (
           <AdminPlayersPanel orders={orders} canManagePlayers={hasManageRights} />
