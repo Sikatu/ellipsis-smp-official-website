@@ -455,10 +455,10 @@ export function AdminMinecraftActionModal({
                     </Field>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <Field label="Volume">
-                        <input className={inputClass} value={volume} onChange={(event) => setVolume(event.target.value)} />
+                        <input type="number" min="0" max="100" step="0.1" className={inputClass} value={volume} onChange={(event) => setVolume(event.target.value)} />
                       </Field>
-                      <Field label="Pitch">
-                        <input className={inputClass} value={pitch} onChange={(event) => setPitch(event.target.value)} />
+                      <Field label="Pitch (0-2)">
+                        <input type="number" min="0" max="2" step="0.1" className={inputClass} value={pitch} onChange={(event) => setPitch(event.target.value)} />
                       </Field>
                     </div>
                   </>
