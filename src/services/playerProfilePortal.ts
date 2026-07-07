@@ -23,6 +23,17 @@ export type MinecraftProfileClaim = {
   expires_at: string;
 };
 
+export type PlayerOrder = {
+  created_at: string;
+  product_name: string;
+  product_category: string | null;
+  product_price: string;
+  quantity: string | null;
+  payment_method: string;
+  payment_reference: string;
+  status: "pending" | "verified" | "delivered" | "rejected";
+};
+
 export async function getCurrentPortalUser() {
   const { data, error } = await supabase.auth.getUser();
 
@@ -118,6 +129,25 @@ export async function fetchMyMinecraftProfile(): Promise<{
 
   return {
     data: profile ? (profile as PlayerPortalProfile) : null,
+    error: null,
+  };
+}
+
+export async function fetchMyOrders(): Promise<{
+  data: PlayerOrder[];
+  error: Error | null;
+}> {
+  const { data, error } = await supabase.rpc("list_my_orders");
+
+  if (error) {
+    return {
+      data: [],
+      error: new Error(error.message),
+    };
+  }
+
+  return {
+    data: Array.isArray(data) ? (data as PlayerOrder[]) : [],
     error: null,
   };
 }

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import {
   CheckCircle2,
   Copy,
+  ShieldCheck,
   Upload,
   X,
 } from "lucide-react";
@@ -27,6 +28,7 @@ type CheckoutClaimSectionProps = {
   method: PaymentMethod;
   minecraftIgn: string;
   setMinecraftIgn: (value: string) => void;
+  isIgnLocked: boolean;
   discordUsername: string;
   setDiscordUsername: (value: string) => void;
   receiptFile: File | null;
@@ -60,6 +62,7 @@ function CheckoutClaimSection({
   method,
   minecraftIgn,
   setMinecraftIgn,
+  isIgnLocked,
   discordUsername,
   setDiscordUsername,
   receiptFile,
@@ -134,17 +137,28 @@ function CheckoutClaimSection({
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <input
-                  value={minecraftIgn}
-                  onChange={(e) => {
-                    setMinecraftIgn(e.target.value);
-                    setStatus("idle");
-                  }}
-                  aria-label="Minecraft IGN"
-                  autoComplete="nickname"
-                  placeholder="Minecraft IGN"
-                  className="rounded-2xl border border-purple-500/25 bg-black/40 px-4 py-3 font-semibold outline-none transition placeholder:text-gray-600 focus:border-purple-300 focus:bg-black/60"
-                />
+                <div className="relative">
+                  <input
+                    value={minecraftIgn}
+                    onChange={(e) => {
+                      if (isIgnLocked) return;
+                      setMinecraftIgn(e.target.value);
+                      setStatus("idle");
+                    }}
+                    readOnly={isIgnLocked}
+                    aria-label="Minecraft IGN"
+                    autoComplete="nickname"
+                    placeholder="Minecraft IGN"
+                    className={`w-full rounded-2xl border px-4 py-3 font-semibold outline-none transition placeholder:text-gray-600 ${
+                      isIgnLocked
+                        ? "cursor-not-allowed border-emerald-400/30 bg-emerald-400/10 pr-10 text-emerald-100"
+                        : "border-purple-500/25 bg-black/40 focus:border-purple-300 focus:bg-black/60"
+                    }`}
+                  />
+                  {isIgnLocked && (
+                    <ShieldCheck className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-300" />
+                  )}
+                </div>
 
                 <input
                   value={discordUsername}
@@ -158,6 +172,13 @@ function CheckoutClaimSection({
                   className="rounded-2xl border border-purple-500/25 bg-black/40 px-4 py-3 font-semibold outline-none transition placeholder:text-gray-600 focus:border-purple-300 focus:bg-black/60"
                 />
               </div>
+
+              {isIgnLocked && (
+                <p className="-mt-1 flex items-center gap-2 text-xs font-semibold text-emerald-300/80">
+                  <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                  Minecraft IGN is locked to your verified linked account.
+                </p>
+              )}
 
               <label
                 onDragEnter={(event) => {

@@ -26,6 +26,12 @@ type CheckoutPaymentSectionProps = {
   downloadQr: () => void;
   copyRecipientInfo: () => void;
   goToMobileStep: (step: MobileCheckoutStep) => void;
+  minecraftIgn: string;
+  setMinecraftIgn: (value: string) => void;
+  isIgnLocked: boolean;
+  linkedMinecraftUuid: string | null;
+  discordUsername: string;
+  setDiscordUsername: (value: string) => void;
 };
 
 function CheckoutPaymentSection({
@@ -39,6 +45,12 @@ function CheckoutPaymentSection({
   downloadQr,
   copyRecipientInfo,
   goToMobileStep,
+  minecraftIgn,
+  setMinecraftIgn,
+  isIgnLocked,
+  linkedMinecraftUuid,
+  discordUsername,
+  setDiscordUsername,
 }: CheckoutPaymentSectionProps) {
   const productId = `${selectedProduct.type}-${selectedProduct.name}`
     .toLowerCase()
@@ -97,6 +109,12 @@ function CheckoutPaymentSection({
                 selectedProduct={selectedProduct}
                 productId={productId}
                 quantity={quantity}
+                minecraftIgn={minecraftIgn}
+                setMinecraftIgn={setMinecraftIgn}
+                isIgnLocked={isIgnLocked}
+                linkedMinecraftUuid={linkedMinecraftUuid}
+                discordUsername={discordUsername}
+                setDiscordUsername={setDiscordUsername}
               />
             )}
 
