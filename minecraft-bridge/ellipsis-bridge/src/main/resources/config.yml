@@ -19,7 +19,7 @@ bridge:
   log-http-errors: true
 
 commands:
-  give-rank: "lp user {player} parent add {rank}"
+  give-rank: "lp user {player} parent addtemp {rank} 30d accumulate"
   give-coins: "cmi money give {player} {amount}"
   give-crate-key: "excellentcrates key give {player} {crate} {amount}"
   give-item: "minecraft:give {player} {item} {amount}"
