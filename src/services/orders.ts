@@ -3,6 +3,7 @@
 export type CreateOrderInput = {
   customerName: string;
   minecraftUsername: string;
+  minecraftUuid?: string | null;
   discordUsername?: string;
   email?: string;
   productId: string;
@@ -37,6 +38,7 @@ export async function createCheckoutOrder(input: CreateOrderInput) {
   const { error: orderError } = await supabase.from("orders").insert({
     customer_name: input.customerName,
     minecraft_username: input.minecraftUsername,
+    minecraft_uuid: input.minecraftUuid || null,
     discord_username: input.discordUsername || null,
     email: input.email || null,
     product_id: input.productId,

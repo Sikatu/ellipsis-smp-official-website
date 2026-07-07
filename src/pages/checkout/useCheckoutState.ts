@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { createCheckoutOrder } from "../../services/orders";
+import {
+  fetchMyMinecraftProfile,
+  getCurrentPortalUser,
+} from "../../services/playerProfilePortal";
 import { ranks } from "../../data/ranks";
 import { crates, furniture, plushies } from "../../data/storeItems";
 import {
@@ -39,6 +43,8 @@ export function useCheckoutState() {
   const [method, setMethod] = useState(paymentMethods[0]);
   const [minecraftIgn, setMinecraftIgn] = useState("");
   const [discordUsername, setDiscordUsername] = useState("");
+  const [linkedMinecraftUuid, setLinkedMinecraftUuid] = useState<string | null>(null);
+  const [isIgnLocked, setIsIgnLocked] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreviewUrl, setReceiptPreviewUrl] = useState("");
   const [fileError, setFileError] = useState("");
@@ -279,6 +285,28 @@ export function useCheckoutState() {
   }, [status]);
 
   useEffect(() => {
+    let isMounted = true;
+
+    async function loadLinkedProfile() {
+      const { user } = await getCurrentPortalUser();
+      if (!user || !isMounted) return;
+
+      const { data: profile } = await fetchMyMinecraftProfile();
+      if (!profile || !isMounted) return;
+
+      setMinecraftIgn(profile.minecraft_username);
+      setLinkedMinecraftUuid(profile.minecraft_uuid);
+      setIsIgnLocked(true);
+    }
+
+    void loadLinkedProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
     const nextSelection = getCheckoutSelectionFromSearch(location.search);
 
     setSelectedCategory(nextSelection.category);
@@ -302,7 +330,9 @@ export function useCheckoutState() {
   }
 
   function resetCheckoutState() {
-    setMinecraftIgn("");
+    if (!isIgnLocked) {
+      setMinecraftIgn("");
+    }
     setDiscordUsername("");
     setHasConfirmedPayment(false);
     setOrderId("");
@@ -442,6 +472,7 @@ export function useCheckoutState() {
       const createdOrderId = await createCheckoutOrder({
         customerName: minecraftIgn.trim(),
         minecraftUsername: minecraftIgn.trim(),
+        minecraftUuid: linkedMinecraftUuid,
         discordUsername: discordUsername.trim(),
         productId: `${selectedProduct.type}-${selectedProduct.name}`
           .toLowerCase()
@@ -481,6 +512,8 @@ export function useCheckoutState() {
     setMethod,
     minecraftIgn,
     setMinecraftIgn,
+    isIgnLocked,
+    linkedMinecraftUuid,
     discordUsername,
     setDiscordUsername,
     receiptFile,

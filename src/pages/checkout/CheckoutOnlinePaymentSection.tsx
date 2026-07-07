@@ -9,15 +9,25 @@ type CheckoutOnlinePaymentSectionProps = {
   };
   productId: string;
   quantity: string | null;
+  minecraftIgn: string;
+  setMinecraftIgn: (value: string) => void;
+  isIgnLocked: boolean;
+  linkedMinecraftUuid: string | null;
+  discordUsername: string;
+  setDiscordUsername: (value: string) => void;
 };
 
 function CheckoutOnlinePaymentSection({
   selectedProduct,
   productId,
   quantity,
+  minecraftIgn,
+  setMinecraftIgn,
+  isIgnLocked,
+  linkedMinecraftUuid,
+  discordUsername,
+  setDiscordUsername,
 }: CheckoutOnlinePaymentSectionProps) {
-  const [minecraftIgn, setMinecraftIgn] = useState("");
-  const [discordUsername, setDiscordUsername] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,6 +45,7 @@ function CheckoutOnlinePaymentSection({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           minecraftUsername: minecraftIgn.trim(),
+          minecraftUuid: linkedMinecraftUuid,
           discordUsername: discordUsername.trim(),
           productId,
           productName: selectedProduct.name,
@@ -86,13 +97,26 @@ function CheckoutOnlinePaymentSection({
             <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.16em] text-emerald-200">
               Minecraft Username
             </label>
-            <input
-              value={minecraftIgn}
-              onChange={(event) => setMinecraftIgn(event.target.value)}
-              type="text"
-              placeholder="Your in-game name"
-              className="w-full rounded-xl border border-emerald-500/25 bg-black/40 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-300/50"
-            />
+            <div className="relative">
+              <input
+                value={minecraftIgn}
+                onChange={(event) => {
+                  if (isIgnLocked) return;
+                  setMinecraftIgn(event.target.value);
+                }}
+                readOnly={isIgnLocked}
+                type="text"
+                placeholder="Your in-game name"
+                className={`w-full rounded-xl border px-4 py-3 text-sm outline-none placeholder:text-gray-600 ${
+                  isIgnLocked
+                    ? "cursor-not-allowed border-emerald-400/40 bg-emerald-400/15 pr-9 text-emerald-100"
+                    : "border-emerald-500/25 bg-black/40 text-white focus:border-emerald-300/50"
+                }`}
+              />
+              {isIgnLocked && (
+                <ShieldCheck className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-300" />
+              )}
+            </div>
           </div>
 
           <div>

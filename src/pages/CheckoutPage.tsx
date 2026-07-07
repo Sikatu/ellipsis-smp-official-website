@@ -26,6 +26,8 @@ function CheckoutPage() {
     setMethod,
     minecraftIgn,
     setMinecraftIgn,
+    isIgnLocked,
+    linkedMinecraftUuid,
     discordUsername,
     setDiscordUsername,
     receiptFile,
@@ -147,6 +149,12 @@ function CheckoutPage() {
               downloadQr={downloadQr}
               copyRecipientInfo={copyRecipientInfo}
               goToMobileStep={goToMobileStep}
+              minecraftIgn={minecraftIgn}
+              setMinecraftIgn={setMinecraftIgn}
+              isIgnLocked={isIgnLocked}
+              linkedMinecraftUuid={linkedMinecraftUuid}
+              discordUsername={discordUsername}
+              setDiscordUsername={setDiscordUsername}
             />
             {!isOnlinePayment && (
               <CheckoutClaimSection
@@ -158,6 +166,7 @@ function CheckoutPage() {
                 method={method}
                 minecraftIgn={minecraftIgn}
                 setMinecraftIgn={setMinecraftIgn}
+                isIgnLocked={isIgnLocked}
                 discordUsername={discordUsername}
                 setDiscordUsername={setDiscordUsername}
                 receiptFile={receiptFile}

@@ -5,12 +5,14 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
+  Clock3,
   Copy,
   Eye,
   EyeOff,
   KeyRound,
   Link2,
   LogOut,
+  PackageCheck,
   ReceiptText,
   RefreshCcw,
   ShieldCheck,
@@ -20,12 +22,14 @@ import {
 import PageShell from "./PageShell";
 import {
   fetchMyMinecraftProfile,
+  fetchMyOrders,
   getCurrentPortalUser,
   requestMinecraftProfileClaim,
   signInPlayerAccount,
   signOutPlayerAccount,
   signUpPlayerAccount,
   type MinecraftProfileClaim,
+  type PlayerOrder,
   type PlayerPortalProfile,
 } from "../services/playerProfilePortal";
 
@@ -35,6 +39,122 @@ function formatDate(value: string | null) {
   if (!value) return "Not available";
 
   return new Date(value).toLocaleString();
+}
+
+const orderStatusMeta: Record<
+  PlayerOrder["status"],
+  { label: string; tone: string; icon: typeof Clock3 }
+> = {
+  pending: {
+    label: "Pending",
+    tone: "border-yellow-400/25 bg-yellow-400/10 text-yellow-100",
+    icon: Clock3,
+  },
+  verified: {
+    label: "Verified",
+    tone: "border-blue-400/25 bg-blue-500/10 text-blue-100",
+    icon: ShieldCheck,
+  },
+  delivered: {
+    label: "Delivered",
+    tone: "border-emerald-400/25 bg-emerald-500/10 text-emerald-100",
+    icon: PackageCheck,
+  },
+  rejected: {
+    label: "Needs Review",
+    tone: "border-red-400/25 bg-red-500/10 text-red-100",
+    icon: AlertTriangle,
+  },
+};
+
+function OrderHistoryPanel() {
+  const [orders, setOrders] = useState<PlayerOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function load() {
+      const result = await fetchMyOrders();
+      if (!isMounted) return;
+
+      setOrders(result.data);
+      setError(result.error?.message || "");
+      setIsLoading(false);
+    }
+
+    void load();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return (
+    <div className="rounded-[2rem] border border-purple-500/20 bg-white/[0.05] p-6">
+      <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-purple-300/20 bg-purple-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-purple-200">
+        <ReceiptText className="h-4 w-4" />
+        Order History
+      </div>
+
+      {isLoading && (
+        <p className="text-sm text-gray-400">Loading your orders...</p>
+      )}
+
+      {!isLoading && error && (
+        <p className="rounded-2xl border border-red-400/25 bg-red-500/10 p-4 text-sm text-red-100">
+          {error}
+        </p>
+      )}
+
+      {!isLoading && !error && orders.length === 0 && (
+        <p className="rounded-2xl border border-white/10 bg-black/20 p-6 text-center text-sm text-gray-400">
+          No orders yet. Purchases made under your linked Minecraft username
+          will show up here automatically.
+        </p>
+      )}
+
+      {!isLoading && orders.length > 0 && (
+        <div className="grid gap-3">
+          {orders.map((order) => {
+            const meta = orderStatusMeta[order.status] || orderStatusMeta.pending;
+            const StatusIcon = meta.icon;
+
+            return (
+              <div
+                key={order.payment_reference}
+                className="rounded-2xl border border-white/10 bg-black/25 p-4"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="break-words font-black text-white">
+                      {order.product_name}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-400">
+                      {order.payment_reference}  -  {formatDate(order.created_at)}
+                    </p>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className="font-black text-yellow-300">
+                      {order.product_price}
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black ${meta.tone}`}
+                    >
+                      <StatusIcon className="h-3.5 w-3.5" />
+                      {meta.label}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function StatCard({
@@ -348,6 +468,8 @@ function ProfilePanel({ profile }: { profile: PlayerPortalProfile }) {
         <StatCard label="Playtime" value={profile.playtime_text || "Not synced"} />
         <StatCard label="Last Seen" value={formatDate(profile.last_seen_at)} />
       </div>
+
+      <OrderHistoryPanel />
 
       <Link
         to="/track"

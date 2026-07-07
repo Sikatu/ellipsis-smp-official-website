@@ -187,6 +187,7 @@ export default async function handler(req, res) {
 
     const body = req.body || {};
     const minecraftUsername = safeText(body.minecraftUsername);
+    const minecraftUuid = safeText(body.minecraftUuid) || null;
     const discordUsername = safeText(body.discordUsername);
     const productId = safeText(body.productId);
     const productName = safeText(body.productName);
@@ -227,6 +228,7 @@ export default async function handler(req, res) {
       order: {
         customer_name: minecraftUsername,
         minecraft_username: minecraftUsername,
+        minecraft_uuid: minecraftUuid,
         discord_username: discordUsername,
         product_id: productId || null,
         product_name: productName,
