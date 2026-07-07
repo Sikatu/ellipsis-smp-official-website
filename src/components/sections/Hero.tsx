@@ -21,22 +21,22 @@ const featureCards = [
   {
     icon: Swords,
     title: "Crossplay",
-    text: "Java and Bedrock players on one official server.",
+    text: "Play together on Java & Bedrock.",
   },
   {
     icon: Users,
     title: "Active Community",
-    text: "Discord support, staff help, events, and announcements.",
+    text: "Friendly players, active staff, and events.",
   },
   {
     icon: Box,
     title: "Custom Content",
-    text: "Custom End content, cosmetics, crates, and progression.",
+    text: "Custom items, cosmetics, and unique systems.",
   },
   {
     icon: Star,
     title: "Daily Rewards",
-    text: "Vote daily, play consistently, and grow with the server.",
+    text: "Vote, play, and earn rewards.",
   },
 ];
 
@@ -74,14 +74,12 @@ function Hero() {
   const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
-    if (shouldReduceMotion) return;
-
     const interval = window.setInterval(() => {
       setShowcaseIndex((current) => (current + 1) % showcaseImages.length);
     }, 6500);
 
     return () => window.clearInterval(interval);
-  }, [shouldReduceMotion]);
+  }, []);
 
   const currentShowcase = showcaseImages[showcaseIndex];
 
@@ -128,28 +126,28 @@ function Hero() {
               loading="eager"
               decoding="async"
               fetchPriority="high"
-              sizes="(min-width: 1024px) 520px, (min-width: 640px) 430px, 300px"
               className="w-[300px] object-contain drop-shadow-[0_0_55px_rgba(168,85,247,0.9)] sm:w-[430px] lg:w-[520px]"
             />
           </picture>
 
-          <div className="mt-8 flex w-full items-center justify-center gap-3 sm:gap-4">
+          <div className="mt-8 flex w-full items-center justify-center gap-4">
             <div className="h-px w-24 bg-gradient-to-r from-transparent to-purple-400/70" />
-            <p className="text-center text-[10px] font-black uppercase tracking-[0.25em] text-purple-200 sm:text-xs sm:tracking-[0.35em]">CROSSPLAY / JAVA & BEDROCK</p>
+            <p className="text-xs font-black uppercase tracking-[0.35em] text-purple-200">
+              Crossplay Java & Bedrock
+            </p>
             <div className="h-px w-24 bg-gradient-to-l from-transparent to-purple-400/70" />
           </div>
 
-          <h1 className="mt-6 text-5xl font-black uppercase leading-[0.95] sm:text-7xl lg:text-8xl">
-            Ellipsis SMP
+          <h1 className="mt-6 text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
+            Adventure. Community.
             <span className="block bg-gradient-to-r from-purple-300 via-fuchsia-300 to-blue-300 bg-clip-text text-transparent">
-              Official Server
+              Legends.
             </span>
           </h1>
 
           <p className="mt-6 max-w-2xl text-base leading-8 text-gray-200 sm:text-lg">
-            The official home for the Ellipsis crossplay Minecraft SMP: live
-            status, joining info, marketplace, voting, Discord, support, and
-            server updates in one place.
+            A crossplay Minecraft SMP built for adventure, community, custom
+            content, cosmetics, and long-term progression.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -159,7 +157,7 @@ function Hero() {
               className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-4 text-sm font-black text-white shadow-[0_0_35px_rgba(168,85,247,0.45)] transition hover:scale-[1.03]"
             >
               <Box className="h-5 w-5" />
-              {copied ? "IP Copied" : "Copy Server IP"}
+              {copied ? "IP Copied" : "Play Now"}
             </button>
 
             <a
@@ -177,7 +175,7 @@ function Hero() {
               className="inline-flex items-center justify-center gap-3 rounded-2xl border border-purple-400/40 bg-black/35 px-8 py-4 text-sm font-black text-white backdrop-blur-xl transition hover:scale-[1.03] hover:bg-white/[0.08]"
             >
               <Heart className="h-5 w-5 text-purple-300" />
-              Marketplace
+              Support Server
             </Link>
           </div>
 
@@ -242,9 +240,6 @@ function Hero() {
                   key={currentShowcase.src}
                   src={currentShowcase.src}
                   alt={currentShowcase.label}
-                  loading="lazy"
-                  decoding="async"
-                  sizes="(min-width: 1024px) 42vw, 100vw"
                   initial={shouldReduceMotion ? false : { opacity: 0, scale: 1.04 }}
                   animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1 }}
                   exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 1.02 }}
@@ -300,7 +295,7 @@ function Hero() {
         </motion.div>
 
         <div className="mx-auto mt-8 flex max-w-6xl flex-col gap-5 rounded-[2rem] border border-purple-500/25 bg-gradient-to-r from-purple-950/45 via-black/40 to-blue-950/35 p-6 shadow-[0_0_45px_rgba(168,85,247,0.16)] backdrop-blur-xl md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:gap-5 sm:text-left">
+          <div className="flex items-center gap-5">
             <div className="flex h-16 w-16 items-center justify-center rounded-full border border-yellow-400/25 bg-yellow-400/10 shadow-[0_0_28px_rgba(250,204,21,0.22)]">
               <Crown className="h-8 w-8 text-yellow-300" />
             </div>
