@@ -7,9 +7,9 @@ import {
     Ticket,
     Users,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
     discordInviteUrl,
-    discordTicketUrl,
     socialLinks,
 } from "../../data/links";
 import { useDiscordWidget } from "../../hooks/useDiscordWidget";
@@ -127,15 +127,13 @@ function Discord() {
                             furniture requests, plushies, rewards, or account-related help.
                         </p>
 
-                        <a
-                            href={discordTicketUrl}
-                            target="_blank"
-                            rel="noreferrer"
+                        <Link
+                            to="/tickets"
                             className="mt-7 inline-flex items-center justify-center gap-2 rounded-xl border border-yellow-400/50 bg-yellow-400/10 px-8 py-4 font-black text-yellow-300 transition hover:scale-105 hover:bg-yellow-400/20"
                         >
                             <Ticket className="h-5 w-5" />
                             Open Ticket
-                        </a>
+                        </Link>
                     </div>
                 </div>
 

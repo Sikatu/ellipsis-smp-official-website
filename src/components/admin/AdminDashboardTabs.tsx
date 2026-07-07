@@ -8,6 +8,7 @@ import {
   Settings,
   ShieldCheck,
   Terminal,
+  Ticket,
   UsersRound,
   Wrench,
 } from "lucide-react";
@@ -16,6 +17,7 @@ import type { LucideIcon } from "lucide-react";
 export type AdminTab =
   | "overview"
   | "orders"
+  | "tickets"
   | "players"
   | "minecraft"
   | "announcements"
@@ -60,6 +62,13 @@ const tabs: Array<{
     value: "orders",
     accent: "purple",
     icon: PackageCheck,
+  },
+  {
+    label: "Tickets",
+    shortLabel: "Tickets",
+    value: "tickets",
+    accent: "yellow",
+    icon: Ticket,
   },
   {
     label: "Players",

@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Clock3,
   Copy,
-  ExternalLink,
   HelpCircle,
   PackageCheck,
   ReceiptText,
@@ -16,7 +15,6 @@ import {
   Truck,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { discordTicketUrl } from "../data/links";
 
 type OrderStatus = "pending" | "verified" | "delivered" | "rejected";
 
@@ -286,10 +284,8 @@ function TrackOrderPage() {
               );
             })}
 
-            <a
-              href={discordTicketUrl}
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              to="/tickets"
               className="group rounded-[1.5rem] border border-yellow-400/25 bg-yellow-400/10 p-5 text-yellow-100 transition hover:-translate-y-1 hover:border-yellow-300/60 hover:bg-yellow-400/15"
             >
               <div className="flex items-center justify-between gap-4">
@@ -307,9 +303,9 @@ function TrackOrderPage() {
                     </p>
                   </div>
                 </div>
-                <ExternalLink className="h-5 w-5 shrink-0 transition group-hover:translate-x-1" />
+                <ArrowRight className="h-5 w-5 shrink-0 transition group-hover:translate-x-1" />
               </div>
-            </a>
+            </Link>
           </div>
         </section>
 
