@@ -33,6 +33,7 @@ type CheckoutProductReviewSectionProps = {
   productSectionRef: RefObject<HTMLElement | null>;
   mobileStep: MobileCheckoutStep;
   activeCheckoutStep: number;
+  isOnlinePayment: boolean;
   categoryBanner: CategoryBanner;
   productBadge: string;
   selectedProduct: ProductSummary;
@@ -54,6 +55,7 @@ function CheckoutProductReviewSection({
   productSectionRef,
   mobileStep,
   activeCheckoutStep,
+  isOnlinePayment,
   categoryBanner,
   productBadge,
   selectedProduct,
@@ -81,8 +83,13 @@ function CheckoutProductReviewSection({
 
   <h1 className="mt-3 text-3xl font-black sm:text-4xl">Secure Checkout</h1>
 
-  <div className="mt-6 grid grid-cols-2 gap-2 text-[8px] font-black uppercase tracking-[0.08em] text-gray-300 sm:grid-cols-4 sm:gap-3 sm:text-[10px] sm:tracking-[0.1em]">
-    {["Select Product", "Pay QR", "Submit Claim", "Verification"].map(
+  <div
+    className={`mt-6 grid grid-cols-2 gap-2 text-[8px] font-black uppercase tracking-[0.08em] text-gray-300 sm:gap-3 sm:text-[10px] sm:tracking-[0.1em] ${isOnlinePayment ? "sm:grid-cols-2" : "sm:grid-cols-4"}`}
+  >
+    {(isOnlinePayment
+      ? ["Select Product", "Pay Online"]
+      : ["Select Product", "Pay QR", "Submit Claim", "Verification"]
+    ).map(
       (step, index) => {
         const isActive = index === activeCheckoutStep;
         const isComplete = index < activeCheckoutStep;
@@ -455,15 +462,21 @@ function CheckoutProductReviewSection({
     </div>
   </div>
 
-  <div className="mt-6 hidden rounded-3xl border border-green-400/20 bg-green-400/10 p-4 text-sm text-green-200 sm:p-5 lg:block">
+  <div
+    className={`mt-6 hidden rounded-3xl border p-4 text-sm sm:p-5 lg:block ${isOnlinePayment
+        ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-200"
+        : "border-green-400/20 bg-green-400/10 text-green-200"
+      }`}
+  >
     <div className="flex items-center gap-2 font-black">
       <ShieldCheck className="h-5 w-5" />
-      Manual Verification
+      {isOnlinePayment ? "Instant Verification" : "Manual Verification"}
     </div>
 
-    <p className="mt-2 text-green-100/80">
-      Pay using the QR, upload your receipt, then staff will verify
-      and deliver your item.
+    <p className={`mt-2 ${isOnlinePayment ? "text-emerald-100/80" : "text-green-100/80"}`}>
+      {isOnlinePayment
+        ? "Pay online and your order is verified and delivered automatically -- no receipt upload needed."
+        : "Pay using the QR, upload your receipt, then staff will verify and deliver your item."}
     </p>
   </div>
 </section>

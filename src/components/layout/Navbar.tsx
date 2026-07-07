@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, Server, X } from "lucide-react";
+import { Menu, Server, UserRound, X } from "lucide-react";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { discordInviteUrl, discordTicketUrl } from "../../data/links";
@@ -65,6 +65,21 @@ function Navbar() {
           <a href={discordTicketUrl} target="_blank" rel="noreferrer" className="rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-2 text-xs font-bold transition hover:scale-105">
             Ticket
           </a>
+
+          <NavLink
+            to="/account"
+            aria-label="Log in to your player account"
+            title="Player Account Login"
+            className={({ isActive }) =>
+              `flex h-9 w-9 items-center justify-center rounded-full border transition ${
+                isActive
+                  ? "border-purple-300/60 bg-purple-500/20 text-purple-100"
+                  : "border-purple-500/40 text-gray-300 hover:bg-white/10 hover:text-purple-300"
+              }`
+            }
+          >
+            <UserRound className="h-4 w-4" />
+          </NavLink>
         </div>
 
         <button
@@ -117,6 +132,21 @@ function Navbar() {
                   {item.label}
                 </NavLink>
               ))}
+
+              <NavLink
+                to="/account"
+                onClick={() => setIsOpen(false)}
+                className={({ isActive }) =>
+                  `flex min-h-12 items-center gap-2 rounded-xl border px-4 py-3 font-bold transition ${
+                    isActive
+                      ? "border-purple-300/50 bg-purple-500/20 text-purple-100"
+                      : "border-purple-500/20 bg-white/5 text-gray-300 hover:border-purple-400/50 hover:bg-white/10"
+                  }`
+                }
+              >
+                <UserRound className="h-4 w-4" />
+                My Account
+              </NavLink>
 
               <a
                 href={discordInviteUrl}

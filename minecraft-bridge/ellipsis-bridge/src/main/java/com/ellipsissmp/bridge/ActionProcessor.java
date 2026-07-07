@@ -326,12 +326,11 @@ public class ActionProcessor {
 
     private String safeText(String value) {
         if (value == null) return "";
-        return value
-            .replace("\r", " ")
-            .replace("\n", " ")
-            .replace("\t", " ")
-            .replaceAll("[;|&]", "")
+        String cleaned = value
+            .replaceAll("[\\r\\n\\t]", " ")
+            .replaceAll("[\"'`@{}\\\\;|&]", "")
             .trim();
+        return cleaned.length() > 200 ? cleaned.substring(0, 200) : cleaned;
     }
 
     private String firstPresent(String... values) {

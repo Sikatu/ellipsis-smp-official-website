@@ -20,6 +20,7 @@ import {
   getPlayerReplyTemplate,
   isReadyToDeliver,
 } from "../../lib/adminOrderTemplates";
+import { getAutomatedMinecraftActionForOrder } from "../../lib/orderMinecraftAutomation";
 import { AdminStatusTimeline } from "./AdminStatusTimeline";
 import { AdminAuditLog } from "./AdminAuditLog";
 
@@ -80,6 +81,20 @@ export function AdminOrderCard({
         text: "Complete the delivery checklist before marking this order as delivered.",
       });
       return;
+    }
+
+    if (newStatus === "verified" && order.status !== "verified") {
+      const preview = getAutomatedMinecraftActionForOrder(order);
+      const confirmed = window.confirm(
+        "This will automatically run a Minecraft action for this order:\n\n" +
+          `${preview.reason}\n\n` +
+          `Product on file: ${order.product_name} (${order.product_price}), qty ${order.quantity || "1"}\n\n` +
+          "Confirm this matches the uploaded receipt before continuing.",
+      );
+
+      if (!confirmed) {
+        return;
+      }
     }
 
     setUpdatingStatus(newStatus);
@@ -224,7 +239,7 @@ export function AdminOrderCard({
             <div className="relative group">
               <select
                 value={order.status}
-                onChange={(event) => onUpdateStatus(order.id, event.target.value as OrderStatus)}
+                onChange={(event) => handleStatusClick(event.target.value as OrderStatus)}
                 disabled={!canManageOrders}
                 className={`cursor-pointer appearance-none rounded-full border px-3 py-1 text-xs font-black uppercase outline-none disabled:cursor-not-allowed disabled:opacity-80 ${statusStyles[order.status]}`}
               >
