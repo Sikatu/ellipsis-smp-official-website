@@ -68,6 +68,9 @@ const approvedCommandOptions = [
   { label: "Example Reward", value: "example-reward" },
 ];
 
+const inputClass =
+  "w-full rounded-xl border border-white/10 bg-black/30 px-4 py-2.5 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-purple-300/50 focus:bg-black/40 focus:shadow-[0_0_0_3px_rgba(168,85,247,0.14)]";
+
 function getActionIcon(actionType: MinecraftActionType) {
   if (actionType === "give_rank") return <BadgeCheck className="h-4 w-4" />;
   if (actionType === "give_coins") return <Coins className="h-4 w-4" />;
@@ -371,7 +374,7 @@ export function AdminMinecraftActionModal({
                     <select
                       value={rank}
                       onChange={(event) => setRank(event.target.value)}
-                      className="input"
+                      className={inputClass}
                     >
                       {rankOptions.map((option) => (
                         <option key={option} value={option}>{option}</option>
@@ -382,17 +385,17 @@ export function AdminMinecraftActionModal({
 
                 {actionType === "give_coins" && (
                   <Field label="Coin Amount">
-                    <input className="input" value={coinAmount} onChange={(event) => setCoinAmount(event.target.value)} />
+                    <input className={inputClass} value={coinAmount} onChange={(event) => setCoinAmount(event.target.value)} />
                   </Field>
                 )}
 
                 {actionType === "give_crate_key" && (
                   <>
                     <Field label="Crate Key">
-                      <input className="input" value={crate} onChange={(event) => setCrate(event.target.value)} />
+                      <input className={inputClass} value={crate} onChange={(event) => setCrate(event.target.value)} />
                     </Field>
                     <Field label="Amount">
-                      <input className="input" value={amount} onChange={(event) => setAmount(event.target.value)} />
+                      <input className={inputClass} value={amount} onChange={(event) => setAmount(event.target.value)} />
                     </Field>
                   </>
                 )}
@@ -400,23 +403,23 @@ export function AdminMinecraftActionModal({
                 {actionType === "give_item" && (
                   <>
                     <Field label="Item ID">
-                      <input className="input" value={item} onChange={(event) => setItem(event.target.value)} />
+                      <input className={inputClass} value={item} onChange={(event) => setItem(event.target.value)} />
                     </Field>
                     <Field label="Amount">
-                      <input className="input" value={amount} onChange={(event) => setAmount(event.target.value)} />
+                      <input className={inputClass} value={amount} onChange={(event) => setAmount(event.target.value)} />
                     </Field>
                   </>
                 )}
 
                 {actionType === "give_kit" && (
                   <Field label="Kit Name">
-                    <input className="input" value={kit} onChange={(event) => setKit(event.target.value)} />
+                    <input className={inputClass} value={kit} onChange={(event) => setKit(event.target.value)} />
                   </Field>
                 )}
 
                 {(actionType === "temp_ban" || actionType === "mute") && (
                   <Field label="Duration">
-                    <input className="input" value={duration} onChange={(event) => setDuration(event.target.value)} placeholder="Example: 1d, 7d, 12h" />
+                    <input className={inputClass} value={duration} onChange={(event) => setDuration(event.target.value)} placeholder="Example: 1d, 7d, 12h" />
                   </Field>
                 )}
 
@@ -427,10 +430,10 @@ export function AdminMinecraftActionModal({
                   actionType === "approved_command") && (
                   <>
                     <Field label="Title">
-                      <input className="input" value={title} onChange={(event) => setTitle(event.target.value)} />
+                      <input className={inputClass} value={title} onChange={(event) => setTitle(event.target.value)} />
                     </Field>
                     <Field label="Message">
-                      <textarea className="input min-h-24 resize-none" value={message} onChange={(event) => setMessage(event.target.value)} />
+                      <textarea className={`${inputClass} min-h-24 resize-none`} value={message} onChange={(event) => setMessage(event.target.value)} />
                     </Field>
                   </>
                 )}
@@ -438,14 +441,14 @@ export function AdminMinecraftActionModal({
                 {actionType === "sound_broadcast" && (
                   <>
                     <Field label="Sound">
-                      <input className="input" value={sound} onChange={(event) => setSound(event.target.value)} />
+                      <input className={inputClass} value={sound} onChange={(event) => setSound(event.target.value)} />
                     </Field>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <Field label="Volume">
-                        <input className="input" value={volume} onChange={(event) => setVolume(event.target.value)} />
+                        <input className={inputClass} value={volume} onChange={(event) => setVolume(event.target.value)} />
                       </Field>
                       <Field label="Pitch">
-                        <input className="input" value={pitch} onChange={(event) => setPitch(event.target.value)} />
+                        <input className={inputClass} value={pitch} onChange={(event) => setPitch(event.target.value)} />
                       </Field>
                     </div>
                   </>
@@ -454,10 +457,10 @@ export function AdminMinecraftActionModal({
                 {actionType === "manual_delivery" && (
                   <>
                     <Field label="Delivery Type">
-                      <input className="input" value={deliveryType} onChange={(event) => setDeliveryType(event.target.value)} />
+                      <input className={inputClass} value={deliveryType} onChange={(event) => setDeliveryType(event.target.value)} />
                     </Field>
                     <Field label="Product Name">
-                      <input className="input" value={productName} onChange={(event) => setProductName(event.target.value)} />
+                      <input className={inputClass} value={productName} onChange={(event) => setProductName(event.target.value)} />
                     </Field>
                   </>
                 )}
@@ -467,7 +470,7 @@ export function AdminMinecraftActionModal({
                     <select
                       value={commandKey}
                       onChange={(event) => setCommandKey(event.target.value)}
-                      className="input"
+                      className={inputClass}
                     >
                       {approvedCommandOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -480,7 +483,7 @@ export function AdminMinecraftActionModal({
 
                 <Field label={needsReason(actionType) ? "Reason Required" : "Reason / Staff Note"}>
                   <textarea
-                    className="input min-h-28 resize-none"
+                    className={`${inputClass} min-h-28 resize-none`}
                     value={reason}
                     onChange={(event) => setReason(event.target.value)}
                     placeholder="Explain why this action is being queued..."

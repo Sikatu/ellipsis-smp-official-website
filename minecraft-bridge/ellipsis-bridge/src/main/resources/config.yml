@@ -50,8 +50,78 @@ commands:
 # approved_command only executes keys listed here.
 # Future website buttons can use payload: {"commandKey":"example-broadcast"}
 approved-commands:
-  example-broadcast: "cmi broadcast &d&lEllipsis SMP &8» &fApproved command test."
-  example-reward: "cmi money give {player} {amount}"
+  test_say:
+    enabled: true
+    description: "Safe console say test."
+    requires-player: false
+    command: "say {message}"
+    params:
+      message: text
+
+  test_actionbar:
+    enabled: true
+    description: "Safe CMI actionbar test."
+    requires-player: false
+    command: "cmi actionbarmsg all {message}"
+    params:
+      message: text
+
+  rank_set:
+    enabled: true
+    description: "Set player rank through LuckPerms."
+    requires-player: true
+    command: "lp user {player} parent set {rank}"
+    params:
+      rank: rank
+
+  money_give:
+    enabled: true
+    description: "Give money using CMI economy."
+    requires-player: true
+    command: "cmi money give {player} {amount}"
+    params:
+      amount: amount
+
+  crate_key_give:
+    enabled: true
+    description: "Give crate key through ExcellentCrates."
+    requires-player: true
+    command: "excellentcrates key give {player} {crate} {amount}"
+    params:
+      crate: crate
+      amount: amount
+
+  player_warn:
+    enabled: true
+    description: "Warn player."
+    requires-player: true
+    command: "cmi warn {player} {reason}"
+    params:
+      reason: text
+
+  broadcast_server:
+    enabled: true
+    description: "Broadcast server message through CMI."
+    requires-player: false
+    command: "cmi broadcast {message}"
+    params:
+      message: text
+
+  broadcast_actionbar:
+    enabled: true
+    description: "Broadcast actionbar message through CMI."
+    requires-player: false
+    command: "cmi actionbarmsg all {message}"
+    params:
+      message: text
+
+  future_plugin_template:
+    enabled: false
+    description: "Template only. Copy this block for future plugin commands."
+    requires-player: true
+    command: "plugincommand {player} {value}"
+    params:
+      value: token
 
 profile-sync:
   enabled: true
