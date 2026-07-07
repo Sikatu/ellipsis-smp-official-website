@@ -25,13 +25,12 @@ const trustPoints = [
 
 const featuredProducts = [
   {
-    name: "ASCENDANT Rank",
-    price: "PHP 499",
-    image: "/ranks/ascendant.png",
-    description: "Top premium rank with the strongest utility perks.",
-    href: "/checkout?type=rank&product=ASCENDANT",
-    badge: "Most Premium",
-    wideImage: true,
+    name: "OVERCLOCK Rank",
+    price: "PHP 399",
+    image: "/ranks/overclock.png",
+    description: "High-tier rank with expanded commands and daily convenience.",
+    href: "/checkout?type=rank&product=OVERCLOCK",
+    badge: "Fan Favorite",
   },
   {
     name: "Stellar Vanguard Crate",
@@ -109,19 +108,19 @@ function MarketplacePage() {
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
         <div className="grid items-stretch gap-6 lg:grid-cols-[1.05fr_0.95fr]">
           <GlassPanel className="overflow-hidden p-0">
-            <div className="grid min-h-full gap-6 bg-gradient-to-br from-purple-950/55 via-black/50 to-yellow-950/20 p-6 sm:p-8 lg:grid-cols-[0.95fr_1.05fr] lg:p-10">
-              <div className="relative flex min-h-[180px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-yellow-400/20 bg-black/35 p-6 sm:min-h-[220px] lg:min-h-full">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(250,204,21,0.16),transparent_55%)]" />
+            <div className="flex h-full flex-col bg-gradient-to-br from-purple-950/55 via-black/50 to-yellow-950/20">
+              <div className="relative flex min-h-[200px] items-center justify-center overflow-hidden border-b border-yellow-400/20 bg-gradient-to-br from-purple-950/40 via-black/60 to-yellow-950/20 p-8 sm:min-h-[240px]">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(250,204,21,0.24),transparent_55%)]" />
                 <img
                   src="/ranks/ascendant.png"
                   alt="ASCENDANT rank"
                   loading="lazy"
                   decoding="async"
-                  className="relative w-full max-w-[220px] object-contain drop-shadow-[0_0_45px_rgba(250,204,21,0.35)] [image-rendering:pixelated]"
+                  className="relative z-10 max-h-[140px] w-full object-contain drop-shadow-[0_0_45px_rgba(250,204,21,0.45)] [image-rendering:pixelated] sm:max-h-[170px]"
                 />
               </div>
 
-              <div className="flex flex-col justify-center">
+              <div className="flex flex-1 flex-col justify-center p-6 sm:p-8 lg:p-10">
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-yellow-300">
                   Featured Upgrade
                 </p>
@@ -171,41 +170,36 @@ function MarketplacePage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             {featuredProducts.map((product) => (
-              <Link key={product.name} to={product.href} className="group block">
-                <GlassPanel className="flex h-full min-h-[190px] flex-col p-4 transition group-hover:-translate-y-1 group-hover:border-purple-300/50 group-hover:bg-white/[0.08]">
-                  <div className="flex items-start gap-4">
-                    <div
-                      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-purple-500/20 bg-black/35 p-2 ${
-                        product.wideImage ? "h-20 w-32" : "h-20 w-20"
-                      }`}
-                    >
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        loading="lazy"
-                        decoding="async"
-                        className="h-full w-full object-contain [image-rendering:pixelated]"
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-purple-300">
-                        {product.badge}
-                      </p>
-                      <h3 className="mt-2 line-clamp-2 text-lg font-black leading-tight text-white">
-                        {product.name}
-                      </h3>
-                      <p className="mt-1 text-sm font-black text-yellow-300">
-                        {product.price}
-                      </p>
-                    </div>
+              <Link key={product.name} to={product.href} className="group block h-full">
+                <GlassPanel className="flex h-full flex-col overflow-hidden p-0 transition group-hover:-translate-y-1 group-hover:border-purple-300/50 group-hover:bg-white/[0.08]">
+                  <div className="relative flex h-36 items-center justify-center overflow-hidden border-b border-purple-500/15 bg-gradient-to-br from-purple-950/40 via-black/45 to-black/20 p-4 sm:h-40">
+                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.18),transparent_65%)]" />
+                    <span className="absolute left-3 top-3 z-10 rounded-full border border-purple-400/25 bg-black/55 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-purple-200">
+                      {product.badge}
+                    </span>
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="relative z-10 h-full w-full object-contain drop-shadow-[0_0_25px_rgba(168,85,247,0.3)] [image-rendering:pixelated]"
+                    />
                   </div>
-                  <p className="mt-4 flex-1 text-sm leading-6 text-gray-300">
-                    {product.description}
-                  </p>
-                  <p className="mt-4 inline-flex items-center gap-2 text-sm font-black text-purple-200">
-                    Go to checkout
-                    <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-                  </p>
+                  <div className="flex flex-1 flex-col p-4">
+                    <h3 className="line-clamp-2 text-lg font-black leading-tight text-white">
+                      {product.name}
+                    </h3>
+                    <p className="mt-1 text-sm font-black text-yellow-300">
+                      {product.price}
+                    </p>
+                    <p className="mt-3 flex-1 text-sm leading-6 text-gray-300">
+                      {product.description}
+                    </p>
+                    <p className="mt-4 inline-flex items-center gap-2 text-sm font-black text-purple-200">
+                      Go to checkout
+                      <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                    </p>
+                  </div>
                 </GlassPanel>
               </Link>
             ))}
