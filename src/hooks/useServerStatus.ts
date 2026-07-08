@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const SERVER_IP = "play.ellipsissmp.com";
+const SERVER_IP = "ellipsissmpmc.com";
 const SERVER_PORT = "19213";
 const REFRESH_INTERVAL = 60000;
 

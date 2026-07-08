@@ -16,7 +16,7 @@ import { discordInviteUrl } from "../../data/links";
 import LiveServerPanel from "../ui/LiveServerPanel";
 import Button, { LinkButton } from "../ui/Button";
 
-const serverIp = "ellipsismc.com:19213";
+const serverIp = "ellipsissmpmc.com:19213";
 
 const featureCards = [
   {
