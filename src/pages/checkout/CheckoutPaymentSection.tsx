@@ -5,6 +5,7 @@ import {
   Download,
 } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
+import Button from "../../components/ui/Button";
 import { paymentMethods } from "./checkoutData";
 import type { CartLine } from "./cartTypes";
 import type { MobileCheckoutStep } from "./checkoutTypes";
@@ -215,14 +216,15 @@ function CheckoutPaymentSection({
               </div>
             </div>
 
-            <button
-              type="button"
+            <Button
               onClick={() => goToMobileStep("claim")}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-4 text-sm font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.32)] lg:hidden"
+              size="lg"
+              fullWidth
+              className="mt-5 lg:hidden"
             >
               Continue to Submit Proof
               <ArrowRight className="h-4 w-4" />
-            </button>
+            </Button>
             </>
             )}
             </div>

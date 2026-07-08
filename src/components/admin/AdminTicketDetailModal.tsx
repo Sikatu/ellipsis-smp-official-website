@@ -20,6 +20,7 @@ import {
 import { getAdminDisplayName } from "../../lib/adminPermissions";
 import { AdminTicketAuditLog } from "./AdminTicketAuditLog";
 import { AdminMinecraftActionModal } from "./AdminMinecraftActionModal";
+import Button from "../ui/Button";
 
 type AdminTicketDetailModalProps = {
   isOpen: boolean;
@@ -264,15 +265,10 @@ export function AdminTicketDetailModal({
                       placeholder="Reply as staff..."
                       className="flex-1 rounded-xl border border-purple-500/25 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-purple-300"
                     />
-                    <button
-                      type="button"
-                      onClick={sendReply}
-                      disabled={isSendingReply}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-3 font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
-                    >
+                    <Button onClick={sendReply} disabled={isSendingReply} className="rounded-xl">
                       <Send className="h-4 w-4" />
                       Send
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>

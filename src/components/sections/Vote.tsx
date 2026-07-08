@@ -7,7 +7,7 @@ import {
     ListChecks,
     Trophy,
 } from "lucide-react";
-import SectionTitle from "../ui/SectionTitle";
+import SectionHeader from "../ui/SectionHeader";
 
 const voteSites = [
     {
@@ -53,11 +53,11 @@ function Vote() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.14),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.16),transparent_36%)]" />
 
             <div className="relative mx-auto max-w-7xl">
-                <SectionTitle
-                    label="Official Vote Links"
+                <SectionHeader
+                    eyebrow="Official Vote Links"
                     title="Complete your daily vote route."
                     description="Open each official vote site, submit your Minecraft username, and help Ellipsis SMP keep climbing."
-                    accent="gold"
+                    tone="gold"
                 />
 
                 <div className="mb-6 grid gap-4 md:grid-cols-3">

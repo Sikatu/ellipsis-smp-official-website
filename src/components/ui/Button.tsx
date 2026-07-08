@@ -1,8 +1,10 @@
 import {
+  type AnchorHTMLAttributes,
   type ButtonHTMLAttributes,
   type ComponentPropsWithoutRef,
 } from "react";
 import { Link } from "react-router-dom";
+import { twMerge } from "tailwind-merge";
 
 export type ButtonVariant = "primary" | "secondary" | "instant" | "ghost";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -33,15 +35,13 @@ function classesFor(
   fullWidth: boolean,
   className: string
 ) {
-  return [
+  return twMerge(
     baseClasses,
     variantClasses[variant],
     sizeClasses[size],
     fullWidth ? "w-full" : "",
-    className,
-  ]
-    .filter(Boolean)
-    .join(" ");
+    className
+  );
 }
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -82,6 +82,28 @@ export function LinkButton({
 }: LinkButtonProps) {
   return (
     <Link
+      className={classesFor(variant, size, fullWidth, className)}
+      {...props}
+    />
+  );
+}
+
+type AnchorButtonProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  fullWidth?: boolean;
+};
+
+/** For external links. Use LinkButton for in-app routes instead. */
+export function AnchorButton({
+  variant = "primary",
+  size = "md",
+  fullWidth = false,
+  className = "",
+  ...props
+}: AnchorButtonProps) {
+  return (
+    <a
       className={classesFor(variant, size, fullWidth, className)}
       {...props}
     />

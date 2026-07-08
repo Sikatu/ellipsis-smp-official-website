@@ -7,6 +7,7 @@ import {
   X,
 } from "lucide-react";
 import type { RefObject } from "react";
+import Button, { LinkButton } from "../../components/ui/Button";
 import type { CartLine } from "./cartTypes";
 import type { MobileCheckoutStep, Status } from "./checkoutTypes";
 
@@ -314,14 +315,14 @@ function CheckoutClaimSection({
                 </span>
               </label>
 
-              <button
-                type="button"
+              <Button
                 disabled={!canSubmit || status === "sending"}
                 onClick={submitClaim}
-                className="rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-4 font-black shadow-[0_0_30px_rgba(99,102,241,0.28)] transition hover:-translate-y-0.5 hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:scale-100"
+                size="lg"
+                fullWidth
               >
                 {submitLabel}
-              </button>
+              </Button>
 
               <div className="rounded-2xl border border-purple-500/20 bg-black/30 p-4 text-sm text-gray-300">
                 <p className="font-black text-purple-200">What happens next?</p>
@@ -384,12 +385,13 @@ function CheckoutClaimSection({
                   )}
 
                   {orderId && (
-                    <Link
+                    <LinkButton
                       to={`/track?order=${orderId}`}
-                      className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-3 text-sm font-black text-white hover:opacity-90"
+                      className="mt-4"
+                      fullWidth
                     >
                       Track This Order
-                    </Link>
+                    </LinkButton>
                   )}
 
                   <div className="mt-5 rounded-2xl border border-yellow-300/25 bg-yellow-300/10 p-4">

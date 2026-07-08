@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, HelpCircle, ShieldCheck, Star } from "lucide-react";
 import { useState } from "react";
-import SectionTitle from "../ui/SectionTitle";
+import SectionHeader from "../ui/SectionHeader";
 
 const rules = [
     {
@@ -116,11 +116,11 @@ function RulesFAQ() {
     return (
         <section id="rules" className="bg-transparent px-4 py-14 text-white sm:px-6 sm:py-20 md:py-24">
             <div className="mx-auto max-w-7xl">
-                <SectionTitle
-                    label="Ellipsis SMP"
+                <SectionHeader
+                    eyebrow="Ellipsis SMP"
                     title="Official Server Rules"
                     description="By joining Ellipsis SMP, you agree to follow all rules listed below. Ignorance of the rules is not an excuse."
-                    accent="purple"
+                    tone="purple"
                 />
 
                 <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr]">

@@ -14,7 +14,8 @@ import {
 } from "../../data/links";
 import { useDiscordWidget } from "../../hooks/useDiscordWidget";
 import { useServerStatus } from "../../hooks/useServerStatus";
-import SectionTitle from "../ui/SectionTitle";
+import SectionHeader from "../ui/SectionHeader";
+import { AnchorButton } from "../ui/Button";
 
 const socials = [
     {
@@ -47,11 +48,11 @@ function Discord() {
     return (
         <section id="discord" className="bg-transparent px-4 py-14 text-white sm:px-6 sm:py-20 md:py-24">
             <div className="mx-auto max-w-6xl">
-                <SectionTitle
-                    label="Community Support"
+                <SectionHeader
+                    eyebrow="Community Support"
                     title="Need Help? Join the Ellipsis SMP Community"
                     description="Get announcements, support, tickets, updates, social content, and help from the community team."
-                    accent="blue"
+                    tone="blue"
                 />
 
                 <div className="mb-6 grid gap-4 md:grid-cols-3">
@@ -104,15 +105,16 @@ function Discord() {
                             announcements, and connect with the Ellipsis SMP community.
                         </p>
 
-                        <a
+                        <AnchorButton
                             href={discordStatus.inviteUrl || discordInviteUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="mt-7 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-4 font-black transition hover:scale-105"
+                            size="lg"
+                            className="mt-7 rounded-xl"
                         >
                             <MessageCircle className="h-5 w-5" />
                             Join Discord
-                        </a>
+                        </AnchorButton>
                     </div>
 
                     <div className="rounded-3xl border border-yellow-400/25 bg-yellow-400/10 p-8 backdrop-blur">

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import GradientText from "../components/ui/GradientText";
+import Button from "../components/ui/Button";
 
 type OrderStatus = "pending" | "verified" | "delivered" | "rejected";
 
@@ -240,15 +241,15 @@ function TrackOrderPage() {
                     className="min-h-[56px] w-full rounded-2xl border border-purple-500/25 bg-black/45 px-4 py-4 font-black uppercase text-white outline-none transition placeholder:text-gray-600 focus:border-purple-300"
                   />
 
-                  <button
-                    type="button"
+                  <Button
                     onClick={() => void trackOrder()}
                     disabled={isLoading}
-                    className="inline-flex min-h-[56px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4 text-sm font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.28)] transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60"
+                    size="lg"
+                    className="min-h-[56px] py-4"
                   >
                     <Search className="h-4 w-4" />
                     {isLoading ? "Checking..." : "Track Order"}
-                  </button>
+                  </Button>
                 </div>
 
                 {message && (

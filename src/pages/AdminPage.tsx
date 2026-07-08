@@ -29,6 +29,7 @@ import { AdminServerOperationsPanel } from "../components/admin/AdminServerOpera
 import { AdminSettingsPanel } from "../components/admin/AdminSettingsPanel";
 import { AdminStaffPanel } from "../components/admin/AdminStaffPanel";
 import { AdminStaffActivityPanel } from "../components/admin/AdminStaffActivityPanel";
+import GradientText from "../components/ui/GradientText";
 import {
   fetchOrders,
   getReceiptUrl,
@@ -396,7 +397,9 @@ function AdminPage() {
             <p className="text-xs font-black uppercase tracking-[0.25em] text-purple-300">
               Ellipsis SMP Admin
             </p>
-            <h1 className="mt-3 text-4xl font-black">Admin Dashboard</h1>
+            <h1 className="mt-3 text-4xl font-black">
+              Admin <GradientText tone="cyan">Dashboard</GradientText>
+            </h1>
 
             <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
               <span className="text-sm font-bold text-gray-300">

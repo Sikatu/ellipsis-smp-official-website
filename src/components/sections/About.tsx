@@ -1,6 +1,7 @@
 import { Copy, Gamepad2, Globe2, ShieldCheck, Users } from "lucide-react";
 import { useState } from "react";
 import { discordInviteUrl } from "../../data/links";
+import { AnchorButton } from "../ui/Button";
 
 const serverAddress = "ellipsismc.com:19213";
 
@@ -99,14 +100,16 @@ function About() {
                             </p>
                         </div>
 
-                        <a
+                        <AnchorButton
                             href={discordInviteUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="block rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4 text-center font-black transition hover:scale-105"
+                            size="lg"
+                            fullWidth
+                            className="rounded-xl py-4"
                         >
                             Join Our Discord
-                        </a>
+                        </AnchorButton>
                     </div>
                 </div>
             </div>

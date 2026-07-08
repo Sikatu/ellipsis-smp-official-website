@@ -10,7 +10,7 @@ import {
     Vote,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import SectionTitle from "../ui/SectionTitle";
+import SectionHeader from "../ui/SectionHeader";
 
 const stats = [
     {
@@ -118,11 +118,11 @@ function ServerStats() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.1),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.14),transparent_35%)]" />
 
             <div className="relative mx-auto max-w-7xl">
-                <SectionTitle
-                    label="Server Snapshot"
+                <SectionHeader
+                    eyebrow="Server Snapshot"
                     title="Ellipsis SMP at a Glance"
                     description="A quick look at the systems, progression, staff, and content that make the server feel alive."
-                    accent="gold"
+                    tone="gold"
                 />
 
                 <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
