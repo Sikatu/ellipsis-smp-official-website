@@ -1,23 +1,19 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
-  AlertOctagon,
   ArrowRight,
-  Clock3,
-  Coins,
+  ChevronDown,
   Gauge,
   Loader2,
   PackageCheck,
   Radio,
-  ReceiptText,
   RefreshCcw,
-  ShieldCheck,
   Terminal,
-  TrendingUp,
   UsersRound,
   Zap,
 } from "lucide-react";
 import type { AdminTab } from "./AdminDashboardTabs";
+import StatusChip from "../ui/StatusChip";
 import type { Order, StatusFilter } from "../../types/admin";
 import type { MinecraftAdminAction } from "../../types/minecraftActions";
 import { useServerStatus } from "../../hooks/useServerStatus";
@@ -57,17 +53,6 @@ type AdminCommandCenterProps = {
 function getNumericPrice(price: string) {
   const value = Number(price.replace(/[^0-9.]/g, ""));
   return Number.isFinite(value) ? value : 0;
-}
-
-function isToday(dateValue: string) {
-  const date = new Date(dateValue);
-  const now = new Date();
-
-  return (
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate()
-  );
 }
 
 function getOrderReference(order: Order) {
@@ -134,19 +119,6 @@ export function AdminCommandCenter({
   const [serverProfiles, setServerProfiles] = useState<MinecraftPlayerProfile[]>([]);
   const [loadingActions, setLoadingActions] = useState(false);
   const [actionError, setActionError] = useState("");
-
-  const todayOrders = useMemo(
-    () => orders.filter((order) => isToday(order.created_at)),
-    [orders],
-  );
-
-  const todayRevenue = useMemo(
-    () =>
-      todayOrders
-        .filter((order) => order.status === "verified" || order.status === "delivered")
-        .reduce((total, order) => total + getNumericPrice(order.product_price), 0),
-    [todayOrders],
-  );
 
   const actionStats = useMemo(() => {
     const waiting = minecraftActions.filter(
@@ -222,21 +194,21 @@ export function AdminCommandCenter({
       label: "Payment Review",
       value: stats.pending,
       helper: "Pending orders waiting for staff verification",
-      tone: stats.pending > 0 ? "blue" : "emerald",
+      alert: false,
       action: () => openOrders("pending"),
     },
     {
       label: "Delivery Queue",
       value: stats.verified,
       helper: "Verified orders that still need fulfillment",
-      tone: stats.verified > 0 ? "cyan" : "emerald",
+      alert: false,
       action: () => openOrders("verified"),
     },
     {
       label: "MC Automation",
       value: actionStats.waiting + actionStats.failed,
       helper: actionStats.failed > 0 ? "Failed Minecraft action needs review" : "Queued Minecraft actions",
-      tone: actionStats.failed > 0 ? "red" : actionStats.waiting > 0 ? "yellow" : "emerald",
+      alert: actionStats.failed > 0,
       action: () => onNavigate("minecraft"),
     },
   ];
@@ -394,18 +366,33 @@ export function AdminCommandCenter({
     onNavigate("orders");
   }
 
+  const intelligenceRows: Array<{ label: string; value: string | number }> = [
+    { label: "Players Online", value: `${serverStatus.playersOnline}/${serverStatus.playersMax}` },
+    { label: "Capacity", value: `${serverIntelligence.playerCapacity}%` },
+    { label: "Unique Supporters", value: syncedProfileSummary.linked || serverIntelligence.uniquePlayers },
+    { label: "Repeat Rate", value: `${serverIntelligence.repeatRate}%` },
+    { label: "Repeat Players", value: serverIntelligence.repeatPlayers },
+    { label: "Fulfillment Rate", value: `${serverIntelligence.fulfillmentRate}%` },
+    { label: "Automation Success", value: `${serverIntelligence.automationCompletion}%` },
+    { label: "Avg Order Value", value: `PHP ${serverIntelligence.averageOrderValue}` },
+    { label: "Synced Profiles", value: serverProfiles.length },
+    { label: "Synced Online", value: syncedProfileSummary.online },
+    { label: "Avg Playtime", value: getFormattedPlaytime(syncedProfileSummary.averagePlaytime) },
+    { label: "Avg Balance", value: syncedProfileSummary.averageBalance },
+  ];
+
   return (
-    <section className="mt-6">
-      <div className="rounded-[2rem] border border-purple-500/25 bg-gradient-to-br from-purple-500/15 via-white/[0.05] to-emerald-500/10 p-6 shadow-[0_0_50px_rgba(168,85,247,0.12)]">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+    <section className="mt-5 flex flex-col gap-4">
+      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-purple-300">
-              Admin Command Center
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#565d78]">
+              Staff operations
             </p>
-            <h2 className="mt-3 text-3xl font-black text-white">
-              Staff operations at a glance
+            <h2 className="mt-2 text-xl font-extrabold text-white">
+              Command Center
             </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-300">
+            <p className="mt-1.5 max-w-2xl text-[13px] leading-6 text-[#9aa0b8]">
               Review urgent orders, today&apos;s movement, Minecraft queue health, and staff workflow
               entry points from one clean overview.
             </p>
@@ -418,14 +405,14 @@ export function AdminCommandCenter({
               void loadMinecraftActions();
               void loadServerProfiles();
             }}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-purple-400/25 bg-purple-500/10 px-5 py-3 text-sm font-black text-purple-100 transition hover:bg-purple-500/20"
+            className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-[13px] font-bold text-[#c4c9dc] transition hover:bg-white/[0.06]"
           >
             <RefreshCcw className="h-4 w-4" />
             Refresh Center
           </button>
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           <StatusPill
             label={realtimeStatus === "error" ? "Realtime Offline" : "Realtime Live"}
             tone={realtimeStatus === "error" ? "danger" : "success"}
@@ -434,100 +421,71 @@ export function AdminCommandCenter({
         </div>
       </div>
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-        <CommandStat
-          label="Today Revenue"
-          value={`PHP ${todayRevenue}`}
-          icon={<Coins className="h-5 w-5" />}
-          tone="yellow"
-        />
-        <CommandStat
-          label="Today Orders"
-          value={todayOrders.length}
-          icon={<ReceiptText className="h-5 w-5" />}
-          tone="purple"
-        />
-        <CommandStat
-          label="Needs Attention"
-          value={stats.needsAttention}
-          icon={<AlertOctagon className="h-5 w-5" />}
-          tone={stats.needsAttention > 0 ? "red" : "emerald"}
-        />
-        <CommandStat
-          label="Pending"
-          value={stats.pending}
-          icon={<Clock3 className="h-5 w-5" />}
-          tone="blue"
-        />
-        <CommandStat
-          label="Verified Waiting"
-          value={stats.verified}
-          icon={<ShieldCheck className="h-5 w-5" />}
-          tone="cyan"
-        />
-        <CommandStat
-          label="MC Waiting"
-          value={actionStats.waiting}
-          icon={<Terminal className="h-5 w-5" />}
-          tone={actionStats.waiting > 0 ? "yellow" : "emerald"}
-        />
-      </div>
-
-      <div className="mt-5 grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-        <div className={`rounded-[2rem] border p-5 ${
-          commandHealth.tone === "danger"
-            ? "border-red-500/30 bg-red-500/[0.08]"
-            : commandHealth.tone === "warning"
-              ? "border-yellow-500/30 bg-yellow-500/[0.08]"
-              : "border-emerald-500/25 bg-emerald-500/[0.07]"
-        }`}>
+      <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-gray-300">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
                 Mission Brief
               </p>
-              <h3 className="mt-2 text-2xl font-black text-white">{commandHealth.label}</h3>
+              <h3 className="mt-2 text-lg font-extrabold text-white">{commandHealth.label}</h3>
             </div>
-            <div className="grid h-20 w-20 place-items-center rounded-full border border-white/15 bg-black/25">
+            <div
+              className={`grid h-16 w-16 shrink-0 place-items-center rounded-full border ${
+                commandHealth.tone === "danger"
+                  ? "border-[rgba(248,113,113,0.35)]"
+                  : commandHealth.tone === "warning"
+                    ? "border-[rgba(251,191,36,0.35)]"
+                    : "border-[rgba(52,211,153,0.3)]"
+              } bg-black/25`}
+            >
               <div className="text-center">
-                <Gauge className="mx-auto h-5 w-5 text-white" />
-                <p className="mt-1 text-lg font-black text-white">{commandHealth.score}</p>
+                <Gauge
+                  className={`mx-auto h-4 w-4 ${
+                    commandHealth.tone === "danger"
+                      ? "text-[#fca5a5]"
+                      : commandHealth.tone === "warning"
+                        ? "text-[#fbbf24]"
+                        : "text-[#34d399]"
+                  }`}
+                />
+                <p className="mt-1 text-sm font-extrabold text-white">{commandHealth.score}</p>
               </div>
             </div>
           </div>
 
-          <p className="mt-4 text-sm leading-6 text-gray-300">{commandHealth.summary}</p>
+          <p className="mt-3 text-[13px] leading-6 text-[#9aa0b8]">{commandHealth.summary}</p>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
             <MiniStat label="Fulfilled" value={commandHealth.completionRate} suffix="%" />
             <MiniStat label="Paid/Verified" value={commandHealth.conversionRate} suffix="%" />
             <MiniStat
               label="Oldest Pending"
               value={formatOrderAge(commandHealth.oldestPendingMinutes)}
-              danger={commandHealth.oldestPendingMinutes > 60}
+              alert={commandHealth.oldestPendingMinutes > 60}
             />
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.045] p-5">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
                 Bottleneck Radar
               </p>
-              <h3 className="mt-2 text-2xl font-black text-white">What staff should clear next</h3>
+              <h3 className="mt-2 text-lg font-extrabold text-white">What staff should clear next</h3>
             </div>
-            <Activity className="h-6 w-6 text-cyan-300" />
+            <Activity className="h-5 w-5 text-[#8b91ad]" />
           </div>
 
-          <div className="mt-5 grid gap-3">
+          <div className="mt-4 grid gap-2.5">
             {bottlenecks.map((item) => (
               <RadarButton
                 key={item.label}
                 label={item.label}
                 value={item.value}
                 helper={item.helper}
-                tone={item.tone}
+                alert={item.alert}
                 onClick={item.action}
               />
             ))}
@@ -535,193 +493,14 @@ export function AdminCommandCenter({
         </div>
       </div>
 
-      <div className="mt-5 rounded-[2rem] border border-cyan-500/20 bg-cyan-500/[0.055] p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">
-              Minecraft Server Intelligence
-            </p>
-            <h3 className="mt-2 text-2xl font-black text-white">
-              Live server and player economy statistics
-            </h3>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-300">
-              A combined view of live server health, supporter behavior, product demand, and staff
-              fulfillment strength.
-            </p>
-          </div>
-
-          <div className={`rounded-2xl border px-4 py-3 ${
-            serverStatus.loading
-              ? "border-yellow-400/25 bg-yellow-500/10 text-yellow-100"
-              : serverStatus.online
-                ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-100"
-                : "border-red-400/25 bg-red-500/10 text-red-100"
-          }`}>
-            <div className="flex items-center gap-2 text-sm font-black">
-              <Radio className="h-4 w-4" />
-              {serverStatus.loading ? "Checking Server" : serverStatus.online ? "Server Online" : "Server Offline"}
-            </div>
-            <p className="mt-1 text-xs text-gray-300">
-              {serverStatus.playersOnline} / {serverStatus.playersMax} players • {serverStatus.version}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <CommandStat
-            label="Players Online"
-            value={`${serverStatus.playersOnline}/${serverStatus.playersMax}`}
-            icon={<UsersRound className="h-5 w-5" />}
-            tone={serverStatus.online ? "emerald" : "red"}
-          />
-          <CommandStat
-            label="Capacity"
-            value={`${serverIntelligence.playerCapacity}%`}
-            icon={<Gauge className="h-5 w-5" />}
-            tone={serverIntelligence.playerCapacity > 80 ? "yellow" : "cyan"}
-          />
-          <CommandStat
-            label="Unique Supporters"
-            value={syncedProfileSummary.linked || serverIntelligence.uniquePlayers}
-            icon={<UsersRound className="h-5 w-5" />}
-            tone="purple"
-          />
-          <CommandStat
-            label="Repeat Rate"
-            value={`${serverIntelligence.repeatRate}%`}
-            icon={<TrendingUp className="h-5 w-5" />}
-            tone={serverIntelligence.repeatRate > 25 ? "emerald" : "blue"}
-          />
-          <CommandStat
-            label="Fulfillment Rate"
-            value={`${serverIntelligence.fulfillmentRate}%`}
-            icon={<PackageCheck className="h-5 w-5" />}
-            tone={serverIntelligence.fulfillmentRate > 85 ? "emerald" : "yellow"}
-          />
-          <CommandStat
-            label="Automation Success"
-            value={`${serverIntelligence.automationCompletion}%`}
-            icon={<Zap className="h-5 w-5" />}
-            tone={serverIntelligence.automationCompletion > 90 ? "emerald" : "yellow"}
-          />
-          <CommandStat
-            label="Avg Order Value"
-            value={`PHP ${serverIntelligence.averageOrderValue}`}
-            icon={<Coins className="h-5 w-5" />}
-            tone="yellow"
-          />
-          <CommandStat
-            label="Repeat Players"
-            value={serverIntelligence.repeatPlayers}
-            icon={<Activity className="h-5 w-5" />}
-            tone="cyan"
-          />
-          <CommandStat
-            label="Synced Profiles"
-            value={serverProfiles.length}
-            icon={<UsersRound className="h-5 w-5" />}
-            tone="cyan"
-          />
-          <CommandStat
-            label="Synced Online"
-            value={syncedProfileSummary.online}
-            icon={<Radio className="h-5 w-5" />}
-            tone={syncedProfileSummary.online > 0 ? "emerald" : "blue"}
-          />
-          <CommandStat
-            label="Avg Playtime"
-            value={getFormattedPlaytime(syncedProfileSummary.averagePlaytime)}
-            icon={<Activity className="h-5 w-5" />}
-            tone="purple"
-          />
-          <CommandStat
-            label="Avg Balance"
-            value={syncedProfileSummary.averageBalance}
-            icon={<Coins className="h-5 w-5" />}
-            tone="yellow"
-          />
-        </div>
-
-        <div className="mt-5 grid gap-5 xl:grid-cols-2">
-          <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">
-              Top Supporters
-            </p>
-            <div className="mt-4 grid gap-3">
-              {serverIntelligence.topSupporters.map((player) => (
-                <div
-                  key={player.ign}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4"
-                >
-                  <div>
-                    <p className="font-black text-white">{player.ign}</p>
-                    <p className="mt-1 text-sm text-gray-400">
-                      {player.orders} order{player.orders === 1 ? "" : "s"} • {player.delivered} delivered
-                    </p>
-                  </div>
-                  <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-xs font-black text-emerald-200">
-                    PHP {player.totalSpent}
-                  </span>
-                </div>
-              ))}
-              {serverIntelligence.topSupporters.length === 0 && (
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-6 text-center text-sm text-gray-400">
-                  Supporter stats will appear after orders come in.
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-yellow-300">
-              Store Demand By Category
-            </p>
-            <div className="mt-4 grid gap-3">
-              {serverIntelligence.categories.map((category) => (
-                <div
-                  key={category.label}
-                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-4"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="font-black text-white">{category.label}</p>
-                    <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-3 py-1 text-xs font-black text-yellow-200">
-                      PHP {category.revenue}
-                    </span>
-                  </div>
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-yellow-300"
-                      style={{
-                        width: `${Math.min(
-                          100,
-                          Math.max(8, (category.orders / Math.max(1, orders.length)) * 100),
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                  <p className="mt-2 text-xs text-gray-400">
-                    {category.orders} order{category.orders === 1 ? "" : "s"}
-                  </p>
-                </div>
-              ))}
-              {serverIntelligence.categories.length === 0 && (
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-6 text-center text-sm text-gray-400">
-                  Category demand will appear after orders come in.
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="rounded-[2rem] border border-red-500/20 bg-red-500/[0.06] p-5">
+      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-red-300">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
                 Needs Attention Queue
               </p>
-              <h3 className="mt-2 text-2xl font-black text-white">
+              <h3 className="mt-2 text-lg font-extrabold text-white">
                 Orders staff should review first
               </h3>
             </div>
@@ -729,63 +508,61 @@ export function AdminCommandCenter({
             <button
               type="button"
               onClick={() => openOrders("needs_attention")}
-              className="rounded-2xl border border-red-400/30 bg-red-500/15 px-4 py-3 text-sm font-black text-red-100 transition hover:bg-red-500/25"
+              className="rounded-[10px] border border-[rgba(248,113,113,0.3)] bg-[rgba(248,113,113,0.08)] px-3.5 py-2 text-[13px] font-bold text-[#fca5a5] transition hover:bg-[rgba(248,113,113,0.14)]"
             >
               Open Queue
             </button>
           </div>
 
-          <div className="mt-5 grid gap-3">
+          <div className="mt-4 grid gap-2.5">
             {priorityOrders.map((order) => (
               <button
                 key={order.id}
                 type="button"
                 onClick={() => openOrders("needs_attention")}
-                className="rounded-2xl border border-white/10 bg-black/25 p-4 text-left transition hover:border-red-300/40 hover:bg-red-500/10"
+                className="rounded-[11px] border border-white/[0.07] bg-black/25 p-3.5 text-left transition hover:border-white/[0.14]"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="font-black text-white">{order.product_name}</p>
-                    <p className="mt-1 text-sm text-gray-300">
-                      {order.minecraft_username || "No IGN"} • {order.discord_username || "No Discord"}
+                    <p className="font-bold text-white">{order.product_name}</p>
+                    <p className="mt-1 text-[13px] text-[#9aa0b8]">
+                      {order.minecraft_username || "No IGN"} &middot; {order.discord_username || "No Discord"}
                     </p>
                   </div>
-                  <div className="flex flex-col items-start gap-2 sm:items-end">
-                    <span className="rounded-full border border-red-400/25 bg-red-500/10 px-3 py-1 text-xs font-black uppercase text-red-200">
+                  <div className="flex flex-col items-start gap-1.5 sm:items-end">
+                    <span className="rounded-full border border-[rgba(248,113,113,0.25)] bg-[rgba(248,113,113,0.1)] px-2.5 py-0.5 text-[11px] font-bold text-[#fca5a5]">
                       {getPriorityLabel(order)}
                     </span>
-                    <span className="text-xs font-bold text-gray-500">
+                    <span className="text-[11px] font-semibold text-[#6b7192]">
                       Age {formatOrderAge(getOrderAgeMinutes(order))}
                     </span>
                   </div>
                 </div>
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                  <span className="font-mono text-gray-500">{getOrderReference(order)}</span>
-                  <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-1 font-black uppercase text-gray-300">
-                    {order.status}
+                <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs">
+                  <span className="mono text-[#6b7192]" style={{ fontFamily: "ui-monospace, monospace" }}>
+                    {getOrderReference(order)}
                   </span>
-                  <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-2 py-1 font-black text-yellow-200">
-                    {order.product_price}
-                  </span>
+                  <StatusChip status={order.status} />
+                  <span className="font-bold text-[#fde047]">{order.product_price}</span>
                 </div>
               </button>
             ))}
 
             {needsAttentionOrders.length === 0 && (
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-6 text-center text-sm text-gray-400">
+              <div className="rounded-[11px] border border-white/[0.07] bg-black/20 p-6 text-center text-[13px] text-[#6b7192]">
                 No urgent orders right now.
               </div>
             )}
           </div>
         </div>
 
-        <div className="grid gap-5">
-          <div className="rounded-[2rem] border border-purple-500/20 bg-white/[0.045] p-5">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-purple-300">
+        <div className="grid gap-4">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
               Quick Navigation
             </p>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
               <QuickButton label="Orders" icon={<PackageCheck className="h-4 w-4" />} onClick={() => onNavigate("orders")} />
               <QuickButton label="Players" icon={<UsersRound className="h-4 w-4" />} onClick={() => onNavigate("players")} />
               <QuickButton label="MC Queue" icon={<Terminal className="h-4 w-4" />} onClick={() => onNavigate("minecraft")} />
@@ -793,51 +570,49 @@ export function AdminCommandCenter({
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-yellow-500/20 bg-yellow-500/[0.06] p-5">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-yellow-300">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
               Minecraft Queue Health
             </p>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
               <MiniStat label="Waiting" value={actionStats.waiting} />
               <MiniStat label="Completed" value={actionStats.completed} />
-              <MiniStat label="Failed" value={actionStats.failed} danger={actionStats.failed > 0} />
+              <MiniStat label="Failed" value={actionStats.failed} alert={actionStats.failed > 0} />
             </div>
 
             {actionError && (
-              <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm font-bold text-red-200">
+              <div className="mt-3 rounded-[10px] border border-[rgba(248,113,113,0.3)] bg-[rgba(248,113,113,0.08)] p-3 text-[13px] font-semibold text-[#fca5a5]">
                 {actionError}
               </div>
             )}
           </div>
 
-          <div className="rounded-[2rem] border border-pink-500/20 bg-pink-500/[0.06] p-5">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-pink-300">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
               Sales Signals
             </p>
 
-            <div className="mt-4 grid gap-3">
+            <div className="mt-3 grid gap-2.5">
               {topProducts.map((product, index) => (
                 <div
                   key={product.name}
-                  className="rounded-2xl border border-white/10 bg-black/20 p-3"
+                  className="rounded-[11px] border border-white/[0.07] bg-black/20 p-3"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-black text-white">
+                      <p className="text-[13px] font-bold text-white">
                         #{index + 1} {product.name}
                       </p>
-                      <p className="mt-1 text-xs text-gray-400">{product.count} orders</p>
+                      <p className="mt-1 text-xs text-[#6b7192]">{product.count} orders</p>
                     </div>
-                    <span className="rounded-full border border-pink-400/20 bg-pink-500/10 px-3 py-1 text-xs font-black text-pink-200">
-                      PHP {product.revenue}
-                    </span>
+                    <span className="font-bold text-[#fde047]">PHP {product.revenue}</span>
                   </div>
                 </div>
               ))}
 
               {topProducts.length === 0 && (
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-6 text-center text-sm text-gray-400">
+                <div className="rounded-[11px] border border-white/[0.07] bg-black/20 p-6 text-center text-[13px] text-[#6b7192]">
                   Sales signals will appear after orders come in.
                 </div>
               )}
@@ -846,75 +621,75 @@ export function AdminCommandCenter({
         </div>
       </div>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-2">
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.045] p-5">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-300">
+      <div className="grid gap-4 xl:grid-cols-2">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
             Recent Orders
           </p>
 
-          <div className="mt-4 grid gap-3">
+          <div className="mt-3 grid gap-2.5">
             {recentOrders.map((order) => (
               <button
                 key={order.id}
                 type="button"
                 onClick={() => openOrders("all")}
-                className="rounded-2xl border border-white/10 bg-black/25 p-4 text-left transition hover:border-emerald-300/40 hover:bg-emerald-500/10"
+                className="rounded-[11px] border border-white/[0.07] bg-black/20 p-3.5 text-left transition hover:border-white/[0.14]"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="font-black text-white">{order.product_name}</p>
-                    <p className="mt-1 text-sm text-gray-400">
-                      {order.minecraft_username || "No IGN"} • {new Date(order.created_at).toLocaleString()}
+                    <p className="font-bold text-white">{order.product_name}</p>
+                    <p className="mt-1 text-[13px] text-[#9aa0b8]">
+                      {order.minecraft_username || "No IGN"} &middot; {new Date(order.created_at).toLocaleString()}
                     </p>
                   </div>
-                  <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-xs font-black uppercase text-emerald-200">
-                    {order.status}
-                  </span>
+                  <StatusChip status={order.status} />
                 </div>
               </button>
             ))}
 
             {recentOrders.length === 0 && (
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-6 text-center text-sm text-gray-400">
+              <div className="rounded-[11px] border border-white/[0.07] bg-black/20 p-6 text-center text-[13px] text-[#6b7192]">
                 No orders yet.
               </div>
             )}
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.045] p-5">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-yellow-300">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
             Recent Minecraft Actions
           </p>
 
           {loadingActions ? (
-            <div className="mt-4 flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-black/20 p-8 text-sm text-gray-300">
+            <div className="mt-3 flex items-center justify-center gap-3 rounded-[11px] border border-white/[0.07] bg-black/20 p-8 text-[13px] text-[#9aa0b8]">
               <Loader2 className="h-5 w-5 animate-spin" />
               Loading Minecraft actions...
             </div>
           ) : (
-            <div className="mt-4 grid gap-3">
+            <div className="mt-3 grid gap-2.5">
               {minecraftActions.slice(0, 5).map((action) => (
                 <button
                   key={action.id}
                   type="button"
                   onClick={() => onNavigate("minecraft")}
-                  className="rounded-2xl border border-white/10 bg-black/25 p-4 text-left transition hover:border-yellow-300/40 hover:bg-yellow-500/10"
+                  className="rounded-[11px] border border-white/[0.07] bg-black/20 p-3.5 text-left transition hover:border-white/[0.14]"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="font-black text-white">
-                        {minecraftActionLabels[action.action_type]} • {action.minecraft_username}
+                      <p className="font-bold text-white">
+                        {minecraftActionLabels[action.action_type]} &middot; {action.minecraft_username}
                       </p>
-                      <p className="mt-1 text-sm text-gray-400">
+                      <p className="mt-1 text-[13px] text-[#9aa0b8]">
                         {getMinecraftActionPayloadSummary(action)}
                       </p>
                     </div>
-                    <span className={`rounded-full border px-3 py-1 text-xs font-black uppercase ${
-                      action.status === "failed"
-                        ? "border-red-400/25 bg-red-500/10 text-red-200"
-                        : "border-blue-400/25 bg-blue-500/10 text-blue-200"
-                    }`}>
+                    <span
+                      className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${
+                        action.status === "failed"
+                          ? "border-[rgba(248,113,113,0.25)] bg-[rgba(248,113,113,0.1)] text-[#fca5a5]"
+                          : "border-[rgba(96,165,250,0.25)] bg-[rgba(96,165,250,0.1)] text-[#60a5fa]"
+                      }`}
+                    >
                       {minecraftActionStatusLabels[action.status]}
                     </span>
                   </div>
@@ -922,7 +697,7 @@ export function AdminCommandCenter({
               ))}
 
               {minecraftActions.length === 0 && (
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-6 text-center text-sm text-gray-400">
+                <div className="rounded-[11px] border border-white/[0.07] bg-black/20 p-6 text-center text-[13px] text-[#6b7192]">
                   No Minecraft actions yet.
                 </div>
               )}
@@ -930,38 +705,110 @@ export function AdminCommandCenter({
           )}
         </div>
       </div>
+
+      {/* Server intelligence -- collapsed below the fold, plain definition list */}
+      <details className="group rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold ${
+                serverStatus.loading
+                  ? "border-[rgba(251,191,36,0.25)] bg-[rgba(251,191,36,0.1)] text-[#fbbf24]"
+                  : serverStatus.online
+                    ? "border-[rgba(52,211,153,0.25)] bg-[rgba(52,211,153,0.1)] text-[#34d399]"
+                    : "border-[rgba(248,113,113,0.25)] bg-[rgba(248,113,113,0.1)] text-[#f87171]"
+              }`}
+            >
+              <Radio className="h-3 w-3" />
+              {serverStatus.loading ? "Checking" : serverStatus.online ? "Online" : "Offline"}
+            </span>
+            <div>
+              <p className="text-[13px] font-extrabold text-white">Minecraft Server Intelligence</p>
+              <p className="text-xs text-[#6b7192]">
+                {serverStatus.playersOnline}/{serverStatus.playersMax} players &middot; {serverStatus.version}
+              </p>
+            </div>
+          </div>
+          <ChevronDown className="h-4 w-4 shrink-0 text-[#6b7192] transition group-open:rotate-180" />
+        </summary>
+
+        <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2.5 border-t border-white/[0.06] pt-4 sm:grid-cols-3 lg:grid-cols-4">
+          {intelligenceRows.map((row) => (
+            <div key={row.label} className="flex items-baseline justify-between gap-3 border-b border-white/[0.05] pb-2">
+              <span className="text-xs text-[#8b91ad]">{row.label}</span>
+              <span className="text-[13px] font-bold text-white">{row.value}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#8b91ad]">
+              Top Supporters
+            </p>
+            <div className="mt-2.5 grid gap-2">
+              {serverIntelligence.topSupporters.map((player) => (
+                <div
+                  key={player.ign}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-white/[0.06] bg-black/20 p-3"
+                >
+                  <div>
+                    <p className="font-bold text-white">{player.ign}</p>
+                    <p className="mt-0.5 text-xs text-[#6b7192]">
+                      {player.orders} order{player.orders === 1 ? "" : "s"} &middot; {player.delivered} delivered
+                    </p>
+                  </div>
+                  <span className="font-bold text-[#fde047]">PHP {player.totalSpent}</span>
+                </div>
+              ))}
+              {serverIntelligence.topSupporters.length === 0 && (
+                <div className="rounded-[10px] border border-white/[0.06] bg-black/20 p-4 text-center text-xs text-[#6b7192]">
+                  Supporter stats will appear after orders come in.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#8b91ad]">
+              Store Demand By Category
+            </p>
+            <div className="mt-2.5 grid gap-2">
+              {serverIntelligence.categories.map((category) => (
+                <div
+                  key={category.label}
+                  className="rounded-[10px] border border-white/[0.06] bg-black/20 p-3"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="font-bold text-white">{category.label}</p>
+                    <span className="font-bold text-[#fde047]">PHP {category.revenue}</span>
+                  </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
+                    <div
+                      className="h-full rounded-full bg-[#a855f7]"
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          Math.max(8, (category.orders / Math.max(1, orders.length)) * 100),
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="mt-1.5 text-xs text-[#6b7192]">
+                    {category.orders} order{category.orders === 1 ? "" : "s"}
+                  </p>
+                </div>
+              ))}
+              {serverIntelligence.categories.length === 0 && (
+                <div className="rounded-[10px] border border-white/[0.06] bg-black/20 p-4 text-center text-xs text-[#6b7192]">
+                  Category demand will appear after orders come in.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </details>
     </section>
-  );
-}
-
-function CommandStat({
-  label,
-  value,
-  icon,
-  tone,
-}: {
-  label: string;
-  value: string | number;
-  icon: React.ReactNode;
-  tone: "purple" | "emerald" | "yellow" | "red" | "blue" | "cyan";
-}) {
-  const toneClass = {
-    purple: "border-purple-500/25 bg-purple-500/10 text-purple-200",
-    emerald: "border-emerald-500/25 bg-emerald-500/10 text-emerald-200",
-    yellow: "border-yellow-500/25 bg-yellow-500/10 text-yellow-200",
-    red: "border-red-500/40 bg-red-500/15 text-red-200",
-    blue: "border-blue-500/25 bg-blue-500/10 text-blue-200",
-    cyan: "border-cyan-500/25 bg-cyan-500/10 text-cyan-200",
-  }[tone];
-
-  return (
-    <div className={`rounded-[1.5rem] border p-5 ${toneClass}`}>
-      <div>{icon}</div>
-      <p className="mt-4 text-[10px] font-black uppercase tracking-[0.18em]">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-black text-white">{value}</p>
-    </div>
   );
 }
 
@@ -973,13 +820,13 @@ function StatusPill({
   tone: "success" | "danger" | "neutral";
 }) {
   const toneClass = {
-    success: "border-emerald-500/25 bg-emerald-500/10 text-emerald-200",
-    danger: "border-red-500/25 bg-red-500/10 text-red-200",
-    neutral: "border-white/10 bg-white/[0.05] text-gray-300",
+    success: "border-[rgba(52,211,153,0.25)] bg-[rgba(52,211,153,0.08)] text-[#6ee7b7]",
+    danger: "border-[rgba(248,113,113,0.25)] bg-[rgba(248,113,113,0.08)] text-[#fca5a5]",
+    neutral: "border-white/[0.08] bg-white/[0.03] text-[#9aa0b8]",
   }[tone];
 
   return (
-    <span className={`rounded-full border px-3 py-1 text-xs font-black uppercase tracking-wider ${toneClass}`}>
+    <span className={`rounded-full border px-3 py-1 text-[11px] font-bold ${toneClass}`}>
       {label}
     </span>
   );
@@ -998,7 +845,7 @@ function QuickButton({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-black text-gray-200 transition hover:border-purple-300/40 hover:bg-purple-500/10 hover:text-purple-100"
+      className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-white/[0.07] bg-black/20 px-3.5 py-2.5 text-[13px] font-bold text-[#c4c9dc] transition hover:border-white/[0.14] hover:bg-white/[0.04]"
     >
       {icon}
       {label}
@@ -1009,23 +856,24 @@ function QuickButton({
 function MiniStat({
   label,
   value,
-  danger,
+  alert,
   suffix,
 }: {
   label: string;
   value: number | string;
-  danger?: boolean;
+  alert?: boolean;
   suffix?: string;
 }) {
   return (
-    <div className={`rounded-2xl border p-3 ${
-      danger
-        ? "border-red-400/25 bg-red-500/10"
-        : "border-white/10 bg-black/20"
-    }`}>
-      <p className="text-xs text-gray-400">{label}</p>
-      <p className={`mt-1 text-lg font-black ${danger ? "text-red-200" : "text-white"}`}>
-        {value}{suffix}
+    <div
+      className={`rounded-[10px] border p-2.5 ${
+        alert ? "border-[rgba(248,113,113,0.3)] bg-[rgba(248,113,113,0.08)]" : "border-white/[0.07] bg-black/20"
+      }`}
+    >
+      <p className="text-xs text-[#8b91ad]">{label}</p>
+      <p className={`mt-1 text-[15px] font-extrabold ${alert ? "text-[#fca5a5]" : "text-white"}`}>
+        {value}
+        {suffix}
       </p>
     </div>
   );
@@ -1035,42 +883,37 @@ function RadarButton({
   label,
   value,
   helper,
-  tone,
+  alert,
   onClick,
 }: {
   label: string;
   value: number;
   helper: string;
-  tone: string;
+  alert: boolean;
   onClick: () => void;
 }) {
-  const toneClass = {
-    blue: "border-blue-400/25 bg-blue-500/10 text-blue-200",
-    cyan: "border-cyan-400/25 bg-cyan-500/10 text-cyan-200",
-    emerald: "border-emerald-400/25 bg-emerald-500/10 text-emerald-200",
-    red: "border-red-400/30 bg-red-500/12 text-red-200",
-    yellow: "border-yellow-400/25 bg-yellow-500/10 text-yellow-200",
-  }[tone] || "border-white/10 bg-black/20 text-gray-200";
-
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`group flex items-center justify-between gap-4 rounded-2xl border p-4 text-left transition hover:bg-white/[0.08] ${toneClass}`}
+      className={`group flex items-center justify-between gap-4 rounded-[11px] border p-3.5 text-left transition hover:bg-white/[0.04] ${
+        alert ? "border-[rgba(248,113,113,0.3)] bg-[rgba(248,113,113,0.06)]" : "border-white/[0.07] bg-black/20"
+      }`}
     >
-      <div className="min-w-0">
-        <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/10 bg-black/20 text-lg font-black text-white">
-            {value}
-          </span>
-          <div>
-            <p className="font-black text-white">{label}</p>
-            <p className="mt-1 text-sm text-gray-300">{helper}</p>
-          </div>
+      <div className="flex min-w-0 items-center gap-3">
+        <span
+          className={`grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border text-[15px] font-extrabold ${
+            alert ? "border-[rgba(248,113,113,0.3)] text-[#fca5a5]" : "border-white/[0.08] text-white"
+          }`}
+        >
+          {value}
+        </span>
+        <div className="min-w-0">
+          <p className="font-bold text-white">{label}</p>
+          <p className="mt-0.5 truncate text-[13px] text-[#9aa0b8]">{helper}</p>
         </div>
       </div>
-      <ArrowRight className="h-5 w-5 shrink-0 transition group-hover:translate-x-1" />
+      <ArrowRight className="h-4 w-4 shrink-0 text-[#6b7192] transition group-hover:translate-x-1" />
     </button>
   );
 }
-

@@ -1,16 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import {
-  Clock3,
-  LogOut,
-  PackageCheck,
-  ReceiptText,
-  Search,
-  ShieldCheck,
-  XCircle,
-  RefreshCcw,
-  AlertOctagon,
-} from "lucide-react";
+import { LogOut, Search } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { AdminAuth } from "../components/admin/AdminAuth";
 import { AdminStaffApproval } from "../components/admin/AdminStaffApproval";
@@ -29,7 +19,7 @@ import { AdminServerOperationsPanel } from "../components/admin/AdminServerOpera
 import { AdminSettingsPanel } from "../components/admin/AdminSettingsPanel";
 import { AdminStaffPanel } from "../components/admin/AdminStaffPanel";
 import { AdminStaffActivityPanel } from "../components/admin/AdminStaffActivityPanel";
-import GradientText from "../components/ui/GradientText";
+import KpiTile from "../components/admin/KpiTile";
 import {
   fetchOrders,
   getReceiptUrl,
@@ -64,6 +54,27 @@ const filters: { label: string; value: StatusFilter }[] = [
   { label: "Delivered", value: "delivered" },
   { label: "Rejected", value: "rejected" },
 ];
+
+const tabTitles: Record<AdminTab, { title: string; subtitle: string }> = {
+  overview: { title: "Command Center", subtitle: "Staff operations at a glance" },
+  orders: { title: "Order Queue", subtitle: "Triage, verify, and deliver player purchases" },
+  tickets: { title: "Tickets", subtitle: "Support requests, ban appeals, and staff applications" },
+  players: { title: "Players", subtitle: "Linked accounts and player-facing history" },
+  minecraft: { title: "Minecraft Queue", subtitle: "Automated and manual delivery actions" },
+  announcements: { title: "Announcements", subtitle: "Broadcast messages to the server" },
+  server_ops: { title: "Server Ops", subtitle: "Server-side operational controls" },
+  activity: { title: "Staff Activity", subtitle: "Recent staff actions across the dashboard" },
+  staff: { title: "Staff", subtitle: "Roster, roles, and permissions" },
+  logs: { title: "Global Audit Log", subtitle: "Every status change and staff action" },
+  settings: { title: "Settings", subtitle: "Dashboard and realtime configuration" },
+};
+
+function formatMinutes(minutes: number) {
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return remainder > 0 ? `${hours}h ${remainder}m` : `${hours}h`;
+}
 
 function getNumericPrice(price: string) {
   const value = Number(price.replace(/[^0-9.]/g, ""));
@@ -304,7 +315,14 @@ function AdminPage() {
       .filter((order) => order.status === "verified" || order.status === "delivered")
       .reduce((total, order) => total + getNumericPrice(order.product_price), 0);
 
-    return { pending, verified, delivered, rejected, needsAttention, revenue };
+    const oldestPendingMinutes = orders
+      .filter((order) => order.status === "pending")
+      .reduce((oldest, order) => {
+        const minutes = Math.floor((Date.now() - new Date(order.created_at).getTime()) / 60000);
+        return Math.max(oldest, minutes);
+      }, 0);
+
+    return { pending, verified, delivered, rejected, needsAttention, revenue, oldestPendingMinutes };
   }, [orders]);
 
   const groupedOrders = useMemo(() => {
@@ -390,99 +408,89 @@ function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#030014] px-4 py-10 text-white sm:px-6">
-      <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-purple-300">
-              Ellipsis SMP Admin
-            </p>
-            <h1 className="mt-3 text-4xl font-black">
-              Admin <GradientText tone="cyan">Dashboard</GradientText>
-            </h1>
+    <main className="min-h-screen bg-[#0a0a14] text-white">
+      <div className="flex min-h-screen">
+        <AdminDashboardTabs
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          ordersBadgeCount={stats.needsAttention}
+          staffName={getAdminDisplayName(adminProfile)}
+          staffRole={adminProfile?.role}
+        />
 
-            <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
-              <span className="text-sm font-bold text-gray-300">
-                {getAdminDisplayName(adminProfile)}
-              </span>
-              <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-black uppercase tracking-wider ${adminProfile?.role === "owner" ? "border-purple-500/50 bg-purple-500/20 text-purple-200" :
-                adminProfile?.role === "manager" ? "border-blue-500/50 bg-blue-500/20 text-blue-200" :
-                  "border-gray-500/50 bg-gray-500/20 text-gray-200"
-                }`}>
+        <div className="min-w-0 flex-1">
+          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-extrabold">{tabTitles[activeTab].title}</h1>
+                <p className="mt-1 text-[13px] text-[#9aa0b8]">{tabTitles[activeTab].subtitle}</p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                {lastUpdated && (
+                  <span
+                    className={`inline-flex items-center gap-2 rounded-[10px] border px-3 py-2 text-xs font-bold ${
+                      realtimeStatus === "error"
+                        ? "border-[rgba(248,113,113,0.25)] bg-[rgba(248,113,113,0.08)] text-[#fca5a5]"
+                        : "border-[rgba(52,211,153,0.25)] bg-[rgba(52,211,153,0.08)] text-[#6ee7b7]"
+                    }`}
+                  >
+                    {realtimeStatus === "live" && (
+                      <span className="h-[7px] w-[7px] rounded-full bg-[#34d399]" />
+                    )}
+                    {realtimeStatus === "error" ? "Offline" : `Live · ${lastUpdated}`}
+                  </span>
+                )}
+
+                <button
+                  onClick={handleRefresh}
+                  className="rounded-[10px] bg-[#a855f7] px-3.5 py-2 text-xs font-extrabold text-[#150829] transition hover:bg-[#9333ea]"
+                >
+                  Refresh
+                </button>
+
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-[10px] border border-white/[0.08] bg-white/[0.03] px-3.5 py-2 text-xs font-bold text-[#9aa0b8] transition hover:bg-white/[0.06]"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  Logout
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[#6b7192]">
+              <span className="font-bold text-[#c4c9dc]">{getAdminDisplayName(adminProfile)}</span>
+              <span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-0.5 font-bold uppercase tracking-wide text-[#9aa0b8]">
                 {adminProfile?.role}
               </span>
+              <span>{adminProfile?.role ? roleDescriptions[adminProfile.role] : "Loading..."}</span>
             </div>
-            <p className="mt-2 text-xs leading-5 text-gray-400 max-w-xl">
-              <strong>Permissions:</strong> {adminProfile?.role ? roleDescriptions[adminProfile.role] : "Loading..."}
-            </p>
-          </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <button
-              onClick={handleRefresh}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-purple-500/25 bg-white/[0.06] px-4 py-3 text-sm font-black transition hover:bg-white/10"
-            >
-              <RefreshCcw className="h-4 w-4" />
-              Refresh
-            </button>
+            <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <KpiTile
+                label="Needs Attention"
+                value={stats.needsAttention}
+                subline={
+                  stats.oldestPendingMinutes > 0
+                    ? `Oldest pending ${formatMinutes(stats.oldestPendingMinutes)}`
+                    : "All caught up"
+                }
+                tone="alert"
+              />
+              <KpiTile label="Pending" value={stats.pending} subline="Awaiting review" />
+              <KpiTile label="Verified — deliver" value={stats.verified} subline="Ready to fulfill" />
+              <KpiTile
+                label="Revenue (today)"
+                value={`PHP ${stats.revenue}`}
+                subline="Verified & delivered"
+              />
+            </div>
 
-            {lastUpdated && (
-              <div className={`flex items-center rounded-2xl border px-4 py-3 text-sm font-bold ${realtimeStatus === "error"
-                ? "border-red-500/20 bg-red-500/10 text-red-200"
-                : "border-emerald-500/20 bg-emerald-500/10 text-emerald-200"
-                }`}>
-                {realtimeStatus === "live" && (
-                  <span className="mr-2 h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                )}
-                {realtimeStatus === "error" && (
-                  <XCircle className="mr-2 h-4 w-4" />
-                )}
-                {realtimeStatus === "error" ? "Offline" : `Live (Updated ${lastUpdated})`}
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={logout}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-purple-500/25 bg-white/[0.06] px-5 py-3 font-black transition hover:bg-white/10"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-          {[
-            { label: "Needs Attention", value: stats.needsAttention, icon: AlertOctagon, alert: stats.needsAttention > 0 },
-            { label: "Pending", value: stats.pending, icon: Clock3 },
-            { label: "Verified", value: stats.verified, icon: ShieldCheck },
-            { label: "Delivered", value: stats.delivered, icon: PackageCheck },
-            { label: "Rejected", value: stats.rejected, icon: XCircle },
-            { label: "Revenue", value: `PHP ${stats.revenue}`, icon: ReceiptText },
-          ].map((stat) => {
-            const StatIcon = stat.icon;
-            return (
-              <div
-                key={stat.label}
-                className={`rounded-[1.5rem] border p-5 ${stat.alert
-                  ? "border-red-500/50 bg-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.3)]"
-                  : "border-purple-500/25 bg-white/[0.06]"
-                  }`}
-              >
-                <StatIcon className={`h-5 w-5 ${stat.alert ? "text-red-300" : "text-purple-300"}`} />
-                <p className={`mt-4 text-[10px] font-black uppercase tracking-[0.18em] ${stat.alert ? "text-red-200" : "text-purple-300"}`}>
-                  {stat.label}
-                </p>
-                <p className={`mt-2 text-2xl font-black ${stat.alert ? "text-white" : ""}`}>{stat.value}</p>
-              </div>
-            );
-          })}
-        </div>
-
-        <AdminStaffApproval userRole={adminProfile?.role} />
-
-        <AdminDashboardTabs activeTab={activeTab} onChange={setActiveTab} />
+            <div className="mt-5">
+              <AdminStaffApproval userRole={adminProfile?.role} />
+            </div>
 
         {activeTab === "overview" && (
           <AdminCommandCenter
@@ -499,31 +507,28 @@ function AdminPage() {
 
         {activeTab === "orders" && (
           <>
-            <div className="grid gap-3 rounded-[1.75rem] border border-purple-500/20 bg-white/[0.045] p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div className="grid gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3.5 lg:grid-cols-[1fr_auto] lg:items-center">
               <div className="relative">
-                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-purple-300" />
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7192]" />
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search by IGN, Discord, order ID, product..."
-                  className="w-full rounded-2xl border border-purple-500/25 bg-black/40 px-11 py-3 text-white outline-none lg:max-w-xl"
+                  className="w-full rounded-[10px] border border-white/[0.08] bg-black/25 px-10 py-2.5 text-sm text-white outline-none placeholder:text-[#565d78] focus:border-white/20 lg:max-w-xl"
                 />
               </div>
 
-              <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+              <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
                 {filters.map((filter) => (
                   <button
                     key={filter.value}
                     type="button"
                     onClick={() => setActiveFilter(filter.value)}
-                    className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${activeFilter === filter.value
-                      ? filter.value === "needs_attention"
-                        ? "border-red-400 bg-red-500/30 text-white"
-                        : "border-purple-300 bg-purple-500/25 text-white"
-                      : filter.value === "needs_attention"
-                        ? "border-red-500/25 bg-white/[0.04] text-red-300 hover:bg-white/[0.08]"
-                        : "border-purple-500/25 bg-white/[0.04] text-purple-200 hover:bg-white/[0.08]"
-                      }`}
+                    className={`shrink-0 rounded-[8px] px-3 py-1.5 text-[11px] font-bold transition ${
+                      activeFilter === filter.value
+                        ? "bg-[rgba(168,85,247,0.16)] text-[#e9d5ff]"
+                        : "border border-white/[0.1] text-[#9aa0b8] hover:bg-white/[0.04]"
+                    }`}
                   >
                     {filter.label}
                   </button>
@@ -532,27 +537,27 @@ function AdminPage() {
             </div>
 
             {message && (
-              <div className="mt-6 rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-red-200">
+              <div className="mt-4 rounded-xl border border-[rgba(248,113,113,0.3)] bg-[rgba(248,113,113,0.08)] p-4 text-sm text-[#fca5a5]">
                 {message}
               </div>
             )}
 
-            <div className="mt-8 grid gap-4">
+            <div className="mt-5 grid gap-3">
               {groupedOrders.map((group) => (
                 <div
                   key={group.reference}
                   className={
                     group.orders.length > 1
-                      ? "rounded-[2rem] border border-purple-400/20 bg-white/[0.02] p-3"
+                      ? "rounded-xl border border-white/[0.07] bg-white/[0.015] p-2.5"
                       : ""
                   }
                 >
                   {group.orders.length > 1 && (
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-2">
-                      <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-300">
+                    <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 px-2">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#8b91ad]">
                         {group.reference} &middot; {group.orders.length} items
                       </p>
-                      <span className="text-xs font-black text-yellow-300">
+                      <span className="text-[13px] font-bold text-[#fde047]">
                         PHP{" "}
                         {group.orders.reduce(
                           (total, order) => total + getNumericPrice(order.product_price),
@@ -562,7 +567,7 @@ function AdminPage() {
                     </div>
                   )}
 
-                  <div className="grid gap-4">
+                  <div className="grid gap-3">
                     {group.orders.map((order) => (
                       <AdminOrderCard
                         key={order.id}
@@ -577,8 +582,8 @@ function AdminPage() {
                 </div>
               ))}
               {filteredOrders.length === 0 && (
-                <div className="rounded-[2rem] border border-purple-500/20 bg-white/[0.02] p-10 text-center">
-                  <p className="text-gray-400">No orders found matching your filters.</p>
+                <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-10 text-center">
+                  <p className="text-[13px] text-[#6b7192]">No orders found matching your filters.</p>
                 </div>
               )}
             </div>
@@ -618,8 +623,7 @@ function AdminPage() {
         )}
 
         {activeTab === "logs" && (
-          <div className="mt-6">
-            <h2 className="mb-4 text-2xl font-black">Global Audit Log</h2>
+          <div className="mt-5">
             <AdminAuditLog isGlobal={true} />
           </div>
         )}
@@ -631,6 +635,8 @@ function AdminPage() {
             orderCount={orders.length}
           />
         )}
+          </div>
+        </div>
       </div>
 
       <StaffNotesModal
