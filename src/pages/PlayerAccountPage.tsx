@@ -204,7 +204,9 @@ function AuthPanel({
     }
 
     if (mode === "signup" && !result.session) {
-      setMessage("Account created. Check your email if confirmation is required.");
+      setMessage(
+        "Account created. If email confirmation is required, confirm it and log in -- either way, your Minecraft account isn't linked yet. That happens in-game with a generated code, right after you log in."
+      );
       return;
     }
 
