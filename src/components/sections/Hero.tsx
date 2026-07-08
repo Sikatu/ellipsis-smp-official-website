@@ -75,12 +75,14 @@ function Hero() {
   const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
+    if (shouldReduceMotion) return;
+
     const interval = window.setInterval(() => {
       setShowcaseIndex((current) => (current + 1) % showcaseImages.length);
     }, 6500);
 
     return () => window.clearInterval(interval);
-  }, []);
+  }, [shouldReduceMotion]);
 
   const currentShowcase = showcaseImages[showcaseIndex];
 
@@ -127,13 +129,14 @@ function Hero() {
               loading="eager"
               decoding="async"
               fetchPriority="high"
+              sizes="(min-width: 1024px) 520px, (min-width: 640px) 430px, 300px"
               className="w-[300px] object-contain drop-shadow-[0_0_55px_rgba(168,85,247,0.9)] sm:w-[430px] lg:w-[520px]"
             />
           </picture>
 
-          <div className="mt-8 flex w-full items-center justify-center gap-4">
+          <div className="mt-8 flex w-full items-center justify-center gap-3 sm:gap-4">
             <div className="h-px w-24 bg-gradient-to-r from-transparent to-purple-400/70" />
-            <p className="text-xs font-black uppercase tracking-[0.35em] text-purple-200">
+            <p className="text-center text-[10px] font-black uppercase tracking-[0.25em] text-purple-200 sm:text-xs sm:tracking-[0.35em]">
               Crossplay Java & Bedrock
             </p>
             <div className="h-px w-24 bg-gradient-to-l from-transparent to-purple-400/70" />
@@ -237,6 +240,9 @@ function Hero() {
                   key={currentShowcase.src}
                   src={currentShowcase.src}
                   alt={currentShowcase.label}
+                  loading="lazy"
+                  decoding="async"
+                  sizes="(min-width: 1024px) 42vw, 100vw"
                   initial={shouldReduceMotion ? false : { opacity: 0, scale: 1.04 }}
                   animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1 }}
                   exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 1.02 }}
@@ -292,7 +298,7 @@ function Hero() {
         </motion.div>
 
         <div className="mx-auto mt-8 flex max-w-6xl flex-col gap-5 rounded-[2rem] border border-purple-500/25 bg-gradient-to-r from-purple-950/45 via-black/40 to-blue-950/35 p-6 shadow-[0_0_45px_rgba(168,85,247,0.16)] backdrop-blur-xl md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-5">
+          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:gap-5 sm:text-left">
             <div className="flex h-16 w-16 items-center justify-center rounded-full border border-yellow-400/25 bg-yellow-400/10 shadow-[0_0_28px_rgba(250,204,21,0.22)]">
               <Crown className="h-8 w-8 text-yellow-300" />
             </div>
