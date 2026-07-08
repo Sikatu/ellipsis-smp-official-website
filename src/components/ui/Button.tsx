@@ -3,6 +3,7 @@ import {
   type ComponentPropsWithoutRef,
 } from "react";
 import { Link } from "react-router-dom";
+import { twMerge } from "tailwind-merge";
 
 export type ButtonVariant = "primary" | "secondary" | "instant" | "ghost";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -33,15 +34,13 @@ function classesFor(
   fullWidth: boolean,
   className: string
 ) {
-  return [
+  return twMerge(
     baseClasses,
     variantClasses[variant],
     sizeClasses[size],
     fullWidth ? "w-full" : "",
-    className,
-  ]
-    .filter(Boolean)
-    .join(" ");
+    className
+  );
 }
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {

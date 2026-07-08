@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
 import PageShell from "./PageShell";
 import GlassPanel from "../components/ui/GlassPanel";
+import { LinkButton } from "../components/ui/Button";
 
 function NotFoundPage() {
   return (
@@ -22,19 +22,13 @@ function NotFoundPage() {
             </p>
 
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link
-                to="/"
-                className="rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4 text-sm font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.35)] transition hover:scale-[1.02]"
-              >
+              <LinkButton to="/" size="md" className="py-4">
                 Back Home
-              </Link>
+              </LinkButton>
 
-              <Link
-                to="/marketplace"
-                className="rounded-2xl border border-purple-500/30 bg-white/[0.06] px-6 py-4 text-sm font-black text-purple-100 transition hover:bg-white/[0.1]"
-              >
+              <LinkButton to="/marketplace" variant="secondary" size="md" className="py-4">
                 Visit Marketplace
-              </Link>
+              </LinkButton>
             </div>
           </GlassPanel>
         </div>

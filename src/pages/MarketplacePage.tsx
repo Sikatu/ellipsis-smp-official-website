@@ -14,6 +14,7 @@ import Store from "../components/sections/Store";
 import PageHero from "../components/ui/PageHero";
 import GlassPanel from "../components/ui/GlassPanel";
 import GradientText from "../components/ui/GradientText";
+import { LinkButton } from "../components/ui/Button";
 import SectionDivider from "../components/ui/SectionDivider";
 import CallToAction from "../components/ui/CallToAction";
 
@@ -156,13 +157,10 @@ function MarketplacePage() {
                 </div>
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <Link
-                    to="/checkout?type=rank&product=ASCENDANT"
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4 text-center text-sm font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.35)] transition hover:scale-[1.02]"
-                  >
+                  <LinkButton to="/checkout?type=rank&product=ASCENDANT" size="lg">
                     Buy ASCENDANT
                     <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  </LinkButton>
                   <a
                     href="#store"
                     className="rounded-2xl border border-purple-500/30 bg-white/[0.06] px-6 py-4 text-center text-sm font-black text-purple-100 transition hover:bg-white/[0.1]"

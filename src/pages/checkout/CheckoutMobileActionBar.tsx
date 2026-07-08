@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import Button from "../../components/ui/Button";
 import type { MobileCheckoutStep } from "./checkoutTypes";
 
 type CheckoutMobileActionBarProps = {
@@ -30,15 +31,15 @@ function CheckoutMobileActionBar({
           </p>
         </div>
 
-        <button
-          type="button"
+        <Button
           onClick={onPrimaryAction}
           disabled={isMobilePrimaryDisabled}
-          className="inline-flex min-w-[138px] shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-3 text-xs font-black text-white shadow-[0_0_24px_rgba(168,85,247,0.28)] transition disabled:cursor-not-allowed disabled:opacity-50"
+          size="sm"
+          className="min-w-[138px] shrink-0 rounded-xl py-3"
         >
           {mobilePrimaryLabel}
           {mobileStep !== "claim" && <ArrowRight className="h-4 w-4" />}
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import PageShell from "./PageShell";
 import GradientText from "../components/ui/GradientText";
+import Button from "../components/ui/Button";
 import { getCurrentPortalUser } from "../services/playerProfilePortal";
 import {
   createTicket,
@@ -264,15 +265,10 @@ function NewTicketForm({
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-4 font-black text-white transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
-        >
+        <Button onClick={handleSubmit} disabled={isSubmitting} size="lg" className="py-4">
           <Send className="h-4 w-4" />
           {isSubmitting ? "Submitting..." : "Submit Ticket"}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -375,15 +371,10 @@ function MyTicketsPanel() {
                     placeholder="Type a reply..."
                     className="flex-1 rounded-2xl border border-purple-500/25 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-purple-300"
                   />
-                  <button
-                    type="button"
-                    onClick={() => sendReply(ticket.id)}
-                    disabled={isSendingReply}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-3 font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
-                  >
+                  <Button onClick={() => sendReply(ticket.id)} disabled={isSendingReply}>
                     <Send className="h-4 w-4" />
                     Send
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -481,15 +472,10 @@ function GuestTicketView({ token }: { token: string }) {
               placeholder="Type a reply..."
               className="flex-1 rounded-2xl border border-purple-500/25 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-purple-300"
             />
-            <button
-              type="button"
-              onClick={sendReply}
-              disabled={isSendingReply}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-3 font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <Button onClick={sendReply} disabled={isSendingReply}>
               <Send className="h-4 w-4" />
               Send
-            </button>
+            </Button>
           </div>
         )}
       </div>

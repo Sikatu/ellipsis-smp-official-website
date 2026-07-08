@@ -7,6 +7,7 @@ import {
   X,
 } from "lucide-react";
 import type { RefObject } from "react";
+import Button from "../../components/ui/Button";
 import { crates } from "../../data/storeItems";
 import { categories, keyQuantities, rankDetails } from "./checkoutData";
 import type { CartLine } from "./cartTypes";
@@ -309,13 +310,9 @@ function CheckoutProductReviewSection({
             </p>
           )}
 
-          <button
-            type="button"
-            onClick={addFromPicker}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-3 text-sm font-black text-white shadow-[0_0_24px_rgba(168,85,247,0.28)]"
-          >
+          <Button onClick={addFromPicker} fullWidth className="mt-4">
             Add to Cart
-          </button>
+          </Button>
         </div>
       )}
 
@@ -328,15 +325,16 @@ function CheckoutProductReviewSection({
         </span>
       </div>
 
-      <button
-        type="button"
+      <Button
         onClick={() => goToMobileStep("pay")}
         disabled={cart.length === 0}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-4 text-sm font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.32)] transition disabled:cursor-not-allowed disabled:opacity-50 lg:hidden"
+        size="lg"
+        fullWidth
+        className="mt-4 lg:hidden"
       >
         Continue to Payment
         <ArrowRight className="h-4 w-4" />
-      </button>
+      </Button>
     </section>
   );
 }
