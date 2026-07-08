@@ -105,7 +105,7 @@ function generateOrderReference() {
   return `ELS-${Date.now().toString(36).toUpperCase()}`;
 }
 
-async function insertPendingOrder({ supabaseUrl, serviceRoleKey, order }) {
+async function insertPendingOrders({ supabaseUrl, serviceRoleKey, orders }) {
   const response = await fetch(`${supabaseUrl}/rest/v1/orders`, {
     method: "POST",
     headers: {
@@ -114,7 +114,7 @@ async function insertPendingOrder({ supabaseUrl, serviceRoleKey, order }) {
       "Content-Type": "application/json",
       Prefer: "return=representation",
     },
-    body: JSON.stringify(order),
+    body: JSON.stringify(orders),
   });
 
   if (!response.ok) {
@@ -122,11 +122,10 @@ async function insertPendingOrder({ supabaseUrl, serviceRoleKey, order }) {
     throw new Error(`Failed to create order: ${detail.slice(0, 300)}`);
   }
 
-  const rows = await response.json();
-  return rows[0];
+  return response.json();
 }
 
-async function createPaymongoCheckoutSession({ secretKey, lineItemName, amount, orderReference, successUrl, cancelUrl }) {
+async function createPaymongoCheckoutSession({ secretKey, lineItems, orderReference, successUrl, cancelUrl }) {
   const response = await fetch("https://api.paymongo.com/v1/checkout_sessions", {
     method: "POST",
     headers: {
@@ -139,14 +138,7 @@ async function createPaymongoCheckoutSession({ secretKey, lineItemName, amount, 
           send_email_receipt: false,
           show_description: true,
           show_line_items: true,
-          line_items: [
-            {
-              currency: "PHP",
-              amount,
-              name: lineItemName,
-              quantity: 1,
-            },
-          ],
+          line_items: lineItems,
           payment_method_types: ["qrph"],
           success_url: successUrl,
           cancel_url: cancelUrl,
@@ -189,63 +181,89 @@ export default async function handler(req, res) {
     const minecraftUsername = safeText(body.minecraftUsername);
     const minecraftUuid = safeText(body.minecraftUuid) || null;
     const discordUsername = safeText(body.discordUsername);
-    const productId = safeText(body.productId);
-    const productName = safeText(body.productName);
-    const productCategory = safeText(body.productCategory);
-    const productPrice = safeText(body.productPrice);
-    const quantity = safeText(body.quantity) || null;
     const siteUrl = safeText(body.siteUrl).replace(/\/$/, "");
+    const cart = Array.isArray(body.cart) ? body.cart : [];
 
     if (!minecraftUsername || !discordUsername) {
       return json(res, 400, { error: "Minecraft username and Discord username are required." });
     }
 
-    if (!productName || !productPrice) {
-      return json(res, 400, { error: "Missing product details." });
+    if (cart.length === 0) {
+      return json(res, 400, { error: "Your cart is empty." });
     }
 
     if (!siteUrl) {
       return json(res, 400, { error: "Missing site URL for payment redirect." });
     }
 
-    const canonicalPrice = resolveCanonicalPrice({ productCategory, productName, quantity });
+    const resolvedLines = [];
 
-    if (!canonicalPrice) {
-      return json(res, 400, { error: "Could not validate this product. Please refresh and try again." });
-    }
+    for (const rawLine of cart) {
+      const productId = safeText(rawLine.productId);
+      const productName = safeText(rawLine.productName);
+      const productCategory = safeText(rawLine.productCategory);
+      const quantity = safeText(rawLine.quantity) || null;
+      const unitCount = Math.max(1, Math.floor(Number(rawLine.unitCount) || 1));
 
-    const amount = parseAmountToCentavos(canonicalPrice);
+      if (!productName) {
+        return json(res, 400, { error: "Missing product details." });
+      }
 
-    if (!amount) {
-      return json(res, 400, { error: "Could not parse a valid amount from the product price." });
+      const canonicalPrice = resolveCanonicalPrice({ productCategory, productName, quantity });
+
+      if (!canonicalPrice) {
+        return json(res, 400, { error: "Could not validate this product. Please refresh and try again." });
+      }
+
+      const amount = parseAmountToCentavos(canonicalPrice);
+
+      if (!amount) {
+        return json(res, 400, { error: "Could not parse a valid amount from the product price." });
+      }
+
+      resolvedLines.push({
+        productId,
+        productName,
+        productCategory,
+        quantity,
+        unitCount,
+        canonicalPrice,
+        amount,
+      });
     }
 
     const orderReference = generateOrderReference();
 
-    const order = await insertPendingOrder({
-      supabaseUrl,
-      serviceRoleKey,
-      order: {
+    const orderRows = resolvedLines.flatMap((line) =>
+      Array.from({ length: line.unitCount }, () => ({
         customer_name: minecraftUsername,
         minecraft_username: minecraftUsername,
         minecraft_uuid: minecraftUuid,
         discord_username: discordUsername,
-        product_id: productId || null,
-        product_name: productName,
-        product_category: productCategory || null,
-        product_price: canonicalPrice,
-        quantity,
+        product_id: line.productId || null,
+        product_name: line.productName,
+        product_category: line.productCategory || null,
+        product_price: line.canonicalPrice,
+        quantity: line.quantity,
         payment_method: "PayMongo (Online)",
         payment_reference: orderReference,
         receipt_url: null,
         status: "pending",
-      },
-    });
+      }))
+    );
+
+    await insertPendingOrders({ supabaseUrl, serviceRoleKey, orders: orderRows });
+
+    const lineItems = resolvedLines.map((line) => ({
+      currency: "PHP",
+      amount: line.amount,
+      name: line.quantity ? `${line.productName} - ${line.quantity}` : line.productName,
+      quantity: line.unitCount,
+    }));
 
     const checkoutUrl = await createPaymongoCheckoutSession({
       secretKey: paymongoSecretKey,
-      lineItemName: productName,
-      amount,
+      lineItems,
       orderReference,
       successUrl: `${siteUrl}/track?order=${encodeURIComponent(orderReference)}`,
       cancelUrl: `${siteUrl}/checkout`,
@@ -254,7 +272,6 @@ export default async function handler(req, res) {
     return json(res, 200, {
       checkoutUrl,
       orderReference,
-      orderId: order.id,
     });
   } catch (error) {
     return json(res, 500, {

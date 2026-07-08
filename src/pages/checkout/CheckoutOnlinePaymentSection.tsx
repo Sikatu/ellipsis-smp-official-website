@@ -1,14 +1,10 @@
 import { useState } from "react";
 import { ShieldCheck, Sparkles } from "lucide-react";
+import type { CartLine } from "./cartTypes";
 
 type CheckoutOnlinePaymentSectionProps = {
-  selectedProduct: {
-    name: string;
-    type: string;
-    price: string;
-  };
-  productId: string;
-  quantity: string | null;
+  cart: CartLine[];
+  subtotalText: string;
   minecraftIgn: string;
   setMinecraftIgn: (value: string) => void;
   isIgnLocked: boolean;
@@ -18,9 +14,8 @@ type CheckoutOnlinePaymentSectionProps = {
 };
 
 function CheckoutOnlinePaymentSection({
-  selectedProduct,
-  productId,
-  quantity,
+  cart,
+  subtotalText,
   minecraftIgn,
   setMinecraftIgn,
   isIgnLocked,
@@ -31,7 +26,9 @@ function CheckoutOnlinePaymentSection({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const canPay = Boolean(minecraftIgn.trim() && discordUsername.trim()) && !isSubmitting;
+  const canPay =
+    Boolean(minecraftIgn.trim() && discordUsername.trim() && cart.length > 0) &&
+    !isSubmitting;
 
   async function handlePayOnline() {
     if (!canPay) return;
@@ -47,11 +44,14 @@ function CheckoutOnlinePaymentSection({
           minecraftUsername: minecraftIgn.trim(),
           minecraftUuid: linkedMinecraftUuid,
           discordUsername: discordUsername.trim(),
-          productId,
-          productName: selectedProduct.name,
-          productCategory: selectedProduct.type,
-          productPrice: selectedProduct.price,
-          quantity,
+          cart: cart.map((line) => ({
+            productId: line.productId,
+            productName: line.orderProductName,
+            productCategory: line.orderProductCategory,
+            productPrice: line.unitPriceText,
+            quantity: line.orderQuantityLabel,
+            unitCount: line.quantity,
+          })),
           siteUrl: window.location.origin,
         }),
       });
@@ -148,7 +148,7 @@ function CheckoutOnlinePaymentSection({
           <Sparkles className="h-4 w-4" />
           {isSubmitting
             ? "Redirecting to secure checkout..."
-            : `Pay ${selectedProduct.price} Online Now`}
+            : `Pay ${subtotalText} Online Now`}
         </button>
 
         <p className="mt-3 text-center text-xs text-gray-500">

@@ -17,11 +17,15 @@ function CheckoutPage() {
     claimSectionRef,
     isOnlinePayment,
     mobileStep,
-    selectedCategory,
-    selectedRank,
-    selectedCrate,
-    selectedKeyQuantity,
-    quantityForOrder,
+    cart,
+    subtotalText,
+    cartItemCount,
+    isPickerOpen,
+    pickerCategory,
+    pickerRank,
+    pickerCrate,
+    pickerKeyQuantity,
+    pickerRankDetails,
     method,
     setMethod,
     minecraftIgn,
@@ -46,21 +50,21 @@ function CheckoutPage() {
     setIsDraggingReceipt,
     isReceiptZoomOpen,
     setIsReceiptZoomOpen,
-    selectedRankDetails,
-    categoryBanner,
-    selectedProduct,
-    priceParts,
-    productBadge,
-    receiveItems,
     canSubmit,
     submitLabel,
     activeCheckoutStep,
     mobilePrimaryLabel,
     isMobilePrimaryDisabled,
-    resetPurchase,
-    updateRank,
-    updateCrate,
-    updateKeyQuantity,
+    addFromPicker,
+    removeLine,
+    incrementLine,
+    decrementLine,
+    openPicker,
+    closePicker,
+    updatePickerRank,
+    updatePickerCrate,
+    updatePickerKeyQuantity,
+    startNewPurchase,
     downloadQr,
     copyRecipientInfo,
     copyOrderId,
@@ -117,20 +121,23 @@ function CheckoutPage() {
             mobileStep={mobileStep}
             activeCheckoutStep={activeCheckoutStep}
             isOnlinePayment={isOnlinePayment}
-            categoryBanner={categoryBanner}
-            productBadge={productBadge}
-            selectedProduct={selectedProduct}
-            selectedCategory={selectedCategory}
-            selectedRank={selectedRank}
-            selectedCrate={selectedCrate}
-            selectedKeyQuantity={selectedKeyQuantity}
-            selectedRankDetails={selectedRankDetails}
-            priceParts={priceParts}
-            receiveItems={receiveItems}
-            resetPurchase={resetPurchase}
-            updateRank={updateRank}
-            updateCrate={updateCrate}
-            updateKeyQuantity={updateKeyQuantity}
+            cart={cart}
+            subtotalText={subtotalText}
+            isPickerOpen={isPickerOpen}
+            pickerCategory={pickerCategory}
+            pickerRank={pickerRank}
+            pickerCrate={pickerCrate}
+            pickerKeyQuantity={pickerKeyQuantity}
+            pickerRankDetails={pickerRankDetails}
+            openPicker={openPicker}
+            closePicker={closePicker}
+            addFromPicker={addFromPicker}
+            removeLine={removeLine}
+            incrementLine={incrementLine}
+            decrementLine={decrementLine}
+            updatePickerRank={updatePickerRank}
+            updatePickerCrate={updatePickerCrate}
+            updatePickerKeyQuantity={updatePickerKeyQuantity}
             goToMobileStep={goToMobileStep}
           />
 
@@ -140,8 +147,8 @@ function CheckoutPage() {
           >
             <CheckoutPaymentSection
               mobileStep={mobileStep}
-              selectedProduct={selectedProduct}
-              quantity={quantityForOrder}
+              cart={cart}
+              subtotalText={subtotalText}
               method={method}
               setMethod={setMethod}
               copiedRecipient={copiedRecipient}
@@ -162,7 +169,8 @@ function CheckoutPage() {
                 resultRef={resultRef}
                 fileInputRef={fileInputRef}
                 mobileStep={mobileStep}
-                selectedProduct={selectedProduct}
+                cart={cart}
+                subtotalText={subtotalText}
                 method={method}
                 minecraftIgn={minecraftIgn}
                 setMinecraftIgn={setMinecraftIgn}
@@ -188,7 +196,7 @@ function CheckoutPage() {
                 canSubmit={Boolean(canSubmit)}
                 submitLabel={submitLabel}
                 submitClaim={submitClaim}
-                resetPurchase={resetPurchase}
+                startNewPurchase={startNewPurchase}
               />
             )}
           </section>
@@ -203,7 +211,8 @@ function CheckoutPage() {
 
         {status !== "success" && !(isOnlinePayment && mobileStep !== "review") && (
           <CheckoutMobileActionBar
-            selectedProduct={selectedProduct}
+            cartItemCount={cartItemCount}
+            subtotalText={subtotalText}
             mobileStep={mobileStep}
             mobilePrimaryLabel={mobilePrimaryLabel}
             isMobilePrimaryDisabled={isMobilePrimaryDisabled}

@@ -1,44 +1,57 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { createCheckoutOrder } from "../../services/orders";
+import { createCheckoutOrders, type CartOrderLine } from "../../services/orders";
 import {
   fetchMyMinecraftProfile,
   getCurrentPortalUser,
 } from "../../services/playerProfilePortal";
 import { ranks } from "../../data/ranks";
 import { crates, furniture, plushies } from "../../data/storeItems";
-import {
-  paymentMethods,
-  rankDetails,
-} from "./checkoutData";
+import { paymentMethods, rankDetails } from "./checkoutData";
 import { getCheckoutSelectionFromSearch } from "./checkoutSelection";
-import type {
-  Category,
-  KeyQuantity,
-  MobileCheckoutStep,
-  Status,
-} from "./checkoutTypes";
+import {
+  buildCrateLine,
+  buildFurnitureLine,
+  buildPlushieLine,
+  buildRankLine,
+  formatPhp,
+  type CartLine,
+} from "./cartTypes";
+import type { Category, KeyQuantity, MobileCheckoutStep, Status } from "./checkoutTypes";
 
 export function useCheckoutState() {
   const location = useLocation();
   const initialSelection = useMemo(
     () => getCheckoutSelectionFromSearch(location.search),
-    [location.search]
+    // Only ever read on mount -- the cart shouldn't get wiped/reseeded just
+    // because the URL changes while the page is open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
+  const hasInitialParams = useMemo(
+    () => Boolean(location.search),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const resultRef = useRef<HTMLDivElement | null>(null);
   const productSectionRef = useRef<HTMLElement | null>(null);
   const paymentSectionRef = useRef<HTMLElement | null>(null);
   const claimSectionRef = useRef<HTMLDivElement | null>(null);
+  const hasSeededCartRef = useRef(false);
 
-  const [mobileStep, setMobileStep] =
-    useState<MobileCheckoutStep>("review");
-  const [selectedCategory, setSelectedCategory] =
-    useState<Category>(initialSelection.category);
-  const [selectedRank, setSelectedRank] = useState(initialSelection.rank);
-  const [selectedCrate, setSelectedCrate] = useState(initialSelection.crate);
-  const [selectedKeyQuantity, setSelectedKeyQuantity] =
-    useState<KeyQuantity>(initialSelection.keyQuantity);
+  const [mobileStep, setMobileStep] = useState<MobileCheckoutStep>("review");
+  const [cart, setCart] = useState<CartLine[]>([]);
+  const [isPickerOpen, setIsPickerOpen] = useState(!hasInitialParams);
+  const [pickerCategory, setPickerCategory] = useState<Category>(
+    initialSelection.category
+  );
+  const [pickerRank, setPickerRank] = useState(initialSelection.rank);
+  const [pickerCrate, setPickerCrate] = useState(initialSelection.crate);
+  const [pickerKeyQuantity, setPickerKeyQuantity] = useState<KeyQuantity>(
+    initialSelection.keyQuantity
+  );
   const [furnitureSlide, setFurnitureSlide] = useState(0);
   const [method, setMethod] = useState(paymentMethods[0]);
   const [minecraftIgn, setMinecraftIgn] = useState("");
@@ -57,184 +70,22 @@ export function useCheckoutState() {
   const [isDraggingReceipt, setIsDraggingReceipt] = useState(false);
   const [isReceiptZoomOpen, setIsReceiptZoomOpen] = useState(false);
 
-  const selectedRankDetails =
-    rankDetails.find((rank) => rank.name === selectedRank) || rankDetails[0];
+  const pickerRankDetails =
+    rankDetails.find((rank) => rank.name === pickerRank) || rankDetails[0];
+  const pickerRankAsset =
+    ranks.find((rank) => rank.name === pickerRankDetails.name) || ranks[0];
+  const pickerCrateAsset =
+    crates.find((crate) => crate.name === pickerCrate) || crates[0];
 
-  const selectedRankAsset =
-    ranks.find((rank) => rank.name === selectedRankDetails.name) || ranks[0];
-
-  const selectedCrateAsset =
-    crates.find((crate) => crate.name === selectedCrate) || crates[0];
-
-  const selectedCratePrice =
-    selectedCrateAsset?.options.find(
-      (option) => option.keys === selectedKeyQuantity
-    )?.price || "Price not available";
-
-  const categoryBanner = useMemo(() => {
-    if (selectedCategory === "Premium Ranks") {
-      return {
-        src: selectedRankAsset.image,
-        alt: `${selectedRankDetails.name} rank banner`,
-      };
-    }
-
-    if (selectedCategory === "Premium Crates") {
-      return {
-        src: selectedCrateAsset?.image || crates[0]?.image || "",
-        alt: `${selectedCrateAsset?.name || "Premium Crate"} banner`,
-      };
-    }
-
-    if (selectedCategory === "Furnitures") {
-      return {
-        src:
-          furniture.packs[furnitureSlide]?.image ||
-          furniture.packs[0]?.image ||
-          "",
-        alt: "Furniture preview",
-      };
-    }
-
-    return {
-      src: plushies.image,
-      alt: "Plushies preview",
-    };
-  }, [
-    selectedCategory,
-    selectedRankAsset.image,
-    selectedRankDetails.name,
-    selectedCrateAsset,
-    furnitureSlide,
-  ]);
-
-  const selectedProduct = useMemo(() => {
-    if (selectedCategory === "Premium Ranks") {
-      return {
-        name: selectedRankDetails.name,
-        type: "Premium Rank",
-        price: selectedRankDetails.price,
-        image: selectedRankAsset.image,
-        description: selectedRankDetails.description,
-      };
-    }
-
-    if (selectedCategory === "Premium Crates") {
-      return {
-        name: `${selectedCrateAsset?.name || selectedCrate} - ${selectedKeyQuantity}`,
-        type: "Premium Crate",
-        price: selectedCratePrice,
-        image: selectedCrateAsset?.image || "",
-        description: `Premium crate package with ${selectedKeyQuantity}.`,
-      };
-    }
-
-    if (selectedCategory === "Furnitures") {
-      return {
-        name: "Ellipsis Coins",
-        type: "Furnitures",
-        price: "PHP 50",
-        image:
-          furniture.packs[furnitureSlide]?.image ||
-          furniture.packs[0]?.image ||
-          "",
-        description:
-          "PHP 50 = 10 Ellipsis Coins. Use Ellipsis Coins in-game at /warp trades to choose the furniture you want.",
-      };
-    }
-
-    return {
-      name: "Plushie Keys",
-      type: "Plushies",
-      price: "PHP 50",
-      image: plushies.image,
-      description:
-        "PHP 50 = 5 Plushie Keys. Use Plushie Keys in-game to unlock adorable plushies.",
-    };
-  }, [
-    selectedCategory,
-    selectedRankDetails,
-    selectedRankAsset.image,
-    selectedCrate,
-    selectedCrateAsset,
-    selectedKeyQuantity,
-    selectedCratePrice,
-    furnitureSlide,
-  ]);
-
-  const priceParts = useMemo(() => {
-    const [currency, ...amountParts] = selectedProduct.price.split(" ");
-    return {
-      currency,
-      amount: amountParts.join(" ") || selectedProduct.price,
-    };
-  }, [selectedProduct.price]);
-
-  const productBadge = useMemo(() => {
-    if (selectedCategory === "Premium Ranks") return "Premium Rank";
-    if (selectedCategory === "Premium Crates") return "Premium Crate";
-    if (selectedCategory === "Furnitures") return "Furniture Coins";
-    return "Plushie Keys";
-  }, [selectedCategory]);
-
-  const receiveItems = useMemo(() => {
-    if (selectedCategory === "Premium Ranks") {
-      return [
-        `${selectedRankDetails.name} Rank`,
-        "30 Days Premium Access",
-        "Delivered after staff verification",
-      ];
-    }
-
-    if (selectedCategory === "Premium Crates") {
-      return [
-        `${selectedCrateAsset?.name || selectedCrate}`,
-        selectedKeyQuantity,
-        "Delivered after staff verification",
-      ];
-    }
-
-    if (selectedCategory === "Furnitures") {
-      return [
-        "10 Ellipsis Coins",
-        "Use at /warp trades",
-        "Delivered after staff verification",
-      ];
-    }
-
-    return [
-      "5 Plushie Keys",
-      "Unlock plushies in-game",
-      "Delivered after staff verification",
-    ];
-  }, [
-    selectedCategory,
-    selectedRankDetails.name,
-    selectedCrateAsset,
-    selectedCrate,
-    selectedKeyQuantity,
-  ]);
-
-  const quantityForOrder =
-    selectedCategory === "Premium Crates" ? selectedKeyQuantity : null;
-
-  const canSubmit = useMemo(() => {
-    return Boolean(
-      minecraftIgn.trim() &&
-        discordUsername.trim() &&
-        receiptFile &&
-        hasConfirmedPayment
-    );
-  }, [minecraftIgn, discordUsername, receiptFile, hasConfirmedPayment]);
-
-  const submitLabel = useMemo(() => {
-    if (status === "sending") return "Submitting...";
-    if (!minecraftIgn.trim()) return "Enter Minecraft IGN";
-    if (!discordUsername.trim()) return "Enter Discord Username";
-    if (!receiptFile) return "Upload Receipt";
-    if (!hasConfirmedPayment) return "Confirm Payment Sent";
-    return "Submit Payment Claim";
-  }, [minecraftIgn, discordUsername, receiptFile, hasConfirmedPayment, status]);
+  const subtotalPhp = useMemo(
+    () => cart.reduce((total, line) => total + line.unitPricePhp * line.quantity, 0),
+    [cart]
+  );
+  const subtotalText = formatPhp(subtotalPhp);
+  const cartItemCount = useMemo(
+    () => cart.reduce((count, line) => count + line.quantity, 0),
+    [cart]
+  );
 
   const isOnlinePayment = method.id === "PayMongo";
 
@@ -246,6 +97,26 @@ export function useCheckoutState() {
     return 2;
   }, [mobileStep, status, isOnlinePayment]);
 
+  const canSubmit = useMemo(() => {
+    return Boolean(
+      cart.length > 0 &&
+        minecraftIgn.trim() &&
+        discordUsername.trim() &&
+        receiptFile &&
+        hasConfirmedPayment
+    );
+  }, [cart.length, minecraftIgn, discordUsername, receiptFile, hasConfirmedPayment]);
+
+  const submitLabel = useMemo(() => {
+    if (status === "sending") return "Submitting...";
+    if (cart.length === 0) return "Add an Item to Cart";
+    if (!minecraftIgn.trim()) return "Enter Minecraft IGN";
+    if (!discordUsername.trim()) return "Enter Discord Username";
+    if (!receiptFile) return "Upload Receipt";
+    if (!hasConfirmedPayment) return "Confirm Payment Sent";
+    return "Submit Payment Claim";
+  }, [cart.length, minecraftIgn, discordUsername, receiptFile, hasConfirmedPayment, status]);
+
   const mobilePrimaryLabel =
     mobileStep === "review"
       ? "Continue to Payment"
@@ -254,7 +125,8 @@ export function useCheckoutState() {
         : submitLabel;
 
   const isMobilePrimaryDisabled =
-    mobileStep === "claim" && (!canSubmit || status === "sending");
+    (mobileStep === "review" && cart.length === 0) ||
+    (mobileStep === "claim" && (!canSubmit || status === "sending"));
 
   useEffect(() => {
     if (!receiptFile) {
@@ -269,14 +141,14 @@ export function useCheckoutState() {
   }, [receiptFile]);
 
   useEffect(() => {
-    if (selectedCategory !== "Furnitures") return;
+    if (pickerCategory !== "Furnitures") return;
 
     const interval = window.setInterval(() => {
       setFurnitureSlide((current) => (current + 1) % furniture.packs.length);
     }, 2500);
 
     return () => window.clearInterval(interval);
-  }, [selectedCategory]);
+  }, [pickerCategory]);
 
   useEffect(() => {
     if (status === "success" || status === "error") {
@@ -307,16 +179,101 @@ export function useCheckoutState() {
   }, []);
 
   useEffect(() => {
-    const nextSelection = getCheckoutSelectionFromSearch(location.search);
+    if (!hasInitialParams || hasSeededCartRef.current) return;
+    hasSeededCartRef.current = true;
 
-    setSelectedCategory(nextSelection.category);
-    setSelectedRank(nextSelection.rank);
-    setSelectedCrate(nextSelection.crate);
-    setSelectedKeyQuantity(nextSelection.keyQuantity);
-    setFurnitureSlide(0);
-    setMobileStep("review");
-    resetCheckoutState();
-  }, [location.search]);
+    if (initialSelection.category === "Premium Ranks") {
+      addLine(buildRankLine(pickerRankDetails, pickerRankAsset.image));
+    } else if (initialSelection.category === "Premium Crates" && pickerCrateAsset) {
+      addLine(buildCrateLine(pickerCrateAsset, initialSelection.keyQuantity));
+    } else if (initialSelection.category === "Furnitures") {
+      addLine(buildFurnitureLine(furniture));
+    } else {
+      addLine(buildPlushieLine(plushies));
+    }
+    // Intentionally mount-only: seeds the cart from URL params exactly once.
+    // The ref guard (not just an empty dep array) matters because
+    // StrictMode double-invokes mount effects in dev.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function addLine(line: CartLine) {
+    setCart((current) => {
+      const existingIndex = current.findIndex((entry) => entry.id === line.id);
+      if (existingIndex === -1) return [...current, line];
+
+      const next = [...current];
+      next[existingIndex] = {
+        ...next[existingIndex],
+        quantity: next[existingIndex].quantity + 1,
+      };
+      return next;
+    });
+  }
+
+  function addFromPicker() {
+    if (pickerCategory === "Premium Ranks") {
+      addLine(buildRankLine(pickerRankDetails, pickerRankAsset.image));
+    } else if (pickerCategory === "Premium Crates" && pickerCrateAsset) {
+      addLine(buildCrateLine(pickerCrateAsset, pickerKeyQuantity));
+    } else if (pickerCategory === "Furnitures") {
+      addLine(buildFurnitureLine(furniture));
+    } else {
+      addLine(buildPlushieLine(plushies));
+    }
+    setIsPickerOpen(false);
+  }
+
+  function removeLine(lineId: string) {
+    setCart((current) => current.filter((line) => line.id !== lineId));
+  }
+
+  function setLineQuantity(lineId: string, quantity: number) {
+    if (quantity <= 0) {
+      removeLine(lineId);
+      return;
+    }
+
+    setCart((current) =>
+      current.map((line) => (line.id === lineId ? { ...line, quantity } : line))
+    );
+  }
+
+  function incrementLine(lineId: string) {
+    setCart((current) =>
+      current.map((line) =>
+        line.id === lineId ? { ...line, quantity: line.quantity + 1 } : line
+      )
+    );
+  }
+
+  function decrementLine(lineId: string) {
+    const line = cart.find((entry) => entry.id === lineId);
+    if (!line) return;
+    setLineQuantity(lineId, line.quantity - 1);
+  }
+
+  function openPicker(category: Category) {
+    setPickerCategory(category);
+    setIsPickerOpen(true);
+  }
+
+  function closePicker() {
+    setIsPickerOpen(false);
+  }
+
+  function updatePickerRank(rankName: string) {
+    setPickerRank(rankName);
+  }
+
+  function updatePickerCrate(crateName: string) {
+    setPickerCrate(crateName);
+    setPickerKeyQuantity("1 key");
+  }
+
+  function updatePickerKeyQuantity(quantity: KeyQuantity) {
+    setPickerKeyQuantity(quantity);
+  }
 
   function clearReceiptUpload() {
     setReceiptFile(null);
@@ -329,42 +286,18 @@ export function useCheckoutState() {
     }
   }
 
-  function resetCheckoutState() {
-    if (!isIgnLocked) {
-      setMinecraftIgn("");
-    }
+  function startNewPurchase() {
+    setCart([]);
+    setIsPickerOpen(true);
+    setPickerCategory("Premium Ranks");
+    setMobileStep("review");
+    if (!isIgnLocked) setMinecraftIgn("");
     setDiscordUsername("");
     setHasConfirmedPayment(false);
     setOrderId("");
     setSubmitError("");
     setStatus("idle");
     clearReceiptUpload();
-  }
-
-  function resetPurchase(category: Category) {
-    setSelectedCategory(category);
-    setSelectedRank(rankDetails[0].name);
-    setSelectedCrate(crates[0]?.name || "");
-    setSelectedKeyQuantity("1 key");
-    setFurnitureSlide(0);
-    setMobileStep("review");
-    resetCheckoutState();
-  }
-
-  function updateRank(rankName: string) {
-    setSelectedRank(rankName);
-    resetCheckoutState();
-  }
-
-  function updateCrate(crateName: string) {
-    setSelectedCrate(crateName);
-    setSelectedKeyQuantity("1 key");
-    resetCheckoutState();
-  }
-
-  function updateKeyQuantity(quantity: KeyQuantity) {
-    setSelectedKeyQuantity(quantity);
-    resetCheckoutState();
   }
 
   function downloadQr() {
@@ -418,6 +351,7 @@ export function useCheckoutState() {
 
   function handleMobilePrimaryAction() {
     if (mobileStep === "review") {
+      if (cart.length === 0) return;
       goToMobileStep("pay");
       return;
     }
@@ -439,12 +373,7 @@ export function useCheckoutState() {
       return;
     }
 
-    const allowedTypes = [
-      "image/png",
-      "image/jpeg",
-      "image/jpg",
-      "image/webp",
-    ];
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
 
     if (!allowedTypes.includes(file.type)) {
       clearReceiptUpload();
@@ -469,23 +398,26 @@ export function useCheckoutState() {
     setOrderId("");
 
     try {
-      const createdOrderId = await createCheckoutOrder({
+      const lines: CartOrderLine[] = cart.map((line) => ({
+        productId: line.productId,
+        productName: line.orderProductName,
+        productCategory: line.orderProductCategory,
+        productPrice: line.unitPriceText,
+        quantity: line.orderQuantityLabel,
+        unitCount: line.quantity,
+      }));
+
+      const createdOrderReference = await createCheckoutOrders({
         customerName: minecraftIgn.trim(),
         minecraftUsername: minecraftIgn.trim(),
         minecraftUuid: linkedMinecraftUuid,
         discordUsername: discordUsername.trim(),
-        productId: `${selectedProduct.type}-${selectedProduct.name}`
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-"),
-        productName: selectedProduct.name,
-        productCategory: selectedProduct.type,
-        productPrice: selectedProduct.price,
-        quantity: quantityForOrder,
         paymentMethod: method.label,
         receiptFile,
+        lines,
       });
 
-      setOrderId(createdOrderId);
+      setOrderId(createdOrderReference);
       setStatus("success");
     } catch (error) {
       setSubmitError(
@@ -503,11 +435,17 @@ export function useCheckoutState() {
     claimSectionRef,
     isOnlinePayment,
     mobileStep,
-    selectedCategory,
-    selectedRank,
-    selectedCrate,
-    selectedKeyQuantity,
-    quantityForOrder,
+    cart,
+    subtotalPhp,
+    subtotalText,
+    cartItemCount,
+    isPickerOpen,
+    pickerCategory,
+    pickerRank,
+    pickerCrate,
+    pickerKeyQuantity,
+    pickerRankDetails,
+    furnitureSlide,
     method,
     setMethod,
     minecraftIgn,
@@ -532,21 +470,22 @@ export function useCheckoutState() {
     setIsDraggingReceipt,
     isReceiptZoomOpen,
     setIsReceiptZoomOpen,
-    selectedRankDetails,
-    categoryBanner,
-    selectedProduct,
-    priceParts,
-    productBadge,
-    receiveItems,
     canSubmit,
     submitLabel,
     activeCheckoutStep,
     mobilePrimaryLabel,
     isMobilePrimaryDisabled,
-    resetPurchase,
-    updateRank,
-    updateCrate,
-    updateKeyQuantity,
+    addFromPicker,
+    removeLine,
+    setLineQuantity,
+    incrementLine,
+    decrementLine,
+    openPicker,
+    closePicker,
+    updatePickerRank,
+    updatePickerCrate,
+    updatePickerKeyQuantity,
+    startNewPurchase,
     downloadQr,
     copyRecipientInfo,
     copyOrderId,
