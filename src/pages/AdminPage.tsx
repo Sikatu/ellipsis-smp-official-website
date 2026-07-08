@@ -306,6 +306,25 @@ function AdminPage() {
     return { pending, verified, delivered, rejected, needsAttention, revenue };
   }, [orders]);
 
+  const groupedOrders = useMemo(() => {
+    const groups: { reference: string; orders: Order[] }[] = [];
+    const indexByReference = new Map<string, number>();
+
+    filteredOrders.forEach((order) => {
+      const reference = order.payment_reference || order.id;
+      const existingIndex = indexByReference.get(reference);
+
+      if (existingIndex === undefined) {
+        indexByReference.set(reference, groups.length);
+        groups.push({ reference, orders: [order] });
+      } else {
+        groups[existingIndex].orders.push(order);
+      }
+    });
+
+    return groups;
+  }, [filteredOrders]);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -516,15 +535,43 @@ function AdminPage() {
             )}
 
             <div className="mt-8 grid gap-4">
-              {filteredOrders.map((order) => (
-                <AdminOrderCard
-                  key={order.id}
-                  order={order}
-                  canManageOrders={hasManageRights}
-                  onViewReceipt={openReceipt}
-                  onEditNotes={(order) => setEditingNotesOrder(order)}
-                  onUpdateStatus={handleUpdateStatus}
-                />
+              {groupedOrders.map((group) => (
+                <div
+                  key={group.reference}
+                  className={
+                    group.orders.length > 1
+                      ? "rounded-[2rem] border border-purple-400/20 bg-white/[0.02] p-3"
+                      : ""
+                  }
+                >
+                  {group.orders.length > 1 && (
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-2">
+                      <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-300">
+                        {group.reference} &middot; {group.orders.length} items
+                      </p>
+                      <span className="text-xs font-black text-yellow-300">
+                        PHP{" "}
+                        {group.orders.reduce(
+                          (total, order) => total + getNumericPrice(order.product_price),
+                          0
+                        )}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="grid gap-4">
+                    {group.orders.map((order) => (
+                      <AdminOrderCard
+                        key={order.id}
+                        order={order}
+                        canManageOrders={hasManageRights}
+                        onViewReceipt={openReceipt}
+                        onEditNotes={(order) => setEditingNotesOrder(order)}
+                        onUpdateStatus={handleUpdateStatus}
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
               {filteredOrders.length === 0 && (
                 <div className="rounded-[2rem] border border-purple-500/20 bg-white/[0.02] p-10 text-center">
