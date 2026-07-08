@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { CalendarDays, Crown, Gift, Newspaper } from "lucide-react";
-import SectionTitle from "../ui/SectionTitle";
+import SectionHeader from "../ui/SectionHeader";
 
 const featuredItems = [
     {
@@ -37,11 +37,11 @@ function Featured() {
     return (
         <section id="featured" className="bg-transparent px-4 py-14 text-white sm:px-6 sm:py-20 md:py-24">
             <div className="mx-auto max-w-7xl">
-                <SectionTitle
-                    label="Featured"
+                <SectionHeader
+                    eyebrow="Featured"
                     title="What's Happening on Ellipsis SMP"
                     description="Stay updated with server highlights, community features, and current promotions."
-                    accent="gold"
+                    tone="gold"
                 />
 
                 <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">

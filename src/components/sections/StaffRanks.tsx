@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Crown, ShieldCheck, Sparkles } from "lucide-react";
-import SectionTitle from "../ui/SectionTitle";
+import SectionHeader from "../ui/SectionHeader";
 
 const staffRanks = [
     {
@@ -81,11 +81,11 @@ function StaffRanks() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.16),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.18),transparent_35%)]" />
 
             <div className="relative mx-auto max-w-7xl">
-                <SectionTitle
-                    label="Staff Council"
+                <SectionHeader
+                    eyebrow="Staff Council"
                     title="The Team Behind Ellipsis SMP"
                     description="Meet the trusted team responsible for leadership, development, management, administration, moderation, building, and player support."
-                    accent="blue"
+                    tone="blue"
                 />
 
                 <div className="mb-10 flex justify-center">

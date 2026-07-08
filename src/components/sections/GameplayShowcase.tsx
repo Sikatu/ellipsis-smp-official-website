@@ -11,7 +11,7 @@ import {
     Sword,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import SectionTitle from "../ui/SectionTitle";
+import SectionHeader from "../ui/SectionHeader";
 
 const stellarityWikiUrl = "https://koharasbasement.wiki.gg/wiki/Stellarity";
 
@@ -115,11 +115,11 @@ function GameplayShowcase() {
     return (
         <section id="gameplay" className="bg-transparent px-4 py-14 text-white sm:px-6 sm:py-20 md:py-24">
             <div className="mx-auto max-w-7xl">
-                <SectionTitle
-                    label="Gameplay Showcase"
+                <SectionHeader
+                    eyebrow="Gameplay Showcase"
                     title="Explore the Ellipsis SMP Experience"
                     description="Discover custom worlds, community moments, Pyro skill systems, and a Stellarity-powered Custom End experience."
-                    accent="blue"
+                    tone="blue"
                 />
 
                 <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">

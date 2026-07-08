@@ -1,6 +1,6 @@
 import { PlayCircle } from "lucide-react";
 import { useState } from "react";
-import SectionTitle from "../ui/SectionTitle";
+import SectionHeader from "../ui/SectionHeader";
 
 function OfficialVideo() {
     const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
@@ -8,8 +8,8 @@ function OfficialVideo() {
     return (
         <section id="video" className="relative px-4 py-20 sm:px-6">
             <div className="mx-auto max-w-6xl">
-                <SectionTitle
-                    label="Official Trailer"
+                <SectionHeader
+                    eyebrow="Official Trailer"
                     title="Watch the Ellipsis SMP Trailer"
                     description="Get a quick look at the world, gameplay, and survival experience waiting for you."
                 />

@@ -14,7 +14,7 @@ import {
 } from "../../data/links";
 import { useDiscordWidget } from "../../hooks/useDiscordWidget";
 import { useServerStatus } from "../../hooks/useServerStatus";
-import SectionTitle from "../ui/SectionTitle";
+import SectionHeader from "../ui/SectionHeader";
 import { AnchorButton } from "../ui/Button";
 
 const socials = [
@@ -48,11 +48,11 @@ function Discord() {
     return (
         <section id="discord" className="bg-transparent px-4 py-14 text-white sm:px-6 sm:py-20 md:py-24">
             <div className="mx-auto max-w-6xl">
-                <SectionTitle
-                    label="Community Support"
+                <SectionHeader
+                    eyebrow="Community Support"
                     title="Need Help? Join the Ellipsis SMP Community"
                     description="Get announcements, support, tickets, updates, social content, and help from the community team."
-                    accent="blue"
+                    tone="blue"
                 />
 
                 <div className="mb-6 grid gap-4 md:grid-cols-3">

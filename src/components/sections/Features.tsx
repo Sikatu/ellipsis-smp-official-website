@@ -9,7 +9,7 @@ import {
     Sparkles,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import SectionTitle from "../ui/SectionTitle";
+import SectionHeader from "../ui/SectionHeader";
 
 const features = [
     {
@@ -66,11 +66,11 @@ function Features() {
     return (
         <section id="features" className="bg-transparent px-4 py-14 text-white sm:px-6 sm:py-20 md:py-24">
             <div className="mx-auto max-w-7xl">
-                <SectionTitle
-                    label="Server Features"
+                <SectionHeader
+                    eyebrow="Server Features"
                     title="Core Server Systems"
                     description="A quick look at the practical systems that keep Ellipsis SMP active, fair, and rewarding."
-                    accent="blue"
+                    tone="blue"
                 />
 
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
