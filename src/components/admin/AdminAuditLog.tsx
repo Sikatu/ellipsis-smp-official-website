@@ -27,12 +27,12 @@ export function AdminAuditLog({ orderId, isGlobal = false }: AdminAuditLogProps)
   }, [orderId, isGlobal]);
 
   if (isLoading) {
-    return <p className="text-sm text-gray-400 p-4">Loading audit logs...</p>;
+    return <p className="p-4 text-[13px] text-[#6b7192]">Loading audit logs...</p>;
   }
 
   if (logs.length === 0) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-gray-400">
+      <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-6 text-center text-[13px] text-[#6b7192]">
         <History className="mx-auto mb-2 h-6 w-6 opacity-50" />
         No audit logs found.
       </div>
@@ -40,9 +40,9 @@ export function AdminAuditLog({ orderId, isGlobal = false }: AdminAuditLogProps)
   }
 
   return (
-    <div className="overflow-x-auto rounded-[1.5rem] border border-white/10 bg-black/20">
-      <table className="w-full text-left text-sm text-gray-300">
-        <thead className="bg-white/5 text-xs font-black uppercase text-gray-400">
+    <div className="overflow-x-auto rounded-xl border border-white/[0.07] bg-black/20">
+      <table className="w-full text-left text-[13px] text-[#c4c9dc]">
+        <thead className="bg-white/[0.03] text-[10px] font-bold uppercase tracking-[0.1em] text-[#565d78]">
           <tr>
             <th className="px-4 py-3">Time</th>
             {isGlobal && <th className="px-4 py-3">Order ID</th>}
@@ -51,35 +51,35 @@ export function AdminAuditLog({ orderId, isGlobal = false }: AdminAuditLogProps)
             <th className="px-4 py-3">Details</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-white/5">
+        <tbody className="divide-y divide-white/[0.05]">
           {logs.map((log) => (
             <tr key={log.id} className="transition hover:bg-white/[0.02]">
               <td className="whitespace-nowrap px-4 py-3 text-xs">
                 {new Date(log.created_at).toLocaleString()}
               </td>
               {isGlobal && (
-                <td className="px-4 py-3 font-mono text-xs text-purple-300">
+                <td className="px-4 py-3 font-mono text-xs text-[#c4b5fd]">
                   {log.order_id?.slice(0, 8)}...
                 </td>
               )}
-              <td className="px-4 py-3 text-xs text-blue-200">
+              <td className="px-4 py-3 text-xs text-[#93c5fd]">
                 {getAuditStaffName(log)}
               </td>
               <td className="px-4 py-3">
-                <span className="inline-flex rounded-full bg-white/10 px-2 py-1 text-xs font-bold text-white">
+                <span className="inline-flex rounded-full bg-white/[0.06] px-2 py-1 text-xs font-bold text-white">
                   {log.action}
                 </span>
               </td>
               <td className="px-4 py-3 text-xs">
                 {log.action === "status_update" && (
-                  <span className="text-gray-400">
+                  <span className="text-[#8b91ad]">
                     <span className="line-through">{log.previous_status || "unknown"}</span>
                     {" → "}
                     <span className="font-bold text-white">{log.next_status}</span>
                   </span>
                 )}
                 {log.action === "staff_notes_update" && (
-                  <span className="inline-flex items-center gap-1 text-yellow-200">
+                  <span className="inline-flex items-center gap-1 text-[#fbbf24]">
                     <FileText className="h-3 w-3" />
                     Notes updated
                   </span>

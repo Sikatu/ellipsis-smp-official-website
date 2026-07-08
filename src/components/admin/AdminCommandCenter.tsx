@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { AdminTab } from "./AdminDashboardTabs";
 import StatusChip from "../ui/StatusChip";
+import { formatOrderAge, getOrderAgeMinutes } from "../../lib/orderAge";
 import type { Order, StatusFilter } from "../../types/admin";
 import type { MinecraftAdminAction } from "../../types/minecraftActions";
 import { useServerStatus } from "../../hooks/useServerStatus";
@@ -57,20 +58,6 @@ function getNumericPrice(price: string) {
 
 function getOrderReference(order: Order) {
   return order.payment_reference || order.id;
-}
-
-function getOrderAgeMinutes(order: Order) {
-  return Math.max(
-    0,
-    Math.floor((new Date().getTime() - new Date(order.created_at).getTime()) / 60000),
-  );
-}
-
-function formatOrderAge(minutes: number) {
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  const remainder = minutes % 60;
-  return remainder > 0 ? `${hours}h ${remainder}m` : `${hours}h`;
 }
 
 function getRecentOrders(orders: Order[]) {

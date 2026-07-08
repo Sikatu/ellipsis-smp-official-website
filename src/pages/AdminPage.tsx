@@ -20,6 +20,7 @@ import { AdminSettingsPanel } from "../components/admin/AdminSettingsPanel";
 import { AdminStaffPanel } from "../components/admin/AdminStaffPanel";
 import { AdminStaffActivityPanel } from "../components/admin/AdminStaffActivityPanel";
 import KpiTile from "../components/admin/KpiTile";
+import { formatOrderAge, getOrderAgeMinutes } from "../lib/orderAge";
 import {
   fetchOrders,
   getReceiptUrl,
@@ -69,12 +70,6 @@ const tabTitles: Record<AdminTab, { title: string; subtitle: string }> = {
   settings: { title: "Settings", subtitle: "Dashboard and realtime configuration" },
 };
 
-function formatMinutes(minutes: number) {
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  const remainder = minutes % 60;
-  return remainder > 0 ? `${hours}h ${remainder}m` : `${hours}h`;
-}
 
 function getNumericPrice(price: string) {
   const value = Number(price.replace(/[^0-9.]/g, ""));
@@ -317,10 +312,7 @@ function AdminPage() {
 
     const oldestPendingMinutes = orders
       .filter((order) => order.status === "pending")
-      .reduce((oldest, order) => {
-        const minutes = Math.floor((Date.now() - new Date(order.created_at).getTime()) / 60000);
-        return Math.max(oldest, minutes);
-      }, 0);
+      .reduce((oldest, order) => Math.max(oldest, getOrderAgeMinutes(order)), 0);
 
     return { pending, verified, delivered, rejected, needsAttention, revenue, oldestPendingMinutes };
   }, [orders]);
@@ -474,7 +466,7 @@ function AdminPage() {
                 value={stats.needsAttention}
                 subline={
                   stats.oldestPendingMinutes > 0
-                    ? `Oldest pending ${formatMinutes(stats.oldestPendingMinutes)}`
+                    ? `Oldest pending ${formatOrderAge(stats.oldestPendingMinutes)}`
                     : "All caught up"
                 }
                 tone="alert"
@@ -542,18 +534,22 @@ function AdminPage() {
               </div>
             )}
 
-            <div className="mt-5 grid gap-3">
+            <div className="mt-5 overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02]">
+              <div
+                className="hidden gap-3 border-b border-white/[0.06] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#565d78] sm:grid"
+                style={{ gridTemplateColumns: "1.4fr 1fr 1fr 0.8fr 0.9fr" }}
+              >
+                <span>Product / IGN</span>
+                <span>Order ID</span>
+                <span>Age</span>
+                <span>Amount</span>
+                <span>Status</span>
+              </div>
+
               {groupedOrders.map((group) => (
-                <div
-                  key={group.reference}
-                  className={
-                    group.orders.length > 1
-                      ? "rounded-xl border border-white/[0.07] bg-white/[0.015] p-2.5"
-                      : ""
-                  }
-                >
+                <div key={group.reference}>
                   {group.orders.length > 1 && (
-                    <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 px-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] bg-white/[0.015] px-4 py-2">
                       <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#8b91ad]">
                         {group.reference} &middot; {group.orders.length} items
                       </p>
@@ -567,22 +563,21 @@ function AdminPage() {
                     </div>
                   )}
 
-                  <div className="grid gap-3">
-                    {group.orders.map((order) => (
-                      <AdminOrderCard
-                        key={order.id}
-                        order={order}
-                        canManageOrders={hasManageRights}
-                        onViewReceipt={openReceipt}
-                        onEditNotes={(order) => setEditingNotesOrder(order)}
-                        onUpdateStatus={handleUpdateStatus}
-                      />
-                    ))}
-                  </div>
+                  {group.orders.map((order) => (
+                    <AdminOrderCard
+                      key={order.id}
+                      order={order}
+                      canManageOrders={hasManageRights}
+                      onViewReceipt={openReceipt}
+                      onEditNotes={(order) => setEditingNotesOrder(order)}
+                      onUpdateStatus={handleUpdateStatus}
+                    />
+                  ))}
                 </div>
               ))}
+
               {filteredOrders.length === 0 && (
-                <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-10 text-center">
+                <div className="p-10 text-center">
                   <p className="text-[13px] text-[#6b7192]">No orders found matching your filters.</p>
                 </div>
               )}
