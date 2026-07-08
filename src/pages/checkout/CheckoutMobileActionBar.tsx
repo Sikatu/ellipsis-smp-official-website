@@ -1,13 +1,9 @@
 import { ArrowRight } from "lucide-react";
 import type { MobileCheckoutStep } from "./checkoutTypes";
 
-type SelectedProduct = {
-  name: string;
-  price: string;
-};
-
 type CheckoutMobileActionBarProps = {
-  selectedProduct: SelectedProduct;
+  cartItemCount: number;
+  subtotalText: string;
   mobileStep: MobileCheckoutStep;
   mobilePrimaryLabel: string;
   isMobilePrimaryDisabled: boolean;
@@ -15,7 +11,8 @@ type CheckoutMobileActionBarProps = {
 };
 
 function CheckoutMobileActionBar({
-  selectedProduct,
+  cartItemCount,
+  subtotalText,
   mobileStep,
   mobilePrimaryLabel,
   isMobilePrimaryDisabled,
@@ -26,10 +23,10 @@ function CheckoutMobileActionBar({
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-purple-300">
-            {selectedProduct.price}
+            {subtotalText}
           </p>
           <p className="line-clamp-1 text-sm font-black text-white">
-            {selectedProduct.name}
+            {cartItemCount} {cartItemCount === 1 ? "item" : "items"} in cart
           </p>
         </div>
 

@@ -192,14 +192,25 @@ function extractPaidResource(event) {
   return { orderReference, paymentMethodUsed };
 }
 
-async function notifyDiscord({ webhookUrl, order, automation }) {
+function getNumericPrice(price) {
+  const value = Number(String(price || "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(value) ? value : 0;
+}
+
+async function notifyDiscord({ webhookUrl, orders, automations }) {
   if (!webhookUrl) return;
 
+  const firstOrder = orders[0];
   const paidAt = new Date().toLocaleString("en-PH", {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: "Asia/Manila",
   });
+
+  const totalPaid = orders.reduce((total, order) => total + getNumericPrice(order.product_price), 0);
+  const itemsList = orders
+    .map((order) => `${order.product_name} (${order.product_price})`)
+    .join("\n");
 
   const embed = {
     title: "🧾 Order Receipt -- Payment Verified",
@@ -207,14 +218,18 @@ async function notifyDiscord({ webhookUrl, order, automation }) {
     color: 3066993,
     timestamp: new Date().toISOString(),
     fields: [
-      { name: "Order ID", value: order.payment_reference || order.id, inline: true },
+      { name: "Order ID", value: firstOrder.payment_reference || firstOrder.id, inline: true },
       { name: "Paid At (PH Time)", value: paidAt, inline: true },
-      { name: "Payment Method", value: order.payment_method || "PayMongo", inline: true },
-      { name: "Minecraft IGN", value: order.minecraft_username || "N/A", inline: true },
-      { name: "Discord", value: order.discord_username || "N/A", inline: true },
-      { name: "Product", value: order.product_name || "N/A", inline: true },
-      { name: "Amount Paid", value: order.product_price || "N/A", inline: true },
-      { name: "Automated Delivery Action", value: automation.reason, inline: false },
+      { name: "Payment Method", value: firstOrder.payment_method || "PayMongo", inline: true },
+      { name: "Minecraft IGN", value: firstOrder.minecraft_username || "N/A", inline: true },
+      { name: "Discord", value: firstOrder.discord_username || "N/A", inline: true },
+      { name: "Items", value: itemsList || "N/A", inline: false },
+      { name: "Amount Paid", value: `PHP ${totalPaid}`, inline: true },
+      {
+        name: "Automated Delivery Actions",
+        value: automations.map((automation) => automation.reason).join("\n") || "N/A",
+        inline: false,
+      },
     ],
     footer: { text: "Ellipsis SMP - PayMongo Webhook" },
   };
@@ -264,85 +279,97 @@ export default async function handler(req, res) {
     const orders = await supabaseRequest({
       supabaseUrl,
       serviceRoleKey,
-      path: `orders?payment_reference=eq.${encodeURIComponent(paid.orderReference)}&limit=1`,
+      path: `orders?payment_reference=eq.${encodeURIComponent(paid.orderReference)}`,
     });
 
-    const order = orders[0];
-
-    if (!order) {
+    if (orders.length === 0) {
       return json(res, 404, { error: "No matching order for this payment reference." });
     }
 
-    // Idempotency: if already verified/delivered, don't reprocess.
-    if (order.status === "verified" || order.status === "delivered") {
+    // A multi-item cart creates one order row per line/unit sharing this
+    // payment_reference -- process every row, not just the first, so every
+    // item in the cart gets verified, audited, and queued for delivery.
+    const pendingOrders = orders.filter(
+      (order) => order.status !== "verified" && order.status !== "delivered"
+    );
+
+    if (pendingOrders.length === 0) {
       return json(res, 200, { ok: true, alreadyProcessed: true });
     }
 
     const paymentMethodLabel = paid.paymentMethodUsed
       ? `PayMongo (${paid.paymentMethodUsed})`
-      : order.payment_method;
+      : pendingOrders[0].payment_method;
 
-    await supabaseRequest({
-      supabaseUrl,
-      serviceRoleKey,
-      path: `orders?id=eq.${order.id}`,
-      method: "PATCH",
-      body: { status: "verified", payment_method: paymentMethodLabel },
-    });
+    const processedOrders = [];
+    const automations = [];
 
-    await supabaseRequest({
-      supabaseUrl,
-      serviceRoleKey,
-      path: "order_audit_logs",
-      method: "POST",
-      body: {
-        order_id: order.id,
-        admin_user_id: null,
-        admin_email: "paymongo-webhook@system",
-        action: "status_update",
-        previous_status: order.status,
-        next_status: "verified",
-        metadata: { source: "paymongo_webhook", admin_display_name: "PayMongo (Automated)" },
-      },
-    }).catch(() => undefined);
-
-    const orderForAutomation = { ...order, payment_method: paymentMethodLabel };
-    const automation = getAutomatedMinecraftActionForOrder(orderForAutomation);
-
-    const existingActions = await supabaseRequest({
-      supabaseUrl,
-      serviceRoleKey,
-      path: `minecraft_admin_actions?source_order_id=eq.${order.id}&automated=eq.true&limit=1`,
-    });
-
-    if (!existingActions[0]) {
+    for (const order of pendingOrders) {
       await supabaseRequest({
         supabaseUrl,
         serviceRoleKey,
-        path: "minecraft_admin_actions",
+        path: `orders?id=eq.${order.id}`,
+        method: "PATCH",
+        body: { status: "verified", payment_method: paymentMethodLabel },
+      });
+
+      await supabaseRequest({
+        supabaseUrl,
+        serviceRoleKey,
+        path: "order_audit_logs",
         method: "POST",
         body: {
-          player_key: order.minecraft_username.trim().toLowerCase(),
-          minecraft_username: order.minecraft_username,
-          discord_username: order.discord_username,
-          action_type: automation.actionType,
-          payload: automation.payload,
-          reason: automation.reason,
-          status: "queued",
-          source_order_id: order.id,
-          source_order_reference: automation.sourceOrderReference,
-          automated: true,
+          order_id: order.id,
+          admin_user_id: null,
+          admin_email: "paymongo-webhook@system",
+          action: "status_update",
+          previous_status: order.status,
+          next_status: "verified",
+          metadata: { source: "paymongo_webhook", admin_display_name: "PayMongo (Automated)" },
         },
+      }).catch(() => undefined);
+
+      const orderForAutomation = { ...order, payment_method: paymentMethodLabel };
+      const automation = getAutomatedMinecraftActionForOrder(orderForAutomation);
+
+      const existingActions = await supabaseRequest({
+        supabaseUrl,
+        serviceRoleKey,
+        path: `minecraft_admin_actions?source_order_id=eq.${order.id}&automated=eq.true&limit=1`,
       });
+
+      if (!existingActions[0]) {
+        await supabaseRequest({
+          supabaseUrl,
+          serviceRoleKey,
+          path: "minecraft_admin_actions",
+          method: "POST",
+          body: {
+            player_key: order.minecraft_username.trim().toLowerCase(),
+            minecraft_username: order.minecraft_username,
+            discord_username: order.discord_username,
+            action_type: automation.actionType,
+            payload: automation.payload,
+            reason: automation.reason,
+            status: "queued",
+            source_order_id: order.id,
+            source_order_reference: automation.sourceOrderReference,
+            automated: true,
+          },
+        });
+      }
+
+      processedOrders.push(orderForAutomation);
+      automations.push(automation);
     }
 
     await notifyDiscord({
       webhookUrl: process.env.DISCORD_ORDER_WEBHOOK_URL,
-      order: orderForAutomation,
-      automation,
+      orders: processedOrders,
+      automations,
     });
 
-    return json(res, 200, { ok: true });
+    return json(res, 200, { ok: true, processed: processedOrders.length });
   } catch (error) {
     return json(res, 500, {
       error: error instanceof Error ? error.message : "Unknown server error.",

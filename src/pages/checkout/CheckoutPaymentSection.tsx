@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import { paymentMethods } from "./checkoutData";
+import type { CartLine } from "./cartTypes";
 import type { MobileCheckoutStep } from "./checkoutTypes";
 import CheckoutOnlinePaymentSection from "./CheckoutOnlinePaymentSection";
 
@@ -13,12 +14,8 @@ type PaymentMethod = (typeof paymentMethods)[number];
 
 type CheckoutPaymentSectionProps = {
   mobileStep: MobileCheckoutStep;
-  selectedProduct: {
-    name: string;
-    type: string;
-    price: string;
-  };
-  quantity: string | null;
+  cart: CartLine[];
+  subtotalText: string;
   method: PaymentMethod;
   setMethod: Dispatch<SetStateAction<PaymentMethod>>;
   copiedRecipient: boolean;
@@ -36,8 +33,8 @@ type CheckoutPaymentSectionProps = {
 
 function CheckoutPaymentSection({
   mobileStep,
-  selectedProduct,
-  quantity,
+  cart,
+  subtotalText,
   method,
   setMethod,
   copiedRecipient,
@@ -52,9 +49,6 @@ function CheckoutPaymentSection({
   discordUsername,
   setDiscordUsername,
 }: CheckoutPaymentSectionProps) {
-  const productId = `${selectedProduct.type}-${selectedProduct.name}`
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-");
   return (
     <>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -76,7 +70,7 @@ function CheckoutPaymentSection({
                   Amount Due
                 </p>
                 <p className="text-2xl font-black text-yellow-300">
-                  {selectedProduct.price}
+                  {subtotalText}
                 </p>
               </div>
             </div>
@@ -106,9 +100,8 @@ function CheckoutPaymentSection({
 
             {method.id === "PayMongo" && (
               <CheckoutOnlinePaymentSection
-                selectedProduct={selectedProduct}
-                productId={productId}
-                quantity={quantity}
+                cart={cart}
+                subtotalText={subtotalText}
                 minecraftIgn={minecraftIgn}
                 setMinecraftIgn={setMinecraftIgn}
                 isIgnLocked={isIgnLocked}

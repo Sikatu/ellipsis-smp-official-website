@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import RouteScrollToTop from "./components/ui/RouteScrollToTop";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 
@@ -11,7 +11,6 @@ const AboutPage = lazy(() => import("./pages/AboutPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
 const TicketsPage = lazy(() => import("./pages/TicketsPage"));
-const PlayerProfilePage = lazy(() => import("./pages/PlayerProfilePage"));
 const PlayerAccountPage = lazy(() => import("./pages/PlayerAccountPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
@@ -44,7 +43,7 @@ function AppRoutes() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/track" element={<TrackOrderPage />} />
           <Route path="/tickets" element={<TicketsPage />} />
-          <Route path="/profile" element={<PlayerProfilePage />} />
+          <Route path="/profile" element={<Navigate to="/account" replace />} />
           <Route path="/account" element={<PlayerAccountPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="*" element={<NotFoundPage />} />

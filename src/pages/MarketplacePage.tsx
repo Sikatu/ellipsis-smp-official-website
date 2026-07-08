@@ -13,6 +13,7 @@ import PageShell from "./PageShell";
 import Store from "../components/sections/Store";
 import PageHero from "../components/ui/PageHero";
 import GlassPanel from "../components/ui/GlassPanel";
+import GradientText from "../components/ui/GradientText";
 import SectionDivider from "../components/ui/SectionDivider";
 import CallToAction from "../components/ui/CallToAction";
 
@@ -86,7 +87,12 @@ function MarketplacePage() {
     <PageShell>
       <PageHero
         eyebrow="Marketplace 3.0"
-        title="Shop with clearer picks, faster checkout, and staff-verified delivery."
+        title={
+          <>
+            Shop with clearer picks, faster checkout, and{" "}
+            <GradientText>staff-verified delivery.</GradientText>
+          </>
+        }
         description="The Ellipsis SMP marketplace now gives players direct product paths, better purchase guidance, and a cleaner mobile buying experience."
       >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

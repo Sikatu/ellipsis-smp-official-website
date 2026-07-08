@@ -1,13 +1,5 @@
-import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
-import type {
-  MinecraftPlayerProfile,
-  PlayerProfileClaim,
-} from "../types/playerProfiles";
-
-function getPlayerKey(minecraftUsername: string) {
-  return minecraftUsername.trim().toLowerCase();
-}
+import type { MinecraftPlayerProfile } from "../types/playerProfiles";
 
 export async function fetchMinecraftPlayerProfiles(limit = 250) {
   const { data, error } = await supabase
@@ -18,68 +10,6 @@ export async function fetchMinecraftPlayerProfiles(limit = 250) {
     .limit(limit);
 
   return { data: (data as MinecraftPlayerProfile[]) || [], error };
-}
-
-export async function fetchMinecraftPlayerProfile(minecraftUsername: string) {
-  const playerKey = getPlayerKey(minecraftUsername);
-
-  const { data, error } = await supabase
-    .from("minecraft_player_profiles")
-    .select("*")
-    .eq("player_key", playerKey)
-    .maybeSingle();
-
-  return { data: (data as MinecraftPlayerProfile | null) || null, error };
-}
-
-export async function fetchMyMinecraftProfiles() {
-  const { data, error } = await supabase
-    .from("minecraft_player_profiles")
-    .select("*")
-    .order("updated_at", { ascending: false });
-
-  return { data: (data as MinecraftPlayerProfile[]) || [], error };
-}
-
-export async function fetchMyPlayerClaims() {
-  const { data, error } = await supabase
-    .from("player_profile_claims")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  return { data: (data as PlayerProfileClaim[]) || [], error };
-}
-
-export async function submitPlayerProfileClaim({
-  user,
-  minecraftUsername,
-  discordUsername,
-  proofNote,
-}: {
-  user: User | null;
-  minecraftUsername: string;
-  discordUsername: string;
-  proofNote: string;
-}) {
-  if (!user) return { error: new Error("You need to sign in first.") };
-
-  const cleanIgn = minecraftUsername.trim();
-  if (!cleanIgn) return { error: new Error("Enter your Minecraft username.") };
-
-  const { error } = await supabase.from("player_profile_claims").insert({
-    user_id: user.id,
-    player_key: getPlayerKey(cleanIgn),
-    minecraft_username: cleanIgn,
-    discord_username: discordUsername.trim() || null,
-    proof_note: proofNote.trim() || null,
-    status: "pending",
-  });
-
-  return { error };
-}
-
-export function getProfileDisplayRank(profile: MinecraftPlayerProfile | null | undefined) {
-  return profile?.current_rank?.trim() || "Member";
 }
 
 export function getFormattedPlaytime(minutes: number) {

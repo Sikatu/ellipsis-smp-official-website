@@ -15,6 +15,15 @@ export type PlayerPortalProfile = {
   public_stats: Record<string, unknown>;
   raw_placeholders: Record<string, unknown>;
   linked_at: string | null;
+  leaderboard_position: number | null;
+  leaderboard_score: number | null;
+  kills: number | null;
+  deaths: number | null;
+  mob_kills: number | null;
+  blocks_broken: number | null;
+  blocks_placed: number | null;
+  active_world: string | null;
+  location_summary: string | null;
 };
 
 export type MinecraftProfileClaim = {

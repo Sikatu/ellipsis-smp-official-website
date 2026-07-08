@@ -7,13 +7,8 @@ import {
   X,
 } from "lucide-react";
 import type { RefObject } from "react";
-import type { Category, MobileCheckoutStep, Status } from "./checkoutTypes";
-
-type SelectedProduct = {
-  name: string;
-  type: string;
-  price: string;
-};
+import type { CartLine } from "./cartTypes";
+import type { MobileCheckoutStep, Status } from "./checkoutTypes";
 
 type PaymentMethod = {
   label: string;
@@ -24,7 +19,8 @@ type CheckoutClaimSectionProps = {
   resultRef: RefObject<HTMLDivElement | null>;
   fileInputRef: RefObject<HTMLInputElement | null>;
   mobileStep: MobileCheckoutStep;
-  selectedProduct: SelectedProduct;
+  cart: CartLine[];
+  subtotalText: string;
   method: PaymentMethod;
   minecraftIgn: string;
   setMinecraftIgn: (value: string) => void;
@@ -50,7 +46,7 @@ type CheckoutClaimSectionProps = {
   canSubmit: boolean;
   submitLabel: string;
   submitClaim: () => void;
-  resetPurchase: (category: Category) => void;
+  startNewPurchase: () => void;
 };
 
 function CheckoutClaimSection({
@@ -58,7 +54,8 @@ function CheckoutClaimSection({
   resultRef,
   fileInputRef,
   mobileStep,
-  selectedProduct,
+  cart,
+  subtotalText,
   method,
   minecraftIgn,
   setMinecraftIgn,
@@ -84,7 +81,7 @@ function CheckoutClaimSection({
   canSubmit,
   submitLabel,
   submitClaim,
-  resetPurchase,
+  startNewPurchase,
 }: CheckoutClaimSectionProps) {
   return (
 <div
@@ -93,16 +90,26 @@ function CheckoutClaimSection({
             >
               <div className="rounded-3xl border border-purple-500/20 bg-black/45 p-5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs font-black uppercase tracking-[0.2em] text-purple-300">
                       Order Review
                     </p>
-                    <p className="mt-2 break-words text-lg font-black text-white">
-                      {selectedProduct.name}
-                    </p>
-                    <p className="mt-1 text-sm text-gray-400">
-                      {selectedProduct.type}
-                    </p>
+                    <div className="mt-3 grid gap-2">
+                      {cart.map((line) => (
+                        <div
+                          key={line.id}
+                          className="flex items-center justify-between gap-3 text-sm"
+                        >
+                          <span className="truncate font-bold text-white">
+                            {line.quantity > 1 ? `${line.quantity}× ` : ""}
+                            {line.name}
+                          </span>
+                          <span className="shrink-0 font-black text-yellow-300">
+                            PHP {(line.unitPricePhp * line.quantity).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="shrink-0 text-left sm:text-right">
@@ -110,7 +117,7 @@ function CheckoutClaimSection({
                       Total
                     </p>
                     <p className="text-2xl font-black text-yellow-300">
-                      {selectedProduct.price}
+                      {subtotalText}
                     </p>
                   </div>
                 </div>
@@ -402,7 +409,7 @@ function CheckoutClaimSection({
                   <div className="mt-4 grid gap-2 sm:grid-cols-2 sm:gap-3">
                     <button
                       type="button"
-                      onClick={() => resetPurchase("Premium Ranks")}
+                      onClick={startNewPurchase}
                       className="rounded-xl border border-emerald-300/30 bg-emerald-400/10 px-4 py-3 font-bold text-emerald-100 hover:bg-emerald-400/20"
                     >
                       Yes, Start Another Purchase

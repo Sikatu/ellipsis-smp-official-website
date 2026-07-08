@@ -15,6 +15,7 @@ import PageShell from "./PageShell";
 import Vote from "../components/sections/Vote";
 import PageHero from "../components/ui/PageHero";
 import GlassPanel from "../components/ui/GlassPanel";
+import GradientText from "../components/ui/GradientText";
 import SectionDivider from "../components/ui/SectionDivider";
 import CallToAction from "../components/ui/CallToAction";
 
@@ -74,7 +75,12 @@ function VotePage() {
     <PageShell>
       <PageHero
         eyebrow="Vote 3.0"
-        title="Vote daily and help Ellipsis SMP climb."
+        title={
+          <>
+            Vote daily and help Ellipsis SMP{" "}
+            <GradientText tone="gold">climb.</GradientText>
+          </>
+        }
         description="Every vote improves discoverability, brings new players into the community, and supports the server through a simple daily routine."
       >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
