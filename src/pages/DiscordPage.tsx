@@ -21,6 +21,7 @@ import PageShell from "./PageShell";
 import Discord from "../components/sections/Discord";
 import PageHero from "../components/ui/PageHero";
 import GlassPanel from "../components/ui/GlassPanel";
+import GradientText from "../components/ui/GradientText";
 import SectionDivider from "../components/ui/SectionDivider";
 import CallToAction from "../components/ui/CallToAction";
 import {
@@ -124,7 +125,12 @@ function DiscordPage() {
     <PageShell>
       <PageHero
         eyebrow="Community 3.0"
-        title="The official Discord hub for support, updates, and the Ellipsis community."
+        title={
+          <>
+            The official Discord hub for support, updates, and{" "}
+            <GradientText tone="indigo">the Ellipsis community.</GradientText>
+          </>
+        }
         description="Join Discord to stay connected with announcements, tickets, events, staff support, social updates, and players beyond the Minecraft server."
       >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

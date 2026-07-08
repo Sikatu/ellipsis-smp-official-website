@@ -13,6 +13,7 @@ import {
   Ticket as TicketIcon,
 } from "lucide-react";
 import PageShell from "./PageShell";
+import GradientText from "../components/ui/GradientText";
 import { getCurrentPortalUser } from "../services/playerProfilePortal";
 import {
   createTicket,
@@ -544,7 +545,9 @@ export default function TicketsPage() {
             Ellipsis SMP Tickets
           </div>
 
-          <h1 className="text-4xl font-black md:text-5xl">Get help from the Ellipsis SMP team.</h1>
+          <h1 className="text-4xl font-black md:text-5xl">
+            Get help from <GradientText>the Ellipsis SMP team.</GradientText>
+          </h1>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-gray-300 md:text-base">
             Open a support request, submit a ban or mute appeal, or apply for a staff
             position — all tracked right here.

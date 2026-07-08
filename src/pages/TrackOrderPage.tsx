@@ -15,6 +15,7 @@ import {
   Truck,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import GradientText from "../components/ui/GradientText";
 
 type OrderStatus = "pending" | "verified" | "delivered" | "rejected";
 
@@ -206,7 +207,8 @@ function TrackOrderPage() {
                 Track Order 3.0
               </p>
               <h1 className="mt-4 max-w-3xl text-4xl font-black leading-tight sm:text-5xl md:text-6xl">
-                Check your payment claim and delivery status.
+                Check your payment claim and{" "}
+                <GradientText>delivery status.</GradientText>
               </h1>
               <p className="mt-5 max-w-2xl text-sm leading-7 text-gray-300 sm:text-base">
                 Enter your Ellipsis order ID to see whether your payment is
