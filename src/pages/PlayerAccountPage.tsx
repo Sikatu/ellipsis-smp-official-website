@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { Link } from "react-router-dom";
 import {
   AlertTriangle,
-  ArrowRight,
   CheckCircle2,
   Clock3,
   Copy,
@@ -13,7 +12,6 @@ import {
   Link2,
   LogOut,
   PackageCheck,
-  ReceiptText,
   RefreshCcw,
   ShieldCheck,
   Sparkles,
@@ -21,6 +19,7 @@ import {
 } from "lucide-react";
 import PageShell from "./PageShell";
 import StatCard from "../components/ui/StatCard";
+import { rankDetails } from "./checkout/checkoutData";
 import {
   fetchMyMinecraftProfile,
   fetchMyOrders,
@@ -42,6 +41,23 @@ function formatDate(value: string | null) {
   return new Date(value).toLocaleString();
 }
 
+function formatShortDate(value: string | null) {
+  if (!value) return "Unknown";
+
+  return new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function getRelativeTime(value: string | null) {
+  if (!value) return null;
+
+  const minutes = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 60000));
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
 function getKillDeathRatio(kills: number | null, deaths: number | null) {
   const safeKills = kills ?? 0;
   const safeDeaths = deaths ?? 0;
@@ -55,22 +71,22 @@ const orderStatusMeta: Record<
 > = {
   pending: {
     label: "Pending",
-    tone: "border-yellow-400/25 bg-yellow-400/10 text-yellow-100",
+    tone: "text-[#fbbf24] bg-[rgba(251,191,36,0.14)] border-[rgba(251,191,36,0.25)]",
     icon: Clock3,
   },
   verified: {
     label: "Verified",
-    tone: "border-blue-400/25 bg-blue-500/10 text-blue-100",
+    tone: "text-[#60a5fa] bg-[rgba(96,165,250,0.14)] border-[rgba(96,165,250,0.25)]",
     icon: ShieldCheck,
   },
   delivered: {
     label: "Delivered",
-    tone: "border-emerald-400/25 bg-emerald-500/10 text-emerald-100",
+    tone: "text-[#34d399] bg-[rgba(52,211,153,0.14)] border-[rgba(52,211,153,0.25)]",
     icon: PackageCheck,
   },
   rejected: {
     label: "Needs Review",
-    tone: "border-red-400/25 bg-red-500/10 text-red-100",
+    tone: "text-[#f87171] bg-[rgba(248,113,113,0.14)] border-[rgba(248,113,113,0.25)]",
     icon: AlertTriangle,
   },
 };
@@ -100,67 +116,196 @@ function OrderHistoryPanel() {
   }, []);
 
   return (
-    <div className="rounded-[2rem] border border-purple-500/20 bg-white/[0.05] p-6">
-      <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-purple-300/20 bg-purple-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-purple-200">
-        <ReceiptText className="h-4 w-4" />
-        Order History
+    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
+      <div className="flex items-center justify-between">
+        <p className="text-[13px] font-extrabold text-white">Order history</p>
+        <Link
+          to="/track"
+          className="text-xs font-bold text-[#c4b5fd] transition hover:text-[#e9d5ff]"
+        >
+          Track an order &rarr;
+        </Link>
       </div>
 
       {isLoading && (
-        <p className="text-sm text-gray-400">Loading your orders...</p>
+        <p className="mt-4 text-[13px] text-[#6b7192]">Loading your orders...</p>
       )}
 
       {!isLoading && error && (
-        <p className="rounded-2xl border border-red-400/25 bg-red-500/10 p-4 text-sm text-red-100">
+        <p className="mt-4 rounded-xl border border-[rgba(248,113,113,0.25)] bg-[rgba(248,113,113,0.08)] p-4 text-[13px] text-[#fca5a5]">
           {error}
         </p>
       )}
 
       {!isLoading && !error && orders.length === 0 && (
-        <p className="rounded-2xl border border-white/10 bg-black/20 p-6 text-center text-sm text-gray-400">
+        <p className="mt-4 rounded-xl border border-white/[0.07] bg-black/20 p-6 text-center text-[13px] text-[#6b7192]">
           No orders yet. Purchases made under your linked Minecraft username
           will show up here automatically.
         </p>
       )}
 
       {!isLoading && orders.length > 0 && (
-        <div className="grid gap-3">
+        <div className="mt-3.5 grid gap-2.5">
           {orders.map((order) => {
             const meta = orderStatusMeta[order.status] || orderStatusMeta.pending;
-            const StatusIcon = meta.icon;
 
             return (
               <div
                 key={order.payment_reference}
-                className="rounded-2xl border border-white/10 bg-black/25 p-4"
+                className="flex items-center justify-between gap-3 rounded-[11px] border border-white/[0.07] bg-black/25 p-3.5"
               >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="break-words font-black text-white">
-                      {order.product_name}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-400">
-                      {order.payment_reference}  -  {formatDate(order.created_at)}
-                    </p>
-                  </div>
+                <div className="min-w-0">
+                  <p className="truncate text-[13px] font-bold text-white">
+                    {order.product_name}
+                  </p>
+                  <p className="mt-0.5 truncate font-mono text-xs text-[#6b7192]">
+                    {order.payment_reference} &middot; {formatShortDate(order.created_at)}
+                  </p>
+                </div>
 
-                  <div className="flex shrink-0 items-center gap-3">
-                    <span className="font-black text-yellow-300">
-                      {order.product_price}
-                    </span>
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black ${meta.tone}`}
-                    >
-                      <StatusIcon className="h-3.5 w-3.5" />
-                      {meta.label}
-                    </span>
-                  </div>
+                <div className="flex shrink-0 items-center gap-2.5">
+                  <span className="text-[13px] font-bold text-[#fde047]">
+                    {order.product_price}
+                  </span>
+                  <span
+                    className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-bold ${meta.tone}`}
+                  >
+                    {meta.label}
+                  </span>
                 </div>
               </div>
             );
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+function NextRankPanel({ currentRank }: { currentRank: string | null }) {
+  const currentIndex = rankDetails.findIndex(
+    (rank) => rank.name.toLowerCase() === (currentRank || "").trim().toLowerCase()
+  );
+  const isTopTier = currentIndex === rankDetails.length - 1;
+  const nextRank = currentIndex >= 0 ? rankDetails[currentIndex + 1] : rankDetails[0];
+  const topTierPerkCount = rankDetails[rankDetails.length - 1].includes.length;
+  const perksUnlocked = currentIndex >= 0 ? rankDetails[currentIndex].includes.length : 0;
+  const progressPercent = Math.min(100, Math.round((perksUnlocked / topTierPerkCount) * 100));
+
+  const description = isTopTier
+    ? `You're on the top tier -- ${rankDetails[currentIndex].name} unlocks unlimited fly & ${perksUnlocked} perks.`
+    : nextRank
+      ? `Upgrade to ${nextRank.name} (${nextRank.price}) to unlock ${nextRank.includes.length} perks.`
+      : "Purchase a rank to start unlocking perks.";
+
+  return (
+    <div className="flex flex-col justify-between rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
+      <div>
+        <p className="text-[13px] font-extrabold text-white">Next rank</p>
+        <p className="mt-1.5 text-xs leading-6 text-[#9aa0b8]">{description}</p>
+      </div>
+
+      <div className="mt-4">
+        <div className="flex justify-between text-[11px] font-bold text-[#9aa0b8]">
+          <span>Perks unlocked</span>
+          <span>
+            {perksUnlocked} / {topTierPerkCount}
+          </span>
+        </div>
+        <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/[0.08]">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-[#fbbf24] to-[#f0abfc]"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeadlineStat({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: string | number;
+  tone?: "default" | "yellow";
+}) {
+  return (
+    <div>
+      <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#8b91ad]">{label}</p>
+      <p className={`mt-1 text-[22px] font-black leading-none ${tone === "yellow" ? "text-[#fde047]" : "text-white"}`}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function ProfileHero({ profile }: { profile: PlayerPortalProfile }) {
+  const [skinFailed, setSkinFailed] = useState(false);
+  const skinUrl =
+    profile.minecraft_uuid && !skinFailed
+      ? `https://crafatar.com/renders/body/${profile.minecraft_uuid}?scale=6&overlay`
+      : null;
+  const syncedAgo = getRelativeTime(profile.last_synced_at);
+
+  return (
+    <div className="grid grid-cols-[auto_1fr] items-center gap-[22px] rounded-2xl border border-white/[0.09] bg-[linear-gradient(120deg,rgba(168,85,247,0.12),rgba(37,99,235,0.06))] p-[18px] sm:p-[22px]">
+      <div className="flex h-[150px] w-[100px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-black/25 sm:w-[118px]">
+        {skinUrl ? (
+          <img
+            src={skinUrl}
+            alt={`${profile.minecraft_username}'s Minecraft skin`}
+            loading="lazy"
+            className="h-full w-full object-contain"
+            onError={() => setSkinFailed(true)}
+          />
+        ) : (
+          <div
+            className="flex h-full w-full flex-col items-center justify-center gap-1.5 border border-dashed border-[rgba(196,181,253,0.35)] p-2 text-center"
+            style={{
+              background:
+                "repeating-linear-gradient(45deg, rgba(255,255,255,.05), rgba(255,255,255,.05) 8px, rgba(255,255,255,.02) 8px, rgba(255,255,255,.02) 16px)",
+            }}
+          >
+            <UserRound className="h-6 w-6 text-[#c4b5fd]" />
+            <span className="font-mono text-[9px] leading-tight text-[#c4b5fd]">
+              Not synced yet
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <h2 className="break-words text-[26px] font-black leading-tight sm:text-[34px]">
+            {profile.minecraft_username}
+          </h2>
+          {profile.current_rank && (
+            <span className="rounded-full bg-gradient-to-r from-[#fbbf24] to-[#f0abfc] px-[11px] py-1 text-[11px] font-black text-[#1a1204]">
+              {profile.current_rank}
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(52,211,153,0.3)] bg-[rgba(52,211,153,0.1)] px-[11px] py-1 text-[11px] font-bold text-[#6ee7b7]">
+            <span className="h-[7px] w-[7px] rounded-full bg-[#34d399]" />
+            {profile.is_online ? "Online now" : "Offline"}
+          </span>
+        </div>
+
+        <p className="mt-2 text-[13px] text-[#9aa0b8]">
+          Linked via <span className="font-mono text-[#c4b5fd]">/ellipsis link</span>
+          {syncedAgo && <> &middot; bridge synced {syncedAgo}</>}
+        </p>
+
+        <div className="mt-[18px] flex flex-wrap gap-x-[26px] gap-y-3">
+          <HeadlineStat label="Playtime" value={profile.playtime_text || "Not synced"} />
+          <div className="hidden h-9 w-px bg-white/10 sm:block" />
+          <HeadlineStat label="Balance" value={profile.balance_text || "Not synced"} tone="yellow" />
+          <div className="hidden h-9 w-px bg-white/10 sm:block" />
+          <HeadlineStat label="Votes" value={profile.votes_total ?? 0} />
+        </div>
+      </div>
     </div>
   );
 }
@@ -214,17 +359,17 @@ function AuthPanel({
   }
 
   return (
-    <div className="mx-auto max-w-2xl rounded-[2rem] border border-purple-500/20 bg-white/[0.05] p-6 shadow-[0_0_70px_rgba(168,85,247,0.18)] backdrop-blur-xl md:p-8">
-      <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-purple-300/20 bg-purple-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-purple-200">
+    <div className="mx-auto max-w-2xl rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6 md:p-8">
+      <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs font-bold uppercase tracking-[0.15em] text-[#c4b5fd]">
         <KeyRound className="h-4 w-4" />
         Player Login
       </div>
 
-      <h1 className="text-3xl font-black text-white md:text-4xl">
+      <h1 className="text-2xl font-extrabold text-white md:text-[28px]">
         Access your Ellipsis SMP profile.
       </h1>
 
-      <p className="mt-3 text-sm leading-7 text-gray-300">
+      <p className="mt-3 text-[13px] leading-6 text-[#9aa0b8]">
         Log in to claim your Minecraft account, view your server progress, and
         prepare your website profile connection.
       </p>
@@ -233,10 +378,10 @@ function AuthPanel({
         <button
           type="button"
           onClick={() => setMode("login")}
-          className={`rounded-2xl border px-4 py-3 text-sm font-black transition ${
+          className={`rounded-xl border px-4 py-3 text-sm font-bold transition ${
             mode === "login"
-              ? "border-purple-300/50 bg-purple-400/20 text-white"
-              : "border-white/10 bg-black/20 text-gray-300 hover:border-white/20"
+              ? "border-[rgba(168,85,247,0.4)] bg-[rgba(168,85,247,0.14)] text-white"
+              : "border-white/[0.08] bg-black/20 text-[#9aa0b8] hover:border-white/[0.16]"
           }`}
         >
           Log In
@@ -245,24 +390,24 @@ function AuthPanel({
         <button
           type="button"
           onClick={() => setMode("signup")}
-          className={`rounded-2xl border px-4 py-3 text-sm font-black transition ${
+          className={`rounded-xl border px-4 py-3 text-sm font-bold transition ${
             mode === "signup"
-              ? "border-pink-300/50 bg-pink-400/20 text-white"
-              : "border-white/10 bg-black/20 text-gray-300 hover:border-white/20"
+              ? "border-[rgba(244,114,182,0.4)] bg-[rgba(244,114,182,0.14)] text-white"
+              : "border-white/[0.08] bg-black/20 text-[#9aa0b8] hover:border-white/[0.16]"
           }`}
         >
           Create Account
         </button>
       </div>
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-6 space-y-3.5">
         <input
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           type="email"
           autoComplete="email"
           placeholder="Email address"
-          className="w-full rounded-2xl border border-purple-500/25 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-purple-300/50"
+          className="w-full rounded-xl border border-white/[0.08] bg-black/25 px-4 py-3 text-white outline-none placeholder:text-[#565d78] focus:border-white/20"
         />
 
         <input
@@ -271,18 +416,18 @@ function AuthPanel({
           type="password"
           autoComplete={mode === "login" ? "current-password" : "new-password"}
           placeholder="Password"
-          className="w-full rounded-2xl border border-purple-500/25 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-purple-300/50"
+          className="w-full rounded-xl border border-white/[0.08] bg-black/25 px-4 py-3 text-white outline-none placeholder:text-[#565d78] focus:border-white/20"
         />
 
         {error && (
-          <div className="flex gap-3 rounded-2xl border border-red-400/25 bg-red-500/10 p-4 text-sm text-red-100">
+          <div className="flex gap-3 rounded-xl border border-[rgba(248,113,113,0.25)] bg-[rgba(248,113,113,0.08)] p-4 text-[13px] text-[#fca5a5]">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             {error}
           </div>
         )}
 
         {message && (
-          <div className="flex gap-3 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+          <div className="flex gap-3 rounded-xl border border-[rgba(52,211,153,0.25)] bg-[rgba(52,211,153,0.08)] p-4 text-[13px] text-[#6ee7b7]">
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
             {message}
           </div>
@@ -292,7 +437,7 @@ function AuthPanel({
           type="button"
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="w-full rounded-2xl bg-purple-300 px-5 py-3 font-black text-black transition hover:bg-purple-200 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-xl bg-[#a855f7] px-5 py-3 font-bold text-[#150829] transition hover:bg-[#9333ea] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting
             ? "Please wait..."
@@ -331,29 +476,29 @@ function ClaimPanel({
   }
 
   return (
-    <div className="rounded-[2rem] border border-purple-500/20 bg-white/[0.05] p-6">
-      <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-pink-300/20 bg-pink-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-pink-200">
+    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6">
+      <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs font-bold uppercase tracking-[0.15em] text-[#f9a8d4]">
         <Link2 className="h-4 w-4" />
         Link Minecraft Account
       </div>
 
-      <h2 className="text-2xl font-black text-white">Generate a claim code.</h2>
+      <h2 className="text-xl font-extrabold text-white">Generate a claim code.</h2>
 
-      <p className="mt-2 text-sm leading-7 text-gray-300">
+      <p className="mt-2 text-[13px] leading-6 text-[#9aa0b8]">
         Create a short code, then use it in-game. This proves the website account
         belongs to the real Minecraft player.
       </p>
 
-      <div className="mt-5 space-y-4">
+      <div className="mt-5 space-y-3.5">
         <input
           value={requestedUsername}
           onChange={(event) => setRequestedUsername(event.target.value)}
           placeholder="Optional: Minecraft IGN"
-          className="w-full rounded-2xl border border-purple-500/25 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-purple-300/50"
+          className="w-full rounded-xl border border-white/[0.08] bg-black/25 px-4 py-3 text-white outline-none placeholder:text-[#565d78] focus:border-white/20"
         />
 
         {error && (
-          <div className="flex gap-3 rounded-2xl border border-red-400/25 bg-red-500/10 p-4 text-sm text-red-100">
+          <div className="flex gap-3 rounded-xl border border-[rgba(248,113,113,0.25)] bg-[rgba(248,113,113,0.08)] p-4 text-[13px] text-[#fca5a5]">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             {error}
           </div>
@@ -363,7 +508,7 @@ function ClaimPanel({
           type="button"
           onClick={handleCreateClaim}
           disabled={isSubmitting}
-          className="w-full rounded-2xl bg-pink-300 px-5 py-3 font-black text-black transition hover:bg-pink-200 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-xl bg-[#f472b6] px-5 py-3 font-bold text-[#1a0714] transition hover:bg-[#ec4899] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting ? "Generating..." : "Generate Claim Code"}
         </button>
@@ -382,16 +527,16 @@ function ClaimCodeCard({ claim }: { claim: MinecraftProfileClaim }) {
   }
 
   return (
-    <div className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-6">
+    <div className="rounded-2xl border border-[rgba(52,211,153,0.25)] bg-[rgba(52,211,153,0.06)] p-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
+          <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#6ee7b7]">
             Claim Code
           </p>
           <p className="mt-3 font-mono text-4xl font-black tracking-[0.16em] text-white">
             {claim.claim_code}
           </p>
-          <p className="mt-3 text-sm text-emerald-100/80">
+          <p className="mt-3 text-[13px] text-[#a7f3d0]">
             Expires: {formatDate(claim.expires_at)}
           </p>
         </div>
@@ -399,19 +544,19 @@ function ClaimCodeCard({ claim }: { claim: MinecraftProfileClaim }) {
         <button
           type="button"
           onClick={copyCode}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/30 bg-black/20 px-4 py-3 text-sm font-black text-emerald-100 transition hover:bg-black/30"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-[rgba(52,211,153,0.3)] bg-black/20 px-4 py-3 text-sm font-bold text-[#a7f3d0] transition hover:bg-black/30"
         >
           <Copy className="h-4 w-4" />
           {copied ? "Copied" : "Copy Code"}
         </button>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-5">
-        <p className="text-sm font-black text-white">Next step in-game:</p>
-        <p className="mt-3 rounded-xl bg-black/40 p-4 font-mono text-sm text-purple-100">
+      <div className="mt-6 rounded-xl border border-white/10 bg-black/30 p-5">
+        <p className="text-sm font-bold text-white">Next step in-game:</p>
+        <p className="mt-3 rounded-lg bg-black/40 p-4 font-mono text-sm text-[#c4b5fd]">
           /ellipsis link {claim.claim_code}
         </p>
-        <p className="mt-3 text-xs leading-6 text-gray-400">
+        <p className="mt-3 text-xs leading-6 text-[#6b7192]">
           Run this in-game while online on Ellipsis SMP to finish linking your
           account. Your profile unlocks here automatically once it's confirmed.
         </p>
@@ -425,141 +570,56 @@ function ProfilePanel({ profile }: { profile: PlayerPortalProfile }) {
   const uuidText = profile.minecraft_uuid || "Not available";
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-emerald-100">
-              <ShieldCheck className="h-4 w-4" />
-              Linked Profile
-            </div>
+    <div className="space-y-4">
+      <ProfileHero profile={profile} />
 
-            <h2 className="text-3xl font-black text-white">
-              {profile.minecraft_username}
-            </h2>
+      <div className="grid gap-4 lg:grid-cols-[1.1fr_1.4fr]">
+        <div className="rounded-2xl border border-[rgba(168,85,247,0.3)] bg-[rgba(168,85,247,0.08)] p-[22px]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#d8b4fe]">
+            Leaderboard rank
+          </p>
+          <p className="mt-2 text-[56px] font-black leading-none">
+            {profile.leaderboard_position ? `#${profile.leaderboard_position}` : "—"}
+          </p>
+          <p className="mt-1.5 text-[13px] text-[#c4c9dc]">
+            Score {(profile.leaderboard_score ?? 0).toLocaleString()}
+          </p>
+        </div>
 
-            <p className="mt-2 text-sm text-gray-300">
-              {profile.is_online ? "Online now" : "Offline"}  -  Linked{" "}
-              {formatDate(profile.linked_at)}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-black/30 px-5 py-4">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-purple-300">
-              Current Rank
-            </p>
-            <p className="mt-2 text-xl font-black text-white">
-              {profile.current_rank || "Not synced yet"}
-            </p>
-          </div>
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+          <StatCard label="K / D" value={getKillDeathRatio(profile.kills, profile.deaths)} />
+          <StatCard label="Kills" value={profile.kills ?? 0} />
+          <StatCard label="Mob Kills" value={profile.mob_kills ?? 0} />
+          <StatCard label="Blocks Broken" value={profile.blocks_broken ?? 0} />
+          <StatCard label="Blocks Placed" value={profile.blocks_placed ?? 0} />
+          <StatCard label="World" value={profile.active_world || "Unknown"} />
+          <StatCard label="First Joined" value={formatShortDate(profile.first_joined_at)} />
+          <StatCard label="Last Seen" value={formatShortDate(profile.last_seen_at)} />
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Balance" value={profile.balance_text || "Not synced"} />
-        <StatCard label="Playtime" value={profile.playtime_text || "Not synced"} />
-        <StatCard label="Votes" value={profile.votes_total ?? 0} />
-        <StatCard
-          label="Leaderboard"
-          value={profile.leaderboard_position ? `#${profile.leaderboard_position}` : "Unranked"}
-        />
-        <StatCard label="Score" value={profile.leaderboard_score ?? 0} />
-        <StatCard label="Kills" value={profile.kills ?? 0} />
-        <StatCard label="K / D" value={getKillDeathRatio(profile.kills, profile.deaths)} />
-        <StatCard
-          label="Status"
-          value={profile.is_online ? "Online" : "Offline"}
-          tone={profile.is_online ? "emerald" : "default"}
-        />
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <OrderHistoryPanel />
-
-        <div className="space-y-6">
-          <InfoPanel title="World Progress">
-            <MiniRow label="Blocks Broken" value={profile.blocks_broken ?? 0} />
-            <MiniRow label="Blocks Placed" value={profile.blocks_placed ?? 0} />
-            <MiniRow label="Mob Kills" value={profile.mob_kills ?? 0} />
-            <MiniRow label="Active World" value={profile.active_world || "Unknown"} />
-          </InfoPanel>
-
-          <InfoPanel title="Sync Details">
-            <MiniRow label="First Joined" value={formatDate(profile.first_joined_at)} />
-            <MiniRow label="Last Seen" value={formatDate(profile.last_seen_at)} />
-            <MiniRow label="Last Synced" value={profile.last_synced_at ? formatDate(profile.last_synced_at) : "Waiting for bridge"} />
-            <MiniRow label="Location" value={profile.location_summary || "Private"} />
-          </InfoPanel>
-        </div>
+        <NextRankPanel currentRank={profile.current_rank} />
       </div>
 
-      <Link
-        to="/track"
-        className="group flex items-center justify-between gap-4 rounded-[2rem] border border-purple-500/20 bg-white/[0.05] p-6 transition hover:border-purple-300/50 hover:bg-white/[0.08]"
-      >
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-purple-500/15 text-purple-200">
-            <ReceiptText className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="font-black text-white">Track an order</p>
-            <p className="mt-1 text-sm text-gray-400">
-              Check the status of a payment claim or delivery.
-            </p>
-          </div>
-        </div>
-        <ArrowRight className="h-5 w-5 shrink-0 text-purple-300 transition group-hover:translate-x-1" />
-      </Link>
-
-      <div className="rounded-[2rem] border border-purple-500/20 bg-white/[0.05] p-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-purple-300">
-              Private Identifier
-            </p>
-            <p className="mt-2 text-sm text-gray-400">
-              UUID is hidden by default for safety.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setShowUuid((value) => !value)}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-purple-500/25 bg-black/30 px-4 py-3 text-sm font-black text-purple-100 transition hover:bg-white/[0.08]"
-          >
-            {showUuid ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            {showUuid ? "Hide UUID" : "Reveal UUID"}
-          </button>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3">
+        <div className="min-w-0">
+          <span className="text-xs font-bold text-[#8b91ad]">Private identifier (UUID)</span>
+          <span className="ml-2 break-all font-mono text-xs text-[#c4c9dc]">
+            {showUuid ? uuidText : "•••• ••••-••••-••••"}
+          </span>
         </div>
 
-        <p className="mt-5 break-all rounded-2xl border border-white/10 bg-black/35 p-4 font-mono text-sm text-gray-200">
-          {showUuid ? uuidText : "----"}
-        </p>
+        <button
+          type="button"
+          onClick={() => setShowUuid((value) => !value)}
+          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-white/[0.08] bg-black/20 px-3 py-1.5 text-xs font-bold text-[#c4b5fd] transition hover:bg-white/[0.05]"
+        >
+          {showUuid ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+          {showUuid ? "Hide" : "Reveal"}
+        </button>
       </div>
-    </div>
-  );
-}
-
-function InfoPanel({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="rounded-[2rem] border border-purple-500/20 bg-white/[0.05] p-6">
-      <h3 className="text-lg font-black text-white">{title}</h3>
-      <div className="mt-4 grid gap-3">{children}</div>
-    </div>
-  );
-}
-
-function MiniRow({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 p-4">
-      <span className="text-sm text-gray-400">{label}</span>
-      <span className="font-black text-white">{value}</span>
     </div>
   );
 }
@@ -612,32 +672,27 @@ export default function PlayerAccountPage() {
 
   return (
     <PageShell>
-      <section className="relative overflow-hidden bg-[#030014] px-4 py-20 text-white sm:px-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.22),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.18),transparent_30%)]" />
-
-        <div className="relative mx-auto max-w-7xl">
-          <div className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <section className="bg-[#030014] px-4 py-14 text-white sm:px-6">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-purple-300/20 bg-purple-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-purple-200">
-                <UserRound className="h-4 w-4" />
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#a78bfa]">
                 Player Account
-              </div>
-
-              <h1 className="text-4xl font-black md:text-6xl">
-                Your Ellipsis SMP profile portal.
+              </p>
+              <h1 className="mt-2 text-[26px] font-extrabold sm:text-[30px]">
+                Your Ellipsis SMP profile
               </h1>
-
-              <p className="mt-4 max-w-3xl text-sm leading-7 text-gray-300 md:text-base">
+              <p className="mt-2 max-w-xl text-[13px] leading-6 text-[#9aa0b8]">
                 {pageSubtitle}
               </p>
             </div>
 
             {user && (
-              <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <button
                   type="button"
                   onClick={loadAccount}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-purple-500/25 bg-white/[0.06] px-5 py-3 text-sm font-black transition hover:bg-white/10"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-sm font-bold text-[#c4c9dc] transition hover:bg-white/[0.06]"
                 >
                   <RefreshCcw className="h-4 w-4" />
                   Refresh
@@ -646,7 +701,7 @@ export default function PlayerAccountPage() {
                 <button
                   type="button"
                   onClick={handleSignOut}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-400/25 bg-red-500/10 px-5 py-3 text-sm font-black text-red-100 transition hover:bg-red-500/20"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[rgba(248,113,113,0.2)] bg-[rgba(248,113,113,0.06)] px-4 py-2.5 text-sm font-bold text-[#fca5a5] transition hover:bg-[rgba(248,113,113,0.12)]"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign Out
@@ -656,9 +711,9 @@ export default function PlayerAccountPage() {
           </div>
 
           {isLoading && (
-            <div className="rounded-[2rem] border border-purple-500/20 bg-white/[0.05] p-10 text-center">
-              <Sparkles className="mx-auto h-8 w-8 animate-pulse text-purple-300" />
-              <p className="mt-4 font-black">Loading player portal...</p>
+            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-10 text-center">
+              <Sparkles className="mx-auto h-8 w-8 animate-pulse text-[#a78bfa]" />
+              <p className="mt-4 font-bold">Loading player portal...</p>
             </div>
           )}
 
@@ -667,9 +722,9 @@ export default function PlayerAccountPage() {
           )}
 
           {!isLoading && user && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {notice && (
-                <div className="rounded-2xl border border-yellow-300/20 bg-yellow-300/10 p-4 text-sm text-yellow-100">
+                <div className="rounded-xl border border-[rgba(251,191,36,0.2)] bg-[rgba(251,191,36,0.06)] p-4 text-[13px] text-[#fbbf24]">
                   {notice}
                 </div>
               )}
@@ -677,22 +732,22 @@ export default function PlayerAccountPage() {
               {profile ? (
                 <ProfilePanel profile={profile} />
               ) : (
-                <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+                <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
                   <ClaimPanel onClaimCreated={setClaim} />
                   {claim ? (
                     <ClaimCodeCard claim={claim} />
                   ) : (
-                    <div className="rounded-[2rem] border border-purple-500/20 bg-white/[0.04] p-6">
-                      <h2 className="text-2xl font-black text-white">
+                    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6">
+                      <h2 className="text-xl font-extrabold text-white">
                         Secure claim flow
                       </h2>
-                      <p className="mt-3 text-sm leading-7 text-gray-300">
+                      <p className="mt-3 text-[13px] leading-6 text-[#9aa0b8]">
                         Your website account is ready. Generate a claim code,
                         then connect it from inside Minecraft. This protects
                         player profiles from fake IGN claims.
                       </p>
 
-                      <div className="mt-5 space-y-3 text-sm text-gray-300">
+                      <div className="mt-5 space-y-3 text-[13px] text-[#9aa0b8]">
                         <p>1. Generate a claim code.</p>
                         <p>2. Join Ellipsis SMP with your real Minecraft account.</p>
                         <p>3. Run the in-game link command.</p>

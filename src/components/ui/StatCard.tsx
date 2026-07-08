@@ -6,16 +6,16 @@ type StatCardProps = {
 
 const toneClasses = {
   default: "text-white",
-  emerald: "text-emerald-300",
+  emerald: "text-[#34d399]",
 };
 
 function StatCard({ label, value, tone = "default" }: StatCardProps) {
   return (
-    <div className="rounded-3xl border border-purple-500/20 bg-white/[0.05] p-5">
-      <p className="text-xs font-black uppercase tracking-[0.2em] text-purple-300">
+    <div className="rounded-[13px] border border-white/[0.08] bg-white/[0.02] p-[15px]">
+      <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#8b91ad]">
         {label}
       </p>
-      <p className={`mt-3 break-words text-2xl font-black ${toneClasses[tone]}`}>
+      <p className={`mt-[7px] break-words text-[22px] font-black leading-none ${toneClasses[tone]}`}>
         {value}
       </p>
     </div>

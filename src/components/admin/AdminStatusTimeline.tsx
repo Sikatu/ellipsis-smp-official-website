@@ -8,10 +8,10 @@ type AdminStatusTimelineProps = {
 };
 
 const statusMeta: Record<OrderStatus, { label: string; icon: any; color: string }> = {
-  pending: { label: "Order Submitted", icon: Clock3, color: "text-yellow-300" },
-  verified: { label: "Payment Verified", icon: ShieldCheck, color: "text-blue-300" },
-  delivered: { label: "Delivered", icon: Truck, color: "text-emerald-300" },
-  rejected: { label: "Rejected", icon: AlertTriangle, color: "text-red-300" },
+  pending: { label: "Order Submitted", icon: Clock3, color: "text-[#fbbf24]" },
+  verified: { label: "Payment Verified", icon: ShieldCheck, color: "text-[#60a5fa]" },
+  delivered: { label: "Delivered", icon: Truck, color: "text-[#34d399]" },
+  rejected: { label: "Rejected", icon: AlertTriangle, color: "text-[#f87171]" },
 };
 
 export function AdminStatusTimeline({ order }: AdminStatusTimelineProps) {
@@ -68,22 +68,22 @@ export function AdminStatusTimeline({ order }: AdminStatusTimelineProps) {
   }
 
   return (
-    <div className="mt-4 rounded-2xl border border-purple-500/20 bg-black/20 p-4">
+    <div className="mt-4 rounded-[11px] border border-white/[0.07] bg-black/20 p-4">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex w-full items-center justify-between text-sm font-black text-purple-200 outline-none transition hover:text-purple-100"
+        className="flex w-full items-center justify-between text-[13px] font-bold text-[#c4c9dc] outline-none transition hover:text-white"
       >
         <span className="flex items-center gap-2">
-          <Clock3 className="h-4 w-4" />
+          <Clock3 className="h-4 w-4 text-[#6b7192]" />
           Status Timeline
         </span>
         {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </button>
 
       {isExpanded && (
-        <div className="mt-4 border-t border-purple-500/20 pt-4">
+        <div className="mt-4 border-t border-white/[0.06] pt-4">
           {isLoading ? (
-            <p className="text-xs text-gray-400">Loading timeline...</p>
+            <p className="text-xs text-[#6b7192]">Loading timeline...</p>
           ) : (
             <div className="flex flex-col gap-4">
               {timelineEvents.map((event, idx) => {
@@ -92,14 +92,14 @@ export function AdminStatusTimeline({ order }: AdminStatusTimelineProps) {
                 return (
                   <div key={idx} className="relative flex gap-4">
                     {!isLast && (
-                      <div className="absolute left-[11px] top-6 h-full w-px bg-white/10" />
+                      <div className="absolute left-[11px] top-6 h-full w-px bg-white/[0.08]" />
                     )}
                     <div className={`relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black/50 ${statusMeta[event.status].color}`}>
                       <Icon className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-black text-white">{event.label}</p>
-                      <p className="mt-1 text-xs text-gray-400">
+                      <p className="text-[13px] font-bold text-white">{event.label}</p>
+                      <p className="mt-0.5 text-xs text-[#6b7192]">
                         {new Date(event.timestamp).toLocaleString()}
                       </p>
                     </div>

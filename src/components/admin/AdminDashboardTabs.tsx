@@ -1,9 +1,10 @@
+import { useState } from "react";
 import {
   BarChart3,
-  CircleDot,
   History,
   LayoutDashboard,
   Megaphone,
+  Menu,
   PackageCheck,
   Settings,
   ShieldCheck,
@@ -11,6 +12,7 @@ import {
   Ticket,
   UsersRound,
   Wrench,
+  X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -27,233 +29,193 @@ export type AdminTab =
   | "logs"
   | "settings";
 
+type TabGroup = "operations" | "server";
+
 type AdminDashboardTabsProps = {
   activeTab: AdminTab;
   onChange: (tab: AdminTab) => void;
+  ordersBadgeCount?: number;
+  staffName?: string;
+  staffRole?: string;
 };
 
-type TabAccent =
-  | "pink"
-  | "purple"
-  | "emerald"
-  | "yellow"
-  | "cyan"
-  | "blue"
-  | "amber"
-  | "gray";
+const groupLabels: Record<TabGroup, string> = {
+  operations: "Operations",
+  server: "Server",
+};
 
 const tabs: Array<{
   label: string;
-  shortLabel: string;
   value: AdminTab;
-  accent: TabAccent;
+  group: TabGroup;
   icon: LucideIcon;
 }> = [
-  {
-    label: "Command Center",
-    shortLabel: "Command",
-    value: "overview",
-    accent: "pink",
-    icon: LayoutDashboard,
-  },
-  {
-    label: "Orders",
-    shortLabel: "Orders",
-    value: "orders",
-    accent: "purple",
-    icon: PackageCheck,
-  },
-  {
-    label: "Tickets",
-    shortLabel: "Tickets",
-    value: "tickets",
-    accent: "yellow",
-    icon: Ticket,
-  },
-  {
-    label: "Players",
-    shortLabel: "Players",
-    value: "players",
-    accent: "emerald",
-    icon: UsersRound,
-  },
-  {
-    label: "Minecraft Queue",
-    shortLabel: "Queue",
-    value: "minecraft",
-    accent: "yellow",
-    icon: Terminal,
-  },
-  {
-    label: "Announcements",
-    shortLabel: "Broadcast",
-    value: "announcements",
-    accent: "pink",
-    icon: Megaphone,
-  },
-  {
-    label: "Server Ops",
-    shortLabel: "Ops",
-    value: "server_ops",
-    accent: "cyan",
-    icon: Wrench,
-  },
-  {
-    label: "Staff Activity",
-    shortLabel: "Activity",
-    value: "activity",
-    accent: "cyan",
-    icon: BarChart3,
-  },
-  {
-    label: "Staff",
-    shortLabel: "Staff",
-    value: "staff",
-    accent: "blue",
-    icon: ShieldCheck,
-  },
-  {
-    label: "Logs",
-    shortLabel: "Logs",
-    value: "logs",
-    accent: "amber",
-    icon: History,
-  },
-  {
-    label: "Settings",
-    shortLabel: "Settings",
-    value: "settings",
-    accent: "gray",
-    icon: Settings,
-  },
+  { label: "Command Center", value: "overview", group: "operations", icon: LayoutDashboard },
+  { label: "Orders", value: "orders", group: "operations", icon: PackageCheck },
+  { label: "Tickets", value: "tickets", group: "operations", icon: Ticket },
+  { label: "Players", value: "players", group: "operations", icon: UsersRound },
+  { label: "Minecraft Queue", value: "minecraft", group: "operations", icon: Terminal },
+  { label: "Announcements", value: "announcements", group: "server", icon: Megaphone },
+  { label: "Server Ops", value: "server_ops", group: "server", icon: Wrench },
+  { label: "Staff", value: "staff", group: "server", icon: ShieldCheck },
+  { label: "Activity", value: "activity", group: "server", icon: BarChart3 },
+  { label: "Logs", value: "logs", group: "server", icon: History },
+  { label: "Settings", value: "settings", group: "server", icon: Settings },
 ];
 
-const accentClasses: Record<
-  TabAccent,
-  {
-    active: string;
-    inactive: string;
-    glow: string;
-    dot: string;
-  }
-> = {
-  pink: {
-    active: "border-pink-300/45 bg-pink-400/15 text-pink-100",
-    inactive: "hover:border-pink-300/25 hover:text-pink-100",
-    glow: "shadow-[0_0_24px_rgba(244,114,182,0.14)]",
-    dot: "bg-pink-300",
-  },
-  purple: {
-    active: "border-purple-300/45 bg-purple-400/15 text-purple-100",
-    inactive: "hover:border-purple-300/25 hover:text-purple-100",
-    glow: "shadow-[0_0_24px_rgba(168,85,247,0.14)]",
-    dot: "bg-purple-300",
-  },
-  emerald: {
-    active: "border-emerald-300/45 bg-emerald-400/15 text-emerald-100",
-    inactive: "hover:border-emerald-300/25 hover:text-emerald-100",
-    glow: "shadow-[0_0_24px_rgba(52,211,153,0.12)]",
-    dot: "bg-emerald-300",
-  },
-  yellow: {
-    active: "border-yellow-300/45 bg-yellow-400/15 text-yellow-100",
-    inactive: "hover:border-yellow-300/25 hover:text-yellow-100",
-    glow: "shadow-[0_0_24px_rgba(250,204,21,0.12)]",
-    dot: "bg-yellow-300",
-  },
-  cyan: {
-    active: "border-cyan-300/45 bg-cyan-400/15 text-cyan-100",
-    inactive: "hover:border-cyan-300/25 hover:text-cyan-100",
-    glow: "shadow-[0_0_24px_rgba(34,211,238,0.13)]",
-    dot: "bg-cyan-300",
-  },
-  blue: {
-    active: "border-blue-300/45 bg-blue-400/15 text-blue-100",
-    inactive: "hover:border-blue-300/25 hover:text-blue-100",
-    glow: "shadow-[0_0_24px_rgba(96,165,250,0.12)]",
-    dot: "bg-blue-300",
-  },
-  amber: {
-    active: "border-amber-300/45 bg-amber-400/15 text-amber-100",
-    inactive: "hover:border-amber-300/25 hover:text-amber-100",
-    glow: "shadow-[0_0_24px_rgba(251,191,36,0.12)]",
-    dot: "bg-amber-300",
-  },
-  gray: {
-    active: "border-slate-200/35 bg-slate-300/10 text-slate-100",
-    inactive: "hover:border-slate-300/25 hover:text-slate-100",
-    glow: "shadow-[0_0_24px_rgba(148,163,184,0.10)]",
-    dot: "bg-slate-300",
-  },
-};
+const operationsTabs = tabs.filter((tab) => tab.group === "operations");
+const serverTabs = tabs.filter((tab) => tab.group === "server");
 
-export function AdminDashboardTabs({
+function NavList({
   activeTab,
   onChange,
-}: AdminDashboardTabsProps) {
-  const activeItem = tabs.find((tab) => tab.value === activeTab) || tabs[0];
-
-  return (
-    <section className="mt-4 mb-4 overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#060616]/85 p-3 shadow-[0_0_40px_rgba(34,211,238,0.06)]">
-      <div className="mb-2 flex flex-col gap-2 px-1 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-100">
-            <CircleDot className="h-4 w-4" />
-          </span>
-
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300">
-              Admin Control Dock
-            </p>
-            <p className="text-[13px] text-slate-500">
-              Active module:{" "}
-              <span className="font-bold text-slate-300">{activeItem.label}</span>
-            </p>
-          </div>
-        </div>
-
-        <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs font-black uppercase tracking-[0.16em] text-slate-400">
-          Operator Navigation
-        </div>
-      </div>
-
-      <div className="relative">
-        <div className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-8 bg-gradient-to-r from-[#060616] to-transparent sm:hidden" />
-        <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-8 bg-gradient-to-l from-[#060616] to-transparent sm:hidden" />
-
-        <nav className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] lg:flex-nowrap lg:overflow-x-auto lg:pb-1 [&::-webkit-scrollbar]:hidden">
-          {tabs.map((tab) => {
+  ordersBadgeCount,
+}: {
+  activeTab: AdminTab;
+  onChange: (tab: AdminTab) => void;
+  ordersBadgeCount?: number;
+}) {
+  function renderGroup(group: TabGroup, groupTabs: typeof tabs) {
+    return (
+      <div key={group}>
+        <p className="px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#565d78]">
+          {groupLabels[group]}
+        </p>
+        <div className="mt-2 flex flex-col gap-0.5">
+          {groupTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.value;
-            const accent = accentClasses[tab.accent];
+            const badge = tab.value === "orders" ? ordersBadgeCount : undefined;
 
             return (
               <button
                 key={tab.value}
                 type="button"
                 onClick={() => onChange(tab.value)}
-                className={`group relative inline-flex shrink-0 items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-sm font-black transition sm:text-[15px] ${
+                className={`flex items-center justify-between gap-2 rounded-[9px] border-l-2 px-2.5 py-[9px] text-[13px] font-semibold transition ${
                   isActive
-                    ? `${accent.active} ${accent.glow}`
-                    : `border-white/10 bg-black/25 text-slate-400 ${accent.inactive}`
+                    ? "border-[#a855f7] bg-[rgba(168,85,247,0.16)] text-[#e9d5ff]"
+                    : "border-transparent text-[#9aa0b8] hover:bg-white/[0.04] hover:text-white"
                 }`}
-                title={tab.label}
               >
-                <span
-                  className={`absolute left-3 top-2 h-1.5 w-1.5 rounded-full transition ${
-                    isActive ? accent.dot : "bg-slate-700 group-hover:bg-slate-500"
-                  }`}
-                />
-
-                <Icon className="ml-1 h-4 w-4" />
-
-                <span className="hidden xl:inline">{tab.label}</span>
-                <span className="xl:hidden">{tab.shortLabel}</span>
+                <span className="flex items-center gap-2.5">
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {tab.label}
+                </span>
+                {Boolean(badge) && (
+                  <span className="rounded-full bg-[rgba(248,113,113,0.18)] px-[7px] py-px text-[10px] font-extrabold text-[#fca5a5]">
+                    {badge}
+                  </span>
+                )}
               </button>
             );
           })}
-        </nav>
+        </div>
       </div>
-    </section>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      {renderGroup("operations", operationsTabs)}
+      {renderGroup("server", serverTabs)}
+    </div>
+  );
+}
+
+function BrandMark() {
+  return (
+    <div className="flex items-center gap-2.5 px-1.5">
+      <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[9px] bg-gradient-to-br from-[#a855f7] to-[#2563eb] text-[13px] font-black">
+        E
+      </span>
+      <div>
+        <p className="text-[13px] font-extrabold leading-tight">Ellipsis</p>
+        <p className="text-[10px] font-semibold leading-tight text-[#6b7192]">Admin Console</p>
+      </div>
+    </div>
+  );
+}
+
+function UserChip({ name, role }: { name?: string; role?: string }) {
+  const initial = (name || "?").trim().charAt(0).toUpperCase() || "?";
+
+  return (
+    <div className="mt-auto flex items-center gap-2.5 rounded-[10px] border border-white/[0.06] bg-white/[0.03] p-2.5">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgba(168,85,247,0.18)] text-[13px] font-extrabold text-[#d8b4fe]">
+        {initial}
+      </span>
+      <div className="min-w-0">
+        <p className="truncate text-xs font-bold">{name || "Staff"}</p>
+        <p className="truncate text-[10px] font-bold uppercase tracking-[0.04em] text-[#6b7192]">
+          {role || "..."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function AdminDashboardTabs({
+  activeTab,
+  onChange,
+  ordersBadgeCount,
+  staffName,
+  staffRole,
+}: AdminDashboardTabsProps) {
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  return (
+    <>
+      {/* Desktop persistent sidebar */}
+      <aside className="hidden w-[212px] shrink-0 flex-col gap-6 border-r border-white/[0.07] bg-[#0c0c17] p-3.5 lg:flex">
+        <BrandMark />
+        <NavList activeTab={activeTab} onChange={onChange} ordersBadgeCount={ordersBadgeCount} />
+        <UserChip name={staffName} role={staffRole} />
+      </aside>
+
+      {/* Mobile trigger */}
+      <button
+        type="button"
+        onClick={() => setIsMobileOpen(true)}
+        className="mb-3 inline-flex items-center gap-2 rounded-[10px] border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-sm font-bold text-[#9aa0b8] lg:hidden"
+      >
+        <Menu className="h-4 w-4" />
+        Menu
+      </button>
+
+      {/* Mobile drawer */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={() => setIsMobileOpen(false)}
+            className="absolute inset-0 bg-black/60"
+          />
+          <aside className="absolute inset-y-0 left-0 flex w-[240px] flex-col gap-6 border-r border-white/[0.07] bg-[#0c0c17] p-4">
+            <div className="flex items-center justify-between">
+              <BrandMark />
+              <button
+                type="button"
+                aria-label="Close menu"
+                onClick={() => setIsMobileOpen(false)}
+                className="text-[#9aa0b8]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <NavList
+              activeTab={activeTab}
+              onChange={(tab) => {
+                onChange(tab);
+                setIsMobileOpen(false);
+              }}
+              ordersBadgeCount={ordersBadgeCount}
+            />
+            <UserChip name={staffName} role={staffRole} />
+          </aside>
+        </div>
+      )}
+    </>
   );
 }
