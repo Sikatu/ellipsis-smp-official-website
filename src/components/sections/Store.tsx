@@ -11,11 +11,11 @@ import {
   Tag,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { ranks } from "../../data/ranks";
 import { crates, furniture, plushies } from "../../data/storeItems";
 import GlassPanel from "../ui/GlassPanel";
 import SectionHeader from "../ui/SectionHeader";
+import { LinkButton } from "../ui/Button";
 
 type ProductCategory = "Ranks" | "Crates" | "Furniture" | "Plushies";
 type ProductType = "rank" | "crate" | "furniture" | "plushie";
@@ -279,13 +279,14 @@ function Store() {
               </p>
             </div>
 
-            <Link
+            <LinkButton
               to={checkoutPath}
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-3 text-xs font-black text-white shadow-[0_0_24px_rgba(168,85,247,0.28)]"
+              size="sm"
+              className="shrink-0 rounded-xl py-3 text-xs"
             >
               Buy Selected
               <ArrowRight className="h-4 w-4" />
-            </Link>
+            </LinkButton>
           </div>
 
           {selectedProduct.type === "crate" && selectedCrate && (
@@ -418,13 +419,14 @@ function Store() {
                       {isActive ? "Selected" : "View"}
                     </button>
 
-                    <Link
+                    <LinkButton
                       to={productCheckoutPath}
-                      className="inline-flex min-w-[112px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-3 text-sm font-black text-white shadow-[0_0_24px_rgba(168,85,247,0.24)]"
+                      size="sm"
+                      className="min-w-[112px] rounded-xl py-3 text-sm"
                     >
                       Buy Now
                       <ArrowRight className="h-4 w-4" />
-                    </Link>
+                    </LinkButton>
                   </div>
                 </motion.div>
               );
@@ -569,13 +571,10 @@ function Store() {
                     </div>
 
                     <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                      <Link
-                        to={checkoutPath}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-4 text-sm font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.32)] transition hover:scale-[1.02]"
-                      >
+                      <LinkButton to={checkoutPath} size="lg">
                         Make Payment
                         <ArrowRight className="h-4 w-4" />
-                      </Link>
+                      </LinkButton>
 
                       <div className="flex items-center justify-center gap-2 rounded-2xl border border-purple-500/20 bg-black/30 px-5 py-4 text-sm font-bold text-purple-100">
                         <Package className="h-4 w-4" />

@@ -15,6 +15,7 @@ import {
 import { useDiscordWidget } from "../../hooks/useDiscordWidget";
 import { useServerStatus } from "../../hooks/useServerStatus";
 import SectionTitle from "../ui/SectionTitle";
+import { AnchorButton } from "../ui/Button";
 
 const socials = [
     {
@@ -104,15 +105,16 @@ function Discord() {
                             announcements, and connect with the Ellipsis SMP community.
                         </p>
 
-                        <a
+                        <AnchorButton
                             href={discordStatus.inviteUrl || discordInviteUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="mt-7 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-4 font-black transition hover:scale-105"
+                            size="lg"
+                            className="mt-7 rounded-xl"
                         >
                             <MessageCircle className="h-5 w-5" />
                             Join Discord
-                        </a>
+                        </AnchorButton>
                     </div>
 
                     <div className="rounded-3xl border border-yellow-400/25 bg-yellow-400/10 p-8 backdrop-blur">

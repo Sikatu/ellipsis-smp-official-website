@@ -4,6 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import { KeyRound, Lock, UserPlus } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { requestPendingProfile } from "../../services/admin";
+import Button from "../ui/Button";
 import type { AccessState, AuthMode } from "../../types/admin";
 
 type AdminAuthProps = {
@@ -160,11 +161,11 @@ export function AdminAuth({
               onChange={(event) => setPassword(event.target.value)}
             />
 
-            <button
-              type="button"
+            <Button
               onClick={authMode === "login" ? login : register}
               disabled={authLoading || accessState === "checking"}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-4 font-black disabled:cursor-not-allowed disabled:opacity-60"
+              size="lg"
+              fullWidth
             >
               {authMode === "login" ? (
                 <KeyRound className="h-4 w-4" />
@@ -176,7 +177,7 @@ export function AdminAuth({
                 : authMode === "login"
                   ? "Login"
                   : "Create Account"}
-            </button>
+            </Button>
 
             {(message || accessMessage) && (
               <div className="rounded-2xl border border-yellow-400/25 bg-yellow-400/10 p-4 text-sm font-bold text-yellow-100">

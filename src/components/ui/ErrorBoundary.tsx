@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import Button from "./Button";
 
 type ErrorBoundaryProps = {
   children: ReactNode;
@@ -32,13 +33,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               This page hit an unexpected error. Try reloading, or head back home.
             </p>
             <div className="mt-6 flex justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => window.location.reload()}
-                className="rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-2.5 text-sm font-bold transition hover:scale-105"
-              >
+              <Button onClick={() => window.location.reload()} size="sm" className="rounded-xl">
                 Reload
-              </button>
+              </Button>
               <a
                 href="/"
                 className="rounded-xl border border-purple-500/40 px-5 py-2.5 text-sm font-bold transition hover:bg-purple-500/10"

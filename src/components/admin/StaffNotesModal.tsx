@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { X, Save } from "lucide-react";
+import Button from "../ui/Button";
 
 type StaffNotesModalProps = {
   isOpen: boolean;
@@ -79,14 +80,10 @@ export function StaffNotesModal({
           >
             Cancel
           </button>
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-3 text-sm font-black text-white transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <Button onClick={handleSave} disabled={isSaving}>
             <Save className="h-4 w-4" />
             {isSaving ? "Saving..." : "Save Notes"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

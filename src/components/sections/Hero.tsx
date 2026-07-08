@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { discordInviteUrl } from "../../data/links";
 import LiveServerPanel from "../ui/LiveServerPanel";
+import Button, { LinkButton } from "../ui/Button";
 
 const serverIp = "ellipsismc.com:19213";
 
@@ -153,14 +154,10 @@ function Hero() {
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={copyServerIp}
-              className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-4 text-sm font-black text-white shadow-[0_0_35px_rgba(168,85,247,0.45)] transition hover:scale-[1.03]"
-            >
+            <Button onClick={copyServerIp} size="lg" className="gap-3 hover:scale-[1.03]">
               <Box className="h-5 w-5" />
               {copied ? "IP Copied" : "Copy Server IP"}
-            </button>
+            </Button>
 
             <a
               href={discordInviteUrl}
@@ -314,13 +311,10 @@ function Hero() {
             </div>
           </div>
 
-          <Link
-            to="/discord"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-4 text-sm font-black text-white shadow-[0_0_30px_rgba(168,85,247,0.35)] transition hover:scale-[1.03]"
-          >
+          <LinkButton to="/discord" size="lg" className="hover:scale-[1.03]">
             Get Started
             <Sparkles className="h-4 w-4" />
-          </Link>
+          </LinkButton>
         </div>
       </div>
     </section>

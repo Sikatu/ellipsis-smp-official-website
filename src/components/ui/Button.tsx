@@ -1,4 +1,5 @@
 import {
+  type AnchorHTMLAttributes,
   type ButtonHTMLAttributes,
   type ComponentPropsWithoutRef,
 } from "react";
@@ -81,6 +82,28 @@ export function LinkButton({
 }: LinkButtonProps) {
   return (
     <Link
+      className={classesFor(variant, size, fullWidth, className)}
+      {...props}
+    />
+  );
+}
+
+type AnchorButtonProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  fullWidth?: boolean;
+};
+
+/** For external links. Use LinkButton for in-app routes instead. */
+export function AnchorButton({
+  variant = "primary",
+  size = "md",
+  fullWidth = false,
+  className = "",
+  ...props
+}: AnchorButtonProps) {
+  return (
+    <a
       className={classesFor(variant, size, fullWidth, className)}
       {...props}
     />
