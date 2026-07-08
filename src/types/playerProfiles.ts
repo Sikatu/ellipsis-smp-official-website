@@ -1,5 +1,3 @@
-export type PlayerClaimStatus = "pending" | "approved" | "rejected";
-
 export type MinecraftPlayerProfile = {
   id: string;
   user_id: string | null;
@@ -30,24 +28,4 @@ export type MinecraftPlayerProfile = {
   raw_stats: Record<string, unknown>;
   created_at: string;
   updated_at: string;
-};
-
-export type PlayerProfileClaim = {
-  id: string;
-  user_id: string;
-  player_key: string;
-  minecraft_username: string;
-  discord_username: string | null;
-  status: PlayerClaimStatus;
-  proof_note: string | null;
-  reviewed_by: string | null;
-  reviewed_at: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-export type PlayerProfileUpsertPayload = Partial<
-  Omit<MinecraftPlayerProfile, "id" | "created_at" | "updated_at">
-> & {
-  minecraft_username: string;
 };

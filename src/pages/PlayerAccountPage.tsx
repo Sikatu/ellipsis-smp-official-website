@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { Link } from "react-router-dom";
 import {
@@ -20,6 +20,7 @@ import {
   UserRound,
 } from "lucide-react";
 import PageShell from "./PageShell";
+import StatCard from "../components/ui/StatCard";
 import {
   fetchMyMinecraftProfile,
   fetchMyOrders,
@@ -39,6 +40,13 @@ function formatDate(value: string | null) {
   if (!value) return "Not available";
 
   return new Date(value).toLocaleString();
+}
+
+function getKillDeathRatio(kills: number | null, deaths: number | null) {
+  const safeKills = kills ?? 0;
+  const safeDeaths = deaths ?? 0;
+  if (!safeDeaths) return safeKills;
+  return Number((safeKills / safeDeaths).toFixed(2));
 }
 
 const orderStatusMeta: Record<
@@ -153,23 +161,6 @@ function OrderHistoryPanel() {
           })}
         </div>
       )}
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | number;
-}) {
-  return (
-    <div className="rounded-3xl border border-purple-500/20 bg-white/[0.05] p-5">
-      <p className="text-xs font-black uppercase tracking-[0.2em] text-purple-300">
-        {label}
-      </p>
-      <p className="mt-3 break-words text-2xl font-black text-white">{value}</p>
     </div>
   );
 }
@@ -464,12 +455,41 @@ function ProfilePanel({ profile }: { profile: PlayerPortalProfile }) {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Balance" value={profile.balance_text || "Not synced"} />
-        <StatCard label="Votes" value={profile.votes_total ?? 0} />
         <StatCard label="Playtime" value={profile.playtime_text || "Not synced"} />
-        <StatCard label="Last Seen" value={formatDate(profile.last_seen_at)} />
+        <StatCard label="Votes" value={profile.votes_total ?? 0} />
+        <StatCard
+          label="Leaderboard"
+          value={profile.leaderboard_position ? `#${profile.leaderboard_position}` : "Unranked"}
+        />
+        <StatCard label="Score" value={profile.leaderboard_score ?? 0} />
+        <StatCard label="Kills" value={profile.kills ?? 0} />
+        <StatCard label="K / D" value={getKillDeathRatio(profile.kills, profile.deaths)} />
+        <StatCard
+          label="Status"
+          value={profile.is_online ? "Online" : "Offline"}
+          tone={profile.is_online ? "emerald" : "default"}
+        />
       </div>
 
-      <OrderHistoryPanel />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <OrderHistoryPanel />
+
+        <div className="space-y-6">
+          <InfoPanel title="World Progress">
+            <MiniRow label="Blocks Broken" value={profile.blocks_broken ?? 0} />
+            <MiniRow label="Blocks Placed" value={profile.blocks_placed ?? 0} />
+            <MiniRow label="Mob Kills" value={profile.mob_kills ?? 0} />
+            <MiniRow label="Active World" value={profile.active_world || "Unknown"} />
+          </InfoPanel>
+
+          <InfoPanel title="Sync Details">
+            <MiniRow label="First Joined" value={formatDate(profile.first_joined_at)} />
+            <MiniRow label="Last Seen" value={formatDate(profile.last_seen_at)} />
+            <MiniRow label="Last Synced" value={profile.last_synced_at ? formatDate(profile.last_synced_at) : "Waiting for bridge"} />
+            <MiniRow label="Location" value={profile.location_summary || "Private"} />
+          </InfoPanel>
+        </div>
+      </div>
 
       <Link
         to="/track"
@@ -514,6 +534,30 @@ function ProfilePanel({ profile }: { profile: PlayerPortalProfile }) {
           {showUuid ? uuidText : "----"}
         </p>
       </div>
+    </div>
+  );
+}
+
+function InfoPanel({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-[2rem] border border-purple-500/20 bg-white/[0.05] p-6">
+      <h3 className="text-lg font-black text-white">{title}</h3>
+      <div className="mt-4 grid gap-3">{children}</div>
+    </div>
+  );
+}
+
+function MiniRow({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 p-4">
+      <span className="text-sm text-gray-400">{label}</span>
+      <span className="font-black text-white">{value}</span>
     </div>
   );
 }
