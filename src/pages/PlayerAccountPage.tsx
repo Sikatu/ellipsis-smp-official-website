@@ -672,7 +672,7 @@ export default function PlayerAccountPage() {
 
   return (
     <PageShell>
-      <section className="bg-[#030014] px-4 py-14 text-white sm:px-6">
+      <section className="bg-[#030014] px-4 pb-14 pt-32 text-white sm:px-6">
         <div className="mx-auto max-w-7xl">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
