@@ -25,7 +25,7 @@ import SectionHeader from "../components/ui/SectionHeader";
 import SectionDivider from "../components/ui/SectionDivider";
 import CallToAction from "../components/ui/CallToAction";
 
-const serverAddress = "ellipsismc.com:19213";
+const serverAddress = "ellipsissmpmc.com:19213";
 
 const joinSteps = [
     {

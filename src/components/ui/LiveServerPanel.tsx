@@ -2,7 +2,7 @@ import { Copy, Globe2, RefreshCw, Server, Signal, Users } from "lucide-react";
 import { useState } from "react";
 import { useServerStatus } from "../../hooks/useServerStatus";
 
-const serverAddress = "ellipsismc.com:19213";
+const serverAddress = "ellipsissmpmc.com:19213";
 
 function LiveServerPanel() {
     const status = useServerStatus();

@@ -10,7 +10,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { discordInviteUrl } from "../../data/links";
 
-const serverAddress = "ellipsismc.com:19213";
+const serverAddress = "ellipsissmpmc.com:19213";
 
 function Footer() {
   const [copied, setCopied] = useState(false);

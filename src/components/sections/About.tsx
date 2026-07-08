@@ -3,7 +3,7 @@ import { useState } from "react";
 import { discordInviteUrl } from "../../data/links";
 import { AnchorButton } from "../ui/Button";
 
-const serverAddress = "ellipsismc.com:19213";
+const serverAddress = "ellipsissmpmc.com:19213";
 
 function About() {
     const [copied, setCopied] = useState(false);
