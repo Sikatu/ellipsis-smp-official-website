@@ -30,6 +30,28 @@ public class ProfileSyncService {
         }
     }
 
+    public int syncAllPlayersAsync() {
+        if (!plugin.getConfig().getBoolean("profile-sync.enabled", true)) return 0;
+
+        OfflinePlayer[] allPlayers = Bukkit.getOfflinePlayers();
+        int batchSize = Math.max(1, plugin.getConfig().getInt("profile-sync.full-sync-batch-size", 15));
+        long batchDelayTicks = Math.max(1, plugin.getConfig().getInt("profile-sync.full-sync-batch-delay-ticks", 20));
+
+        for (int index = 0; index < allPlayers.length; index += batchSize) {
+            int start = index;
+            int end = Math.min(allPlayers.length, index + batchSize);
+            long delay = (long) (index / batchSize) * batchDelayTicks;
+
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                for (int playerIndex = start; playerIndex < end; playerIndex++) {
+                    syncPlayerAsync(allPlayers[playerIndex]);
+                }
+            }, delay);
+        }
+
+        return allPlayers.length;
+    }
+
     public void syncPlayerAsync(OfflinePlayer player) {
         if (!plugin.getConfig().getBoolean("profile-sync.enabled", true)) return;
         Bukkit.getScheduler().runTask(plugin, () -> {

@@ -150,6 +150,11 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
                 supabase.markActionProcessing(action.id());
             }
 
+            if ("sync_all_profiles".equals(action.actionType())) {
+                processSyncAllProfilesAction(action);
+                return;
+            }
+
             ActionProcessor.ActionResult result = actionProcessor.process(action);
             if (result.success()) {
                 supabase.markActionCompleted(action.id(), result.message());
@@ -159,6 +164,20 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
             }
         } catch (Exception error) {
             getLogger().warning("Failed to process action " + action.id() + ": " + error.getMessage());
+            try {
+                supabase.markActionFailed(action.id(), error.getMessage());
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    private void processSyncAllProfilesAction(BridgeAction action) {
+        try {
+            lastProfileSyncAt = Instant.now();
+            int total = profileSyncService.syncAllPlayersAsync();
+            supabase.markActionCompleted(action.id(), "Queued resync for " + total + " known players.");
+        } catch (Exception error) {
+            getLogger().warning("Failed to queue full profile sync: " + error.getMessage());
             try {
                 supabase.markActionFailed(action.id(), error.getMessage());
             } catch (Exception ignored) {
@@ -261,6 +280,13 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
             return true;
         }
 
+        if (args[0].equalsIgnoreCase("syncall")) {
+            lastProfileSyncAt = Instant.now();
+            int total = profileSyncService.syncAllPlayersAsync();
+            sender.sendMessage("Full player sync started for " + total + " known players.");
+            return true;
+        }
+
 
         if (args[0].equalsIgnoreCase("syncplayer")) {
             if (args.length < 2) {
@@ -300,7 +326,7 @@ public class EllipsisBridgePlugin extends JavaPlugin implements Listener {
             return true;
         }
 
-        sender.sendMessage("Usage: /ellipsisbridge <status|reload|poll|sync|syncplayer|diagnose|heartbeat>");
+        sender.sendMessage("Usage: /ellipsisbridge <status|reload|poll|sync|syncall|syncplayer|diagnose|heartbeat>");
         return true;
     }
 

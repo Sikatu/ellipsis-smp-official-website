@@ -1,14 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  ArrowUpDown,
   BadgeCheck,
   ChevronDown,
+  Clock3,
   Coins,
   Crown,
   Eye,
+  Loader2,
+  Medal,
   MessageSquare,
+  RefreshCcw,
   Search,
   ShieldAlert,
+  Skull,
+  Swords,
+  ThumbsUp,
   Trophy,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import type { Order } from "../../types/admin";
 import type { MinecraftActionType } from "../../types/minecraftActions";
@@ -18,6 +28,8 @@ import {
   getFormattedPlaytime,
   getPlayerProfileSummary,
 } from "../../services/playerProfiles";
+import { createSyncAllProfilesAction } from "../../services/minecraftActions";
+import { getKillDeathRatio, getRelativeTime } from "../../lib/playerStats";
 import { AdminMinecraftActionModal } from "./AdminMinecraftActionModal";
 import { AdminPlayerNotesModal } from "./AdminPlayerNotesModal";
 import {
@@ -25,6 +37,87 @@ import {
   type AdminPlayerProfile,
 } from "./AdminPlayerProfileModal";
 import KpiTile from "./KpiTile";
+
+type RankingMetric = "leaderboard_score" | "total_playtime_minutes" | "kills" | "votes" | "balance";
+
+const rankingMetrics: Array<{
+  key: RankingMetric;
+  label: string;
+  icon: typeof Trophy;
+  format: (profile: MinecraftPlayerProfile) => string;
+}> = [
+  {
+    key: "leaderboard_score",
+    label: "Leaderboard",
+    icon: Trophy,
+    format: (profile) => `${profile.leaderboard_score} pts`,
+  },
+  {
+    key: "total_playtime_minutes",
+    label: "Playtime",
+    icon: Clock3,
+    format: (profile) => getFormattedPlaytime(profile.total_playtime_minutes),
+  },
+  {
+    key: "kills",
+    label: "Kills",
+    icon: Swords,
+    format: (profile) => `${profile.kills} kills`,
+  },
+  {
+    key: "votes",
+    label: "Votes",
+    icon: ThumbsUp,
+    format: (profile) => `${profile.votes} votes`,
+  },
+  {
+    key: "balance",
+    label: "Balance",
+    icon: Coins,
+    format: (profile) => `PHP ${profile.balance}`,
+  },
+];
+
+type StatsSortKey =
+  | "minecraft_username"
+  | "current_rank"
+  | "balance"
+  | "total_playtime_minutes"
+  | "kills"
+  | "votes"
+  | "last_seen_at"
+  | "leaderboard_score";
+
+const statsColumns: Array<{ key: StatsSortKey; label: string }> = [
+  { key: "minecraft_username", label: "Player" },
+  { key: "current_rank", label: "Rank" },
+  { key: "leaderboard_score", label: "Score" },
+  { key: "balance", label: "Balance" },
+  { key: "total_playtime_minutes", label: "Playtime" },
+  { key: "kills", label: "K / D" },
+  { key: "votes", label: "Votes" },
+  { key: "last_seen_at", label: "Last Seen" },
+];
+
+function getStatsSortValue(profile: MinecraftPlayerProfile, key: StatsSortKey): number | string {
+  switch (key) {
+    case "minecraft_username":
+      return profile.minecraft_username.toLowerCase();
+    case "current_rank":
+      return profile.current_rank.toLowerCase();
+    case "last_seen_at":
+      return profile.last_seen_at ? new Date(profile.last_seen_at).getTime() : 0;
+    default:
+      return profile[key] ?? 0;
+  }
+}
+
+function rankBadgeStyle(position: number) {
+  if (position === 1) return "border-[rgba(251,191,36,0.4)] bg-[rgba(251,191,36,0.12)] text-[#fbbf24]";
+  if (position === 2) return "border-[rgba(203,213,225,0.4)] bg-[rgba(203,213,225,0.12)] text-[#cbd5e1]";
+  if (position === 3) return "border-[rgba(217,119,6,0.4)] bg-[rgba(217,119,6,0.12)] text-[#d97706]";
+  return "border-white/[0.08] bg-black/20 text-[#9aa0b8]";
+}
 
 type AdminPlayersPanelProps = {
   orders: Order[];
@@ -192,28 +285,56 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
   const [selectedProfilePlayer, setSelectedProfilePlayer] = useState<AdminPlayerProfile | null>(null);
   const [serverProfiles, setServerProfiles] = useState<MinecraftPlayerProfile[]>([]);
   const [profileError, setProfileError] = useState("");
+  const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
+  const [syncState, setSyncState] = useState<"idle" | "queuing" | "queued" | "error">("idle");
+  const [syncMessage, setSyncMessage] = useState("");
+  const [rankingMetric, setRankingMetric] = useState<RankingMetric>("leaderboard_score");
+  const [statsSort, setStatsSort] = useState<{ key: StatsSortKey; direction: "asc" | "desc" }>({
+    key: "leaderboard_score",
+    direction: "desc",
+  });
+
+  async function loadServerProfiles() {
+    setIsLoadingProfiles(true);
+    const { data, error } = await fetchMinecraftPlayerProfiles(500);
+    setIsLoadingProfiles(false);
+
+    if (error) {
+      setProfileError(error.message);
+    } else {
+      setProfileError("");
+      setServerProfiles(data);
+    }
+  }
 
   useEffect(() => {
-    let isMounted = true;
+    void loadServerProfiles();
+  }, []);
 
-    async function loadServerProfiles() {
-      const { data, error } = await fetchMinecraftPlayerProfiles(500);
-      if (!isMounted) return;
+  async function handleSyncAllPlayers() {
+    setSyncState("queuing");
+    setSyncMessage("");
 
-      if (error) {
-        setProfileError(error.message);
-      } else {
-        setProfileError("");
-        setServerProfiles(data);
-      }
+    const { error, warning } = await createSyncAllProfilesAction();
+
+    if (error) {
+      setSyncState("error");
+      setSyncMessage(error.message);
+      return;
     }
 
-    void loadServerProfiles();
+    setSyncState("queued");
+    setSyncMessage(warning || "Sync queued. The bridge will resync every known player shortly.");
+  }
 
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  function toggleStatsSort(key: StatsSortKey) {
+    setStatsSort((current) => {
+      if (current.key === key) {
+        return { key, direction: current.direction === "desc" ? "asc" : "desc" };
+      }
+      return { key, direction: "desc" };
+    });
+  }
 
   const players = useMemo(() => {
     const map = new Map<string, AdminPlayerProfile>();
@@ -266,6 +387,31 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
     return map;
   }, [serverProfiles]);
 
+  const topRankedProfiles = useMemo(() => {
+    return [...serverProfiles]
+      .sort((a, b) => Number(b[rankingMetric] || 0) - Number(a[rankingMetric] || 0))
+      .slice(0, 10);
+  }, [serverProfiles, rankingMetric]);
+
+  const sortedStatsProfiles = useMemo(() => {
+    const filtered = serverProfiles.filter((profile) => {
+      const haystack = `${profile.minecraft_username} ${profile.discord_username || ""}`.toLowerCase();
+      return haystack.includes(search.toLowerCase());
+    });
+
+    return filtered.sort((a, b) => {
+      const aValue = getStatsSortValue(a, statsSort.key);
+      const bValue = getStatsSortValue(b, statsSort.key);
+      const direction = statsSort.direction === "asc" ? 1 : -1;
+
+      if (typeof aValue === "string" || typeof bValue === "string") {
+        return String(aValue).localeCompare(String(bValue)) * direction;
+      }
+
+      return (Number(aValue) - Number(bValue)) * direction;
+    });
+  }, [serverProfiles, search, statsSort]);
+
   function openAction(player: { ign: string; discord: string }, actionType: MinecraftActionType) {
     setSelectedActionPlayer({
       ign: player.ign,
@@ -291,8 +437,8 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
           Players Dashboard
         </h2>
         <p className="mt-1.5 max-w-2xl text-[13px] leading-6 text-[#9aa0b8]">
-          Order history, synced Minecraft profiles, player controls, notes, and manual
-          command-center actions all live here.
+          Order history, synced Minecraft profiles, top rankings, player controls, notes, and
+          manual command-center actions all live here.
         </p>
       </div>
 
@@ -323,12 +469,35 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
             </p>
           </div>
 
-          {profileError && (
-            <div className="rounded-[10px] border border-[rgba(251,191,36,0.25)] bg-[rgba(251,191,36,0.08)] px-4 py-2.5 text-[13px] font-bold text-[#fbbf24]">
-              {profileError}
-            </div>
-          )}
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            {profileError && (
+              <div className="rounded-[10px] border border-[rgba(251,191,36,0.25)] bg-[rgba(251,191,36,0.08)] px-4 py-2.5 text-[13px] font-bold text-[#fbbf24]">
+                {profileError}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleSyncAllPlayers}
+              disabled={!canManagePlayers || syncState === "queuing"}
+              title={canManagePlayers ? "Queue a full resync of every known player" : "Support role cannot queue Minecraft actions"}
+              className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-[rgba(96,165,250,0.25)] bg-[rgba(96,165,250,0.08)] px-4 py-2.5 text-[13px] font-bold text-[#60a5fa] transition hover:bg-[rgba(96,165,250,0.14)] disabled:cursor-not-allowed disabled:border-white/[0.06] disabled:bg-white/[0.02] disabled:text-[#565d78]"
+            >
+              {syncState === "queuing" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCcw className="h-4 w-4" />
+              )}
+              Sync All Players
+            </button>
+          </div>
         </div>
+
+        {syncMessage && (
+          <p className={`mt-3 text-[13px] font-semibold ${syncState === "error" ? "text-[#fca5a5]" : "text-[#6ee7b7]"}`}>
+            {syncMessage}
+          </p>
+        )}
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <KpiTile label="Synced Players" value={serverProfiles.length} />
@@ -337,33 +506,150 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
           <KpiTile label="Ranked" value={serverProfileSummary.ranked} />
           <KpiTile label="Avg Playtime" value={getFormattedPlaytime(serverProfileSummary.averagePlaytime)} />
         </div>
+      </div>
 
-        <div className="mt-4 grid gap-2.5 lg:grid-cols-2">
-          {serverProfiles.slice(0, 4).map((profile) => (
-            <article
-              key={profile.id}
-              className="rounded-[11px] border border-white/[0.07] bg-black/20 p-3.5"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="font-bold text-white">{profile.minecraft_username}</p>
-                  <p className="mt-0.5 text-[13px] text-[#8b91ad]">
-                    {profile.current_rank} &middot; {getFormattedPlaytime(profile.total_playtime_minutes)}
-                  </p>
+      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
+              Top Rankings
+            </p>
+            <h3 className="mt-2 text-lg font-extrabold text-white">
+              Server leaderboard
+            </h3>
+          </div>
+
+          <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+            {rankingMetrics.map((metric) => {
+              const Icon = metric.icon;
+              const isActive = rankingMetric === metric.key;
+              return (
+                <button
+                  key={metric.key}
+                  type="button"
+                  onClick={() => setRankingMetric(metric.key)}
+                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-[11px] font-bold transition ${
+                    isActive
+                      ? "bg-[rgba(168,85,247,0.18)] text-[#e9d5ff]"
+                      : "bg-white/[0.03] text-[#9aa0b8] hover:bg-white/[0.06]"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {metric.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {topRankedProfiles.map((profile, index) => {
+            const position = index + 1;
+            const metric = rankingMetrics.find((item) => item.key === rankingMetric)!;
+
+            return (
+              <div
+                key={profile.id}
+                className="flex items-center gap-3 rounded-[11px] border border-white/[0.07] bg-black/20 p-3"
+              >
+                <span
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-[13px] font-extrabold ${rankBadgeStyle(position)}`}
+                >
+                  {position <= 3 ? <Medal className="h-4 w-4" /> : position}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-bold text-white">{profile.minecraft_username}</p>
+                  <p className="mt-0.5 truncate text-xs text-[#8b91ad]">{profile.current_rank}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-[13px] font-bold text-[#fde047]">
-                    {profile.leaderboard_position ? `#${profile.leaderboard_position}` : "Unranked"}
-                  </p>
-                  <p className="mt-0.5 text-xs text-[#6b7192]">Score {profile.leaderboard_score}</p>
-                </div>
+                <span className="shrink-0 text-[13px] font-bold text-[#fde047]">{metric.format(profile)}</span>
               </div>
-            </article>
-          ))}
+            );
+          })}
 
-          {serverProfiles.length === 0 && (
-            <div className="rounded-[11px] border border-white/[0.07] bg-black/20 p-6 text-center text-[13px] text-[#6b7192] lg:col-span-2">
+          {topRankedProfiles.length === 0 && (
+            <div className="rounded-[11px] border border-white/[0.07] bg-black/20 p-6 text-center text-[13px] text-[#6b7192] sm:col-span-2">
               No synced Minecraft profiles yet. The bridge will populate this table.
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
+          All Player Stats
+        </p>
+        <h3 className="mt-2 text-lg font-extrabold text-white">
+          Full synced profile table
+        </h3>
+
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[720px] border-collapse text-[13px]">
+            <thead>
+              <tr className="border-b border-white/[0.06] text-left text-[10px] font-bold uppercase tracking-[0.1em] text-[#565d78]">
+                {statsColumns.map((column) => (
+                  <th key={column.key} className="whitespace-nowrap px-3 py-2.5">
+                    <button
+                      type="button"
+                      onClick={() => toggleStatsSort(column.key)}
+                      className={`inline-flex items-center gap-1 transition hover:text-white ${
+                        statsSort.key === column.key ? "text-white" : ""
+                      }`}
+                    >
+                      {column.label}
+                      <ArrowUpDown className="h-3 w-3" />
+                    </button>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sortedStatsProfiles.map((profile) => (
+                <tr
+                  key={profile.id}
+                  className="border-b border-white/[0.05] last:border-b-0 hover:bg-white/[0.02]"
+                >
+                  <td className="whitespace-nowrap px-3 py-2.5">
+                    <span className="inline-flex items-center gap-1.5 font-bold text-white">
+                      {profile.is_online ? (
+                        <Wifi className="h-3.5 w-3.5 text-[#34d399]" />
+                      ) : (
+                        <WifiOff className="h-3.5 w-3.5 text-[#565d78]" />
+                      )}
+                      {profile.minecraft_username}
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2.5 text-[#c4c9dc]">{profile.current_rank}</td>
+                  <td className="whitespace-nowrap px-3 py-2.5 text-[#c4c9dc]">
+                    {profile.leaderboard_position ? `#${profile.leaderboard_position}` : "Unranked"}
+                    <span className="ml-1.5 text-xs text-[#6b7192]">({profile.leaderboard_score})</span>
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2.5 text-[#fde047]">PHP {profile.balance}</td>
+                  <td className="whitespace-nowrap px-3 py-2.5 text-[#c4c9dc]">
+                    {getFormattedPlaytime(profile.total_playtime_minutes)}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2.5 text-[#c4c9dc]">
+                    <span className="inline-flex items-center gap-1">
+                      <Swords className="h-3.5 w-3.5 text-[#60a5fa]" />
+                      {profile.kills}
+                      <Skull className="ml-1.5 h-3.5 w-3.5 text-[#f87171]" />
+                      {profile.deaths}
+                      <span className="ml-1.5 text-xs text-[#6b7192]">
+                        ({getKillDeathRatio(profile.kills, profile.deaths)})
+                      </span>
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2.5 text-[#c4c9dc]">{profile.votes}</td>
+                  <td className="whitespace-nowrap px-3 py-2.5 text-[#6b7192]">
+                    {getRelativeTime(profile.last_seen_at) || "Unknown"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {sortedStatsProfiles.length === 0 && (
+            <div className="p-6 text-center text-[13px] text-[#6b7192]">
+              {isLoadingProfiles ? "Loading synced profiles..." : "No synced Minecraft profiles found."}
             </div>
           )}
         </div>
