@@ -1,5 +1,8 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /checkout
+Disallow: /track
+Disallow: /account
 
 Sitemap: https://www.ellipsissmp.com/sitemap.xml

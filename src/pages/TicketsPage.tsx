@@ -538,7 +538,14 @@ export default function TicketsPage() {
   }
 
   return (
-    <PageShell>
+    <PageShell
+      seo={{
+        title: "Support Tickets | Ellipsis SMP Minecraft Server",
+        description:
+          "Need help on Ellipsis SMP? Open a support ticket and our staff team will assist you with orders, account issues, and more.",
+        path: "/tickets",
+      }}
+    >
       <section className="relative overflow-hidden bg-[#030014] px-4 py-20 text-white sm:px-6">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.22),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.18),transparent_30%)]" />
 

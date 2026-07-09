@@ -140,7 +140,14 @@ function AboutPage() {
   }
 
   return (
-    <PageShell>
+    <PageShell
+      seo={{
+        title: "About & How to Join | Ellipsis SMP Minecraft Server",
+        description:
+          "Learn how to join Ellipsis SMP, a crossplay Minecraft SMP server for Java & Bedrock. Server IP, rules, and everything new players need to know.",
+        path: "/about",
+      }}
+    >
       <PageHero
         eyebrow="Player Guide 3.0"
         title={

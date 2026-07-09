@@ -7,6 +7,7 @@ import CheckoutClaimSection from "./checkout/CheckoutClaimSection";
 import CheckoutReceiptZoomModal from "./checkout/CheckoutReceiptZoomModal";
 import CheckoutMobileActionBar from "./checkout/CheckoutMobileActionBar";
 import { useCheckoutState } from "./checkout/useCheckoutState";
+import { useSeo } from "../hooks/useSeo";
 
 function CheckoutPage() {
   const {
@@ -74,6 +75,13 @@ function CheckoutPage() {
     clearReceiptUpload,
     submitClaim,
   } = useCheckoutState();
+
+  useSeo({
+    title: "Checkout | Ellipsis SMP",
+    description: "Complete your Ellipsis SMP purchase securely.",
+    path: "/checkout",
+    noindex: true,
+  });
 
   const visibleMobileSteps = isOnlinePayment
     ? mobileCheckoutSteps.filter((step) => step.id !== "claim")

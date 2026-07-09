@@ -122,7 +122,14 @@ const goodCommunityHabits = [
 
 function DiscordPage() {
   return (
-    <PageShell>
+    <PageShell
+      seo={{
+        title: "Join Our Discord | Ellipsis SMP Minecraft Server Community",
+        description:
+          "Join the Ellipsis SMP Discord to connect with the community, get support, follow announcements, and stay updated on our Minecraft server.",
+        path: "/discord",
+      }}
+    >
       <PageHero
         eyebrow="Community 3.0"
         title={

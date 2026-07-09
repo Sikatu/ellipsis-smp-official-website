@@ -85,7 +85,14 @@ const buyingSteps = [
 
 function MarketplacePage() {
   return (
-    <PageShell>
+    <PageShell
+      seo={{
+        title: "Marketplace | Ranks, Crates & Cosmetics — Ellipsis SMP Server",
+        description:
+          "Browse ranks, crates, kits, and cosmetics for the Ellipsis Minecraft SMP server. Fast, staff-verified delivery on every purchase.",
+        path: "/marketplace",
+      }}
+    >
       <PageHero
         eyebrow="Marketplace 3.0"
         title={
