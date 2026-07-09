@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  AlertTriangle,
-  BadgeCheck,
   Ban,
+  BadgeCheck,
   CheckCircle2,
+  ChevronDown,
   Coins,
   Loader2,
   RefreshCcw,
@@ -24,6 +24,8 @@ import {
   minecraftActionStatusLabels,
   updateMinecraftAdminActionStatus,
 } from "../../services/minecraftActions";
+import KpiTile from "./KpiTile";
+
 type AdminMinecraftActionCenterProps = {
   canManagePlayers: boolean;
 };
@@ -40,11 +42,11 @@ const statusFilters: Array<{ label: string; value: StatusFilter }> = [
 ];
 
 const statusStyles: Record<MinecraftActionStatus, string> = {
-  queued: "border-yellow-400/25 bg-yellow-400/10 text-yellow-200",
-  processing: "border-blue-400/25 bg-blue-500/10 text-blue-200",
-  completed: "border-emerald-400/25 bg-emerald-500/10 text-emerald-200",
-  failed: "border-red-400/25 bg-red-500/10 text-red-200",
-  cancelled: "border-gray-400/25 bg-gray-500/10 text-gray-200",
+  queued: "text-[#fbbf24] bg-[rgba(251,191,36,0.14)] border-[rgba(251,191,36,0.25)]",
+  processing: "text-[#60a5fa] bg-[rgba(96,165,250,0.14)] border-[rgba(96,165,250,0.25)]",
+  completed: "text-[#34d399] bg-[rgba(52,211,153,0.14)] border-[rgba(52,211,153,0.25)]",
+  failed: "text-[#f87171] bg-[rgba(248,113,113,0.14)] border-[rgba(248,113,113,0.25)]",
+  cancelled: "text-[#8b91ad] bg-white/[0.05] border-white/[0.1]",
 };
 
 function getActionIcon(actionType: MinecraftActionType) {
@@ -56,6 +58,157 @@ function getActionIcon(actionType: MinecraftActionType) {
 
 function canUpdateStatus(status: MinecraftActionStatus) {
   return status === "queued" || status === "processing";
+}
+
+function ActionRow({
+  action,
+  canManagePlayers,
+  resultMessage,
+  onResultMessageChange,
+  onStatusUpdate,
+  isUpdating,
+}: {
+  action: MinecraftAdminAction;
+  canManagePlayers: boolean;
+  resultMessage: string;
+  onResultMessageChange: (value: string) => void;
+  onStatusUpdate: (status: MinecraftActionStatus) => void;
+  isUpdating: boolean;
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const editable = canManagePlayers && canUpdateStatus(action.status);
+
+  return (
+    <div className="border-b border-white/[0.05] last:border-b-0">
+      <button
+        type="button"
+        onClick={() => setIsExpanded((value) => !value)}
+        className="grid w-full grid-cols-[1fr_auto] items-center gap-3 px-4 py-3.5 text-left text-[13px] transition hover:bg-white/[0.02] sm:grid-cols-[1.3fr_1fr_0.9fr_auto]"
+      >
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="shrink-0 text-[#8b91ad]">{getActionIcon(action.action_type)}</span>
+          <div className="min-w-0">
+            <p className="truncate font-bold text-white">{minecraftActionLabels[action.action_type]}</p>
+            <p className="mt-0.5 truncate text-[11px] text-[#8b91ad]">{action.minecraft_username}</p>
+          </div>
+        </div>
+
+        <span className="hidden truncate text-[#9aa0b8] sm:block">
+          {getMinecraftActionPayloadSummary(action)}
+        </span>
+
+        <span className="hidden text-[#9aa0b8] sm:block">
+          {new Date(action.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+        </span>
+
+        <div className="flex items-center justify-end gap-2">
+          <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusStyles[action.status]}`}>
+            {minecraftActionStatusLabels[action.status]}
+          </span>
+          <ChevronDown className={`h-4 w-4 shrink-0 text-[#6b7192] transition ${isExpanded ? "rotate-180" : ""}`} />
+        </div>
+      </button>
+
+      {isExpanded && (
+        <div className="border-t border-white/[0.06] bg-black/15 p-4 sm:p-5">
+          <div className="grid gap-5 lg:grid-cols-[1fr_220px]">
+            <div>
+              <div className="grid gap-2.5 text-[13px] text-[#c4c9dc] sm:grid-cols-2 lg:grid-cols-3">
+                <p><strong className="text-[#8b91ad]">IGN:</strong> <span className="font-mono text-white">{action.minecraft_username}</span></p>
+                <p><strong className="text-[#8b91ad]">Discord:</strong> <span className="text-white">{action.discord_username || "N/A"}</span></p>
+                <p><strong className="text-[#8b91ad]">Payload:</strong> <span className="text-white">{getMinecraftActionPayloadSummary(action)}</span></p>
+                <p><strong className="text-[#8b91ad]">Source:</strong> <span className="text-white">{action.automated ? "Automated" : "Manual"}</span></p>
+                <p><strong className="text-[#8b91ad]">Order:</strong> <span className="font-mono text-white">{action.source_order_reference || "N/A"}</span></p>
+                <p className="sm:col-span-2 lg:col-span-3">
+                  <strong className="text-[#8b91ad]">Reason:</strong> <span className="text-white">{action.reason || "No reason provided."}</span>
+                </p>
+              </div>
+
+              <div className="mt-3.5">
+                <label className="text-[11px] font-bold uppercase tracking-wide text-[#8b91ad]">
+                  Result Message
+                </label>
+                <textarea
+                  value={resultMessage}
+                  onChange={(event) => onResultMessageChange(event.target.value)}
+                  disabled={!editable}
+                  rows={3}
+                  placeholder="Example: Rank delivered manually by Sikatu."
+                  className="mt-1.5 w-full resize-none rounded-[10px] border border-white/[0.08] bg-black/25 p-3 text-[13px] leading-6 text-white outline-none placeholder:text-[#565d78] focus:border-white/20 disabled:cursor-not-allowed disabled:opacity-70"
+                />
+              </div>
+
+              {action.processed_at && (
+                <p className="mt-2.5 text-xs text-[#6b7192]">
+                  Processed: {new Date(action.processed_at).toLocaleString()}
+                </p>
+              )}
+            </div>
+
+            <div className="grid content-start gap-2">
+              {action.status === "queued" && (
+                <button
+                  type="button"
+                  onClick={() => onStatusUpdate("processing")}
+                  disabled={!canManagePlayers || isUpdating}
+                  className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-[rgba(96,165,250,0.3)] bg-[rgba(96,165,250,0.08)] px-4 py-2.5 text-[13px] font-bold text-[#60a5fa] transition hover:bg-[rgba(96,165,250,0.14)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <TimerReset className="h-4 w-4" />}
+                  Mark Processing
+                </button>
+              )}
+
+              {canUpdateStatus(action.status) && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onStatusUpdate("completed")}
+                    disabled={!canManagePlayers || isUpdating}
+                    className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-[rgba(52,211,153,0.3)] bg-[rgba(52,211,153,0.08)] px-4 py-2.5 text-[13px] font-bold text-[#34d399] transition hover:bg-[rgba(52,211,153,0.14)] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                    Mark Completed
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onStatusUpdate("failed")}
+                    disabled={!canManagePlayers || isUpdating}
+                    className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-[rgba(248,113,113,0.3)] bg-[rgba(248,113,113,0.08)] px-4 py-2.5 text-[13px] font-bold text-[#f87171] transition hover:bg-[rgba(248,113,113,0.14)] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                    Mark Failed
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onStatusUpdate("cancelled")}
+                    disabled={!canManagePlayers || isUpdating}
+                    className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-[13px] font-bold text-[#c4c9dc] transition hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+                    Cancel Action
+                  </button>
+                </>
+              )}
+
+              {!canManagePlayers && (
+                <div className="rounded-[10px] border border-[rgba(251,191,36,0.2)] bg-[rgba(251,191,36,0.06)] p-3 text-xs font-bold text-[#fbbf24]">
+                  Support role can view this queue but cannot update Minecraft actions.
+                </div>
+              )}
+
+              {!canUpdateStatus(action.status) && (
+                <div className="rounded-[10px] border border-white/[0.07] bg-black/20 p-3 text-xs font-bold text-[#8b91ad]">
+                  This action is already closed.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function AdminMinecraftActionCenter({
@@ -169,47 +322,35 @@ export function AdminMinecraftActionCenter({
   }
 
   return (
-    <section className="mt-6">
-      <div className="rounded-[2rem] border border-purple-500/20 bg-purple-500/[0.06] p-6">
-        <p className="text-xs font-black uppercase tracking-[0.22em] text-purple-300">
+    <section className="flex flex-col gap-4">
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
           Minecraft Operations
         </p>
-        <h2 className="mt-3 text-2xl font-black text-white">
+        <h2 className="mt-2 text-xl font-extrabold text-white">
           Minecraft Action Center
         </h2>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-300">
+        <p className="mt-1.5 max-w-2xl text-[13px] leading-6 text-[#9aa0b8]">
           Review and manage queued Minecraft actions from the Players dashboard.
           Actions are still manual-safe until the secure Minecraft bridge is connected.
         </p>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-4">
-          <p className="text-xs font-black uppercase tracking-widest text-yellow-200">Queued</p>
-          <p className="mt-2 text-2xl font-black text-white">{queueStats.queued}</p>
-        </div>
-        <div className="rounded-2xl border border-blue-400/20 bg-blue-500/10 p-4">
-          <p className="text-xs font-black uppercase tracking-widest text-blue-200">Processing</p>
-          <p className="mt-2 text-2xl font-black text-white">{queueStats.processing}</p>
-        </div>
-        <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
-          <p className="text-xs font-black uppercase tracking-widest text-emerald-200">Completed</p>
-          <p className="mt-2 text-2xl font-black text-white">{queueStats.completed}</p>
-        </div>
-        <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4">
-          <p className="text-xs font-black uppercase tracking-widest text-red-200">Failed</p>
-          <p className="mt-2 text-2xl font-black text-white">{queueStats.failed}</p>
-        </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <KpiTile label="Queued" value={queueStats.queued} />
+        <KpiTile label="Processing" value={queueStats.processing} />
+        <KpiTile label="Completed" value={queueStats.completed} />
+        <KpiTile label="Failed" value={queueStats.failed} tone={queueStats.failed > 0 ? "alert" : "neutral"} />
       </div>
 
-      <div className="mt-5 grid gap-3 rounded-[1.75rem] border border-purple-500/20 bg-white/[0.045] p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+      <div className="grid gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3.5 lg:grid-cols-[1fr_auto] lg:items-center">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-purple-300" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7192]" />
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by IGN, Discord, action, reason, result..."
-            className="w-full rounded-2xl border border-purple-500/20 bg-black/30 py-3 pl-11 pr-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-purple-300"
+            className="w-full rounded-[10px] border border-white/[0.08] bg-black/25 px-10 py-2.5 text-sm text-white outline-none placeholder:text-[#565d78] focus:border-white/20"
           />
         </div>
 
@@ -217,23 +358,23 @@ export function AdminMinecraftActionCenter({
           type="button"
           onClick={loadActions}
           disabled={loading}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-purple-400/25 bg-purple-500/10 px-4 py-3 text-sm font-black text-purple-100 transition hover:bg-purple-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-[13px] font-bold text-[#c4c9dc] transition hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
           Refresh
         </button>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="-mt-1 flex flex-wrap gap-1.5">
         {statusFilters.map((filter) => (
           <button
             key={filter.value}
             type="button"
             onClick={() => setActiveStatus(filter.value)}
-            className={`rounded-full border px-4 py-2 text-xs font-black uppercase tracking-wider transition ${
+            className={`rounded-[8px] px-3 py-1.5 text-[11px] font-bold transition ${
               activeStatus === filter.value
-                ? "border-purple-300 bg-purple-500/20 text-purple-100"
-                : "border-white/10 bg-white/[0.03] text-gray-400 hover:border-purple-300/40 hover:text-purple-100"
+                ? "bg-[rgba(168,85,247,0.16)] text-[#e9d5ff]"
+                : "border border-white/[0.1] text-[#9aa0b8] hover:bg-white/[0.04]"
             }`}
           >
             {filter.label}
@@ -242,150 +383,50 @@ export function AdminMinecraftActionCenter({
       </div>
 
       {feedback && (
-        <div className={`mt-4 rounded-xl border p-3 text-sm font-bold ${
-          feedback.type === "success"
-            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
-            : "border-red-500/30 bg-red-500/10 text-red-200"
-        }`}>
+        <div
+          className={`rounded-xl border p-3 text-[13px] font-bold ${
+            feedback.type === "success"
+              ? "border-[rgba(52,211,153,0.3)] bg-[rgba(52,211,153,0.08)] text-[#6ee7b7]"
+              : "border-[rgba(248,113,113,0.3)] bg-[rgba(248,113,113,0.08)] text-[#fca5a5]"
+          }`}
+        >
           {feedback.text}
         </div>
       )}
 
       {loading ? (
-        <div className="mt-6 flex items-center justify-center gap-3 rounded-[2rem] border border-purple-500/20 bg-white/[0.03] p-10 text-gray-300">
+        <div className="flex items-center justify-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-10 text-[13px] text-[#9aa0b8]">
           <Loader2 className="h-5 w-5 animate-spin" />
           Loading Minecraft actions...
         </div>
       ) : (
-        <div className="mt-6 grid gap-4">
-          {filteredActions.map((action) => {
-            const isUpdating = updatingActionId === action.id;
-            const editable = canManagePlayers && canUpdateStatus(action.status);
+        <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02]">
+          <div
+            className="hidden gap-3 border-b border-white/[0.06] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#565d78] sm:grid"
+            style={{ gridTemplateColumns: "1.3fr 1fr 0.9fr auto" }}
+          >
+            <span>Action / IGN</span>
+            <span>Payload</span>
+            <span>Date</span>
+            <span>Status</span>
+          </div>
 
-            return (
-              <article
-                key={action.id}
-                className="rounded-[2rem] border border-purple-500/25 bg-white/[0.06] p-5 shadow-[0_0_35px_rgba(168,85,247,0.1)]"
-              >
-                <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`rounded-full border px-3 py-1 text-xs font-black uppercase ${statusStyles[action.status]}`}>
-                        {minecraftActionStatusLabels[action.status]}
-                      </span>
-                      <span className="text-sm text-gray-400">
-                        {new Date(action.created_at).toLocaleString()}
-                      </span>
-                    </div>
-
-                    <h3 className="mt-3 flex flex-wrap items-center gap-2 text-xl font-black text-white">
-                      {getActionIcon(action.action_type)}
-                      {minecraftActionLabels[action.action_type]}
-                    </h3>
-
-                    <div className="mt-4 grid gap-3 text-sm text-gray-300 sm:grid-cols-2 lg:grid-cols-3">
-                      <p><strong>IGN:</strong> <span className="font-mono text-white">{action.minecraft_username}</span></p>
-                      <p><strong>Discord:</strong> <span className="text-white">{action.discord_username || "N/A"}</span></p>
-                      <p><strong>Payload:</strong> <span className="text-white">{getMinecraftActionPayloadSummary(action)}</span></p>
-                      <p><strong>Source:</strong> <span className="text-white">{action.automated ? "Automated" : "Manual"}</span></p>
-                      <p><strong>Order:</strong> <span className="font-mono text-white">{action.source_order_reference || "N/A"}</span></p>
-                      <p className="sm:col-span-2 lg:col-span-3">
-                        <strong>Reason:</strong> <span className="text-white">{action.reason || "No reason provided."}</span>
-                      </p>
-                    </div>
-
-                    <div className="mt-4">
-                      <label className="text-xs font-black uppercase tracking-widest text-purple-300">
-                        Result Message
-                      </label>
-                      <textarea
-                        value={resultMessages[action.id] ?? ""}
-                        onChange={(event) =>
-                          setResultMessages((current) => ({
-                            ...current,
-                            [action.id]: event.target.value,
-                          }))
-                        }
-                        disabled={!editable}
-                        rows={3}
-                        placeholder="Example: Rank delivered manually by Sikatu."
-                        className="mt-2 w-full resize-none rounded-2xl border border-purple-500/20 bg-black/30 p-3 text-sm leading-6 text-white outline-none placeholder:text-gray-600 focus:border-purple-300 disabled:cursor-not-allowed disabled:opacity-70"
-                      />
-                    </div>
-
-                    {action.processed_at && (
-                      <p className="mt-3 text-xs text-gray-500">
-                        Processed: {new Date(action.processed_at).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="grid content-start gap-2">
-                    {action.status === "queued" && (
-                      <button
-                        type="button"
-                        onClick={() => handleStatusUpdate(action, "processing")}
-                        disabled={!canManagePlayers || isUpdating}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blue-400/25 bg-blue-500/10 px-4 py-3 text-sm font-black text-blue-100 transition hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <AlertTriangle className="h-4 w-4" />}
-                        Mark Processing
-                      </button>
-                    )}
-
-                    {canUpdateStatus(action.status) && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleStatusUpdate(action, "completed")}
-                          disabled={!canManagePlayers || isUpdating}
-                          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm font-black text-emerald-100 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                          Mark Completed
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleStatusUpdate(action, "failed")}
-                          disabled={!canManagePlayers || isUpdating}
-                          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-black text-red-100 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-                          Mark Failed
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleStatusUpdate(action, "cancelled")}
-                          disabled={!canManagePlayers || isUpdating}
-                          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-gray-400/25 bg-gray-500/10 px-4 py-3 text-sm font-black text-gray-100 transition hover:bg-gray-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
-                          Cancel Action
-                        </button>
-                      </>
-                    )}
-
-                    {!canManagePlayers && (
-                      <div className="rounded-xl border border-yellow-400/20 bg-yellow-400/10 p-3 text-xs font-bold text-yellow-100">
-                        Support role can view this queue but cannot update Minecraft actions.
-                      </div>
-                    )}
-
-                    {!canUpdateStatus(action.status) && (
-                      <div className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs font-bold text-gray-400">
-                        This action is already closed.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </article>
-            );
-          })}
+          {filteredActions.map((action) => (
+            <ActionRow
+              key={action.id}
+              action={action}
+              canManagePlayers={canManagePlayers}
+              resultMessage={resultMessages[action.id] ?? ""}
+              onResultMessageChange={(value) =>
+                setResultMessages((current) => ({ ...current, [action.id]: value }))
+              }
+              onStatusUpdate={(status) => handleStatusUpdate(action, status)}
+              isUpdating={updatingActionId === action.id}
+            />
+          ))}
 
           {filteredActions.length === 0 && (
-            <div className="rounded-[2rem] border border-purple-500/20 bg-white/[0.02] p-10 text-center text-gray-400">
+            <div className="p-10 text-center text-[13px] text-[#6b7192]">
               No Minecraft actions found.
             </div>
           )}
@@ -394,5 +435,3 @@ export function AdminMinecraftActionCenter({
     </section>
   );
 }
-
-

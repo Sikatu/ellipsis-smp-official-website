@@ -61,7 +61,7 @@ const statusMeta: Record<
     title: "Waiting for staff verification",
     description:
       "Your claim was received. Staff still needs to check the receipt and order details.",
-    tone: "border-yellow-400/30 bg-yellow-400/10 text-yellow-100",
+    tone: "border-[rgba(251,191,36,0.3)] bg-[rgba(251,191,36,0.1)] text-[#fef3c7]",
     icon: Clock3,
   },
   verified: {
@@ -69,7 +69,7 @@ const statusMeta: Record<
     title: "Payment verified",
     description:
       "Staff confirmed the payment. Your purchase is waiting for in-game delivery.",
-    tone: "border-blue-400/30 bg-blue-500/10 text-blue-100",
+    tone: "border-[rgba(96,165,250,0.3)] bg-[rgba(96,165,250,0.1)] text-[#dbeafe]",
     icon: ShieldCheck,
   },
   delivered: {
@@ -77,7 +77,7 @@ const statusMeta: Record<
     title: "Purchase delivered",
     description:
       "Your purchase has been delivered in-game. Keep the order ID for your records.",
-    tone: "border-emerald-400/30 bg-emerald-500/10 text-emerald-100",
+    tone: "border-[rgba(52,211,153,0.3)] bg-[rgba(52,211,153,0.1)] text-[#d1fae5]",
     icon: PackageCheck,
   },
   rejected: {
@@ -85,7 +85,7 @@ const statusMeta: Record<
     title: "Order needs staff review",
     description:
       "The claim was rejected or could not be verified. Please contact staff through Discord.",
-    tone: "border-red-400/30 bg-red-500/10 text-red-100",
+    tone: "border-[rgba(248,113,113,0.3)] bg-[rgba(248,113,113,0.1)] text-[#fee2e2]",
     icon: AlertTriangle,
   },
 };

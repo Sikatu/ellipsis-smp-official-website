@@ -138,7 +138,6 @@ function CheckoutPage() {
             updatePickerRank={updatePickerRank}
             updatePickerCrate={updatePickerCrate}
             updatePickerKeyQuantity={updatePickerKeyQuantity}
-            goToMobileStep={goToMobileStep}
           />
 
           <section
@@ -155,7 +154,6 @@ function CheckoutPage() {
               setCopiedRecipient={setCopiedRecipient}
               downloadQr={downloadQr}
               copyRecipientInfo={copyRecipientInfo}
-              goToMobileStep={goToMobileStep}
               minecraftIgn={minecraftIgn}
               setMinecraftIgn={setMinecraftIgn}
               isIgnLocked={isIgnLocked}

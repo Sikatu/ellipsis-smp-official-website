@@ -1,11 +1,9 @@
 import {
-  ArrowRight,
   CheckCircle2,
   Copy,
   Download,
 } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
-import Button from "../../components/ui/Button";
 import { paymentMethods } from "./checkoutData";
 import type { CartLine } from "./cartTypes";
 import type { MobileCheckoutStep } from "./checkoutTypes";
@@ -23,7 +21,6 @@ type CheckoutPaymentSectionProps = {
   setCopiedRecipient: Dispatch<SetStateAction<boolean>>;
   downloadQr: () => void;
   copyRecipientInfo: () => void;
-  goToMobileStep: (step: MobileCheckoutStep) => void;
   minecraftIgn: string;
   setMinecraftIgn: (value: string) => void;
   isIgnLocked: boolean;
@@ -42,7 +39,6 @@ function CheckoutPaymentSection({
   setCopiedRecipient,
   downloadQr,
   copyRecipientInfo,
-  goToMobileStep,
   minecraftIgn,
   setMinecraftIgn,
   isIgnLocked,
@@ -216,15 +212,6 @@ function CheckoutPaymentSection({
               </div>
             </div>
 
-            <Button
-              onClick={() => goToMobileStep("claim")}
-              size="lg"
-              fullWidth
-              className="mt-5 lg:hidden"
-            >
-              Continue to Submit Proof
-              <ArrowRight className="h-4 w-4" />
-            </Button>
             </>
             )}
             </div>

@@ -1,5 +1,4 @@
 import {
-  ArrowRight,
   CheckCircle2,
   Minus,
   Plus,
@@ -43,7 +42,6 @@ type CheckoutProductReviewSectionProps = {
   updatePickerRank: (rankName: string) => void;
   updatePickerCrate: (crateName: string) => void;
   updatePickerKeyQuantity: (quantity: KeyQuantity) => void;
-  goToMobileStep: (step: MobileCheckoutStep) => void;
 };
 
 const categoryChipLabels: Record<Category, string> = {
@@ -75,7 +73,6 @@ function CheckoutProductReviewSection({
   updatePickerRank,
   updatePickerCrate,
   updatePickerKeyQuantity,
-  goToMobileStep,
 }: CheckoutProductReviewSectionProps) {
   const pickerCrateAsset =
     crates.find((crate) => crate.name === pickerCrate) || crates[0];
@@ -324,17 +321,6 @@ function CheckoutProductReviewSection({
           {subtotalText}
         </span>
       </div>
-
-      <Button
-        onClick={() => goToMobileStep("pay")}
-        disabled={cart.length === 0}
-        size="lg"
-        fullWidth
-        className="mt-4 lg:hidden"
-      >
-        Continue to Payment
-        <ArrowRight className="h-4 w-4" />
-      </Button>
     </section>
   );
 }
