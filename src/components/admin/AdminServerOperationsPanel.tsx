@@ -461,19 +461,19 @@ const categoryOrder: OperationCategory[] = [
 ];
 
 const riskStyles: Record<RiskLevel, string> = {
-  Low: "border-emerald-300/25 bg-emerald-400/10 text-emerald-100",
-  Medium: "border-cyan-300/25 bg-cyan-400/10 text-cyan-100",
-  High: "border-amber-300/25 bg-amber-400/10 text-amber-100",
-  Critical: "border-red-300/25 bg-red-400/10 text-red-100",
+  Low: "border-[rgba(52,211,153,0.25)] bg-[rgba(52,211,153,0.1)] text-[#6ee7b7]",
+  Medium: "border-[rgba(96,165,250,0.25)] bg-[rgba(96,165,250,0.1)] text-[#93c5fd]",
+  High: "border-[rgba(251,191,36,0.25)] bg-[rgba(251,191,36,0.1)] text-[#fbbf24]",
+  Critical: "border-[rgba(248,113,113,0.25)] bg-[rgba(248,113,113,0.1)] text-[#fca5a5]",
 };
 
 type StatusTone = "emerald" | "amber" | "red" | "cyan";
 
 const statusToneClasses: Record<StatusTone, { text: string; dot: string }> = {
-  emerald: { text: "text-emerald-300", dot: "bg-emerald-400" },
-  amber: { text: "text-amber-300", dot: "bg-amber-400" },
-  red: { text: "text-red-300", dot: "bg-red-400" },
-  cyan: { text: "text-cyan-300", dot: "bg-cyan-400" },
+  emerald: { text: "text-[#34d399]", dot: "bg-[#34d399]" },
+  amber: { text: "text-[#fbbf24]", dot: "bg-[#fbbf24]" },
+  red: { text: "text-[#f87171]", dot: "bg-[#f87171]" },
+  cyan: { text: "text-[#8b91ad]", dot: "bg-[#8b91ad]" },
 };
 
 const fieldLabels: Record<FieldKey, string> = {
@@ -491,7 +491,7 @@ const fieldLabels: Record<FieldKey, string> = {
 };
 
 const inputClass =
-  "w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/50 focus:bg-black/40 focus:shadow-[0_0_0_3px_rgba(34,211,238,0.12)]";
+  "w-full rounded-[10px] border border-white/[0.08] bg-black/25 px-4 py-2.5 text-sm text-white outline-none transition placeholder:text-[#565d78] focus:border-white/20";
 const textareaClass = `${inputClass} resize-none`;
 
 function requiresOperatorConfirmation(risk: RiskLevel) {
@@ -1033,31 +1033,25 @@ export function AdminServerOperationsPanel({
           : "cyan";
 
   return (
-    <section className="mt-6">
-      <div className="relative overflow-hidden rounded-[2rem] border border-cyan-300/20 bg-[#020817]/90 p-6 shadow-[0_0_60px_rgba(34,211,238,0.08)]">
-        <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-yellow-400 via-purple-500 to-blue-500" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.18),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.14),transparent_34%)]" />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.2)_1px,transparent_1px)] [background-size:42px_42px]" />
-
-        <div className="relative flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+    <section className="flex flex-col gap-4">
+      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-cyan-100">
-              <Terminal className="h-4 w-4" />
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
               Operator Console
-              <span className="h-px w-6 bg-gradient-to-r from-yellow-400/70 to-transparent" />
-            </div>
+            </p>
 
-            <h2 className="mt-4 max-w-3xl text-3xl font-black leading-tight text-white md:text-4xl">
+            <h2 className="mt-2 text-xl font-extrabold text-white">
               Operator Command Center
             </h2>
 
-            <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-300">
+            <p className="mt-1.5 max-w-2xl text-[13px] leading-6 text-[#9aa0b8]">
               Queue bridge-safe server operations through approved templates only.
               Built for owner-level control, clear audit intent, and fast live-server execution.
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3 xl:min-w-[480px]">
+          <div className="grid gap-2.5 sm:grid-cols-3 xl:min-w-[420px]">
             <StatusChip
               icon={<Activity className="h-4 w-4" />}
               label="Bridge Mode"
@@ -1081,12 +1075,12 @@ export function AdminServerOperationsPanel({
       </div>
 
       {!canManageServer && (
-        <div className="mt-5 flex flex-col gap-3 rounded-[1.75rem] border border-amber-300/25 bg-amber-400/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-[rgba(251,191,36,0.2)] bg-[rgba(251,191,36,0.06)] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <Crown className="mt-0.5 h-5 w-5 shrink-0 text-amber-200" />
+            <Crown className="mt-0.5 h-5 w-5 shrink-0 text-[#fbbf24]" />
             <div>
-              <p className="text-sm font-black text-white">Owner Access Required</p>
-              <p className="mt-1 text-xs leading-5 text-amber-100/80">
+              <p className="text-[13px] font-extrabold text-white">Owner Access Required</p>
+              <p className="mt-1 text-xs leading-5 text-[#9aa0b8]">
                 The Operator Console is restricted to the owner role. You can review
                 commands, presets, and live telemetry, but queueing is disabled for
                 your account.
@@ -1094,28 +1088,28 @@ export function AdminServerOperationsPanel({
             </div>
           </div>
 
-          <span className="w-fit shrink-0 rounded-full border border-amber-300/30 bg-black/25 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-amber-200">
+          <span className="w-fit shrink-0 rounded-full border border-[rgba(251,191,36,0.25)] bg-black/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-[#fbbf24]">
             View Only
           </span>
         </div>
       )}
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_320px]">
-        <aside className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 shadow-[0_0_35px_rgba(168,85,247,0.06)]">
+      <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_320px]">
+        <aside className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
                 Command Deck
               </p>
-              <p className="mt-0.5 text-[11px] text-slate-500">
+              <p className="mt-0.5 text-[11px] text-[#6b7192]">
                 {visibleOperationCount} of {operations.length} operations
               </p>
             </div>
-            <Radio className="h-4 w-4 text-cyan-200" />
+            <Radio className="h-4 w-4 text-[#6b7192]" />
           </div>
 
           <div className="relative mt-3">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#6b7192]" />
             <input
               value={commandSearch}
               onChange={(event) => setCommandSearch(event.target.value)}
@@ -1128,7 +1122,7 @@ export function AdminServerOperationsPanel({
             {(Object.keys(riskStyles) as RiskLevel[]).map((risk) => (
               <span
                 key={risk}
-                className={`rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.1em] ${riskStyles[risk]}`}
+                className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] ${riskStyles[risk]}`}
               >
                 {risk}
               </span>
@@ -1137,7 +1131,7 @@ export function AdminServerOperationsPanel({
 
           <div className="mt-4 space-y-5">
             {groupedOperations.length === 0 && (
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-center text-xs leading-5 text-slate-500">
+              <div className="rounded-[10px] border border-white/[0.07] bg-black/20 p-4 text-center text-xs leading-5 text-[#6b7192]">
                 No commands match &quot;{commandSearch}&quot;.
               </div>
             )}
@@ -1147,7 +1141,7 @@ export function AdminServerOperationsPanel({
 
               return (
                 <div key={category}>
-                  <div className="mb-2 flex items-center gap-2 px-1 text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">
+                  <div className="mb-2 flex items-center gap-2 px-1 text-[11px] font-bold uppercase tracking-[0.15em] text-[#6b7192]">
                     <Icon className="h-3.5 w-3.5" />
                     {category}
                   </div>
@@ -1162,24 +1156,24 @@ export function AdminServerOperationsPanel({
                           type="button"
                           onClick={() => updateOperation(operation.id)}
                           disabled={!canManageServer}
-                          className={`group w-full rounded-2xl border p-3 text-left transition ${
+                          className={`group w-full rounded-[11px] border p-3 text-left transition ${
                             isActive
-                              ? "border-cyan-300/60 bg-cyan-400/15 text-white shadow-[0_0_24px_rgba(34,211,238,0.10)]"
-                              : "border-white/10 bg-black/20 text-slate-300 hover:border-cyan-300/25 hover:bg-white/[0.06] hover:text-white"
+                              ? "border-[#a855f7] bg-[rgba(168,85,247,0.14)] text-white"
+                              : "border-white/[0.07] bg-black/20 text-[#9aa0b8] hover:border-white/[0.16] hover:bg-white/[0.04] hover:text-white"
                           } disabled:cursor-not-allowed disabled:opacity-50`}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <div className="text-sm font-black">
+                              <div className="text-[13px] font-bold">
                                 {operation.label}
                               </div>
-                              <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-400">
+                              <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#6b7192]">
                                 {operation.helper}
                               </p>
                             </div>
 
                             <span
-                              className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${riskStyles[operation.risk]}`}
+                              className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${riskStyles[operation.risk]}`}
                             >
                               {operation.risk}
                             </span>
@@ -1194,28 +1188,28 @@ export function AdminServerOperationsPanel({
           </div>
         </aside>
 
-        <main className="rounded-[2rem] border border-cyan-300/15 bg-[#08071a]/90 p-5 shadow-[0_0_45px_rgba(34,211,238,0.06)]">
+        <main className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-purple-300/20 bg-purple-400/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-purple-100">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-[#c4b5fd]">
                 <Crown className="h-3.5 w-3.5" />
                 Mission Brief
               </div>
 
-              <h3 className="mt-3 text-3xl font-black text-white">
+              <h3 className="mt-3 text-xl font-extrabold text-white">
                 {selectedOperation.label}
               </h3>
 
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+              <p className="mt-2 max-w-2xl text-[13px] leading-6 text-[#9aa0b8]">
                 {selectedOperation.operatorNote}
               </p>
             </div>
 
-            <div className={`rounded-2xl border px-4 py-3 text-sm ${riskStyles[selectedOperation.risk]}`}>
-              <div className="text-xs font-black uppercase tracking-[0.18em] opacity-80">
+            <div className={`rounded-[11px] border px-4 py-3 text-sm ${riskStyles[selectedOperation.risk]}`}>
+              <div className="text-[10px] font-bold uppercase tracking-[0.15em] opacity-80">
                 Risk Level
               </div>
-              <div className="mt-1 text-lg font-black">{selectedOperation.risk}</div>
+              <div className="mt-1 text-lg font-extrabold">{selectedOperation.risk}</div>
             </div>
           </div>
 
@@ -1267,7 +1261,7 @@ export function AdminServerOperationsPanel({
                   className={textareaClass}
                   placeholder="Write the live transmission message here..."
                 />
-                <div className="mt-2 text-right text-xs text-slate-500">
+                <div className="mt-2 text-right text-xs text-[#6b7192]">
                   {message.length}/220
                 </div>
               </Field>
@@ -1407,12 +1401,12 @@ export function AdminServerOperationsPanel({
             {error && <Feedback tone="error">{error}</Feedback>}
             {notice && <Feedback tone="success">{notice}</Feedback>}
 
-            <div className="sticky bottom-4 z-10 rounded-2xl border border-cyan-300/20 bg-[#050713]/95 p-3 shadow-[0_0_35px_rgba(34,211,238,0.12)] backdrop-blur">
+            <div className="sticky bottom-4 z-10 rounded-xl border border-white/[0.08] bg-[#0c0c17]/95 p-3 backdrop-blur">
               <button
                 type="button"
                 onClick={handleQueue}
                 disabled={!canManageServer || isSubmitting}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-300/35 bg-cyan-400/15 px-5 py-3 text-sm font-black text-cyan-100 transition hover:bg-cyan-400/25 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#a855f7] px-5 py-3 text-sm font-bold text-[#150829] transition hover:bg-[#9333ea] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {!canManageServer ? (
                   <Lock className="h-4 w-4" />
@@ -1431,10 +1425,10 @@ export function AdminServerOperationsPanel({
           </div>
         </main>
 
-        <aside className="space-y-5 xl:sticky xl:top-24 xl:self-start">
+        <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
           <RecentOperationStream operations={recentOperations} telemetryStatus={telemetryStatus} />
-<div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
               System Intelligence
             </p>
 
@@ -1487,35 +1481,35 @@ export function AdminServerOperationsPanel({
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-purple-300/15 bg-purple-500/[0.045] p-4">
-            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-purple-200">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#c4b5fd]">
               <Sparkles className="h-4 w-4" />
               Operator Doctrine
             </div>
 
-            <div className="mt-4 space-y-4 text-sm leading-6 text-slate-300">
+            <div className="mt-3.5 space-y-3.5 text-[13px] leading-6 text-[#9aa0b8]">
               <p>
                 Start with low-risk commands after every bridge update. Use
-                <span className="font-mono text-cyan-200"> Console Say Test </span>
+                <span className="font-mono text-[#c4c9dc]"> Console Say Test </span>
                 before rank, money, crate, whitelist, or moderation actions.
               </p>
 
               <p>
                 New plugin commands should be added in
-                <span className="font-mono text-cyan-200"> plugins/EllipsisBridge/config.yml </span>
+                <span className="font-mono text-[#c4c9dc]"> plugins/EllipsisBridge/config.yml </span>
                 then activated with
-                <span className="font-mono text-cyan-200"> /ellipsisbridge reload</span>.
+                <span className="font-mono text-[#c4c9dc]"> /ellipsisbridge reload</span>.
               </p>
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-emerald-300/15 bg-emerald-500/[0.045] p-4">
-            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#6ee7b7]">
               <Lock className="h-4 w-4" />
               Safety Doctrine
             </div>
 
-            <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-300">
+            <ul className="mt-3.5 space-y-2.5 text-[13px] leading-6 text-[#9aa0b8]">
               <li>Raw console commands are not accepted.</li>
               <li>Command keys must exist in bridge config.</li>
               <li>Broad selectors and OP commands are blocked by the plugin.</li>
@@ -1549,27 +1543,27 @@ function BridgeReadinessGuard({
 
   const toneClass =
     telemetryStatus === "live"
-      ? "border-emerald-300/20 bg-emerald-400/10 text-emerald-100"
+      ? "border-[rgba(52,211,153,0.25)] bg-[rgba(52,211,153,0.06)] text-[#6ee7b7]"
       : telemetryStatus === "syncing"
-        ? "border-cyan-300/20 bg-cyan-400/10 text-cyan-100"
-        : "border-amber-300/25 bg-amber-400/10 text-amber-100";
+        ? "border-white/[0.08] bg-white/[0.02] text-[#9aa0b8]"
+        : "border-[rgba(251,191,36,0.25)] bg-[rgba(251,191,36,0.06)] text-[#fbbf24]";
 
   return (
-    <div className={`mb-5 rounded-2xl border p-4 ${toneClass}`}>
+    <div className={`mb-5 rounded-xl border p-4 ${toneClass}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.2em]">
+          <p className="text-[10px] font-bold uppercase tracking-[0.15em]">
             Bridge Readiness Guard
           </p>
-          <p className="mt-1 text-sm font-black text-white">
+          <p className="mt-1 text-[13px] font-extrabold text-white">
             {statusLabel}
           </p>
-          <p className="mt-1 text-xs leading-5 text-slate-300">
+          <p className="mt-1 text-xs leading-5 text-[#9aa0b8]">
             {statusHelper}
           </p>
         </div>
 
-        <span className="w-fit rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em]">
+        <span className="w-fit rounded-full border border-white/[0.1] bg-black/20 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em]">
           {telemetryStatus}
         </span>
       </div>
@@ -1584,26 +1578,26 @@ function PresetDeck({
   onApply: (preset: OperatorPreset) => void;
 }) {
   const toneClasses: Record<OperatorPreset["tone"], string> = {
-    cyan: "border-cyan-300/20 bg-cyan-400/10 hover:border-cyan-300/45 hover:bg-cyan-400/15",
-    purple: "border-purple-300/20 bg-purple-400/10 hover:border-purple-300/45 hover:bg-purple-400/15",
-    amber: "border-amber-300/20 bg-amber-400/10 hover:border-amber-300/45 hover:bg-amber-400/15",
-    emerald: "border-emerald-300/20 bg-emerald-400/10 hover:border-emerald-300/45 hover:bg-emerald-400/15",
-    pink: "border-pink-300/20 bg-pink-400/10 hover:border-pink-300/45 hover:bg-pink-400/15",
+    cyan: "border-white/[0.07] bg-black/20 hover:border-white/[0.14] hover:bg-white/[0.04]",
+    purple: "border-white/[0.07] bg-black/20 hover:border-white/[0.14] hover:bg-white/[0.04]",
+    amber: "border-white/[0.07] bg-black/20 hover:border-white/[0.14] hover:bg-white/[0.04]",
+    emerald: "border-white/[0.07] bg-black/20 hover:border-white/[0.14] hover:bg-white/[0.04]",
+    pink: "border-white/[0.07] bg-black/20 hover:border-white/[0.14] hover:bg-white/[0.04]",
   };
 
   return (
-    <div className="mb-5 rounded-2xl border border-white/10 bg-black/25 p-4">
+    <div className="mb-5 rounded-xl border border-white/[0.08] bg-black/20 p-4">
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
             Quick Protocols
           </p>
-          <p className="mt-1 text-xs leading-5 text-slate-500">
+          <p className="mt-1 text-xs leading-5 text-[#6b7192]">
             Load common operator scenarios, then review before deployment.
           </p>
         </div>
 
-        <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
+        <span className="rounded-full border border-white/[0.1] bg-white/[0.03] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
           Presets
         </span>
       </div>
@@ -1614,13 +1608,13 @@ function PresetDeck({
             key={preset.label}
             type="button"
             onClick={() => onApply(preset)}
-            className={`rounded-2xl border p-3 text-left transition ${toneClasses[preset.tone]}`}
+            className={`rounded-[11px] border p-3 text-left transition ${toneClasses[preset.tone]}`}
           >
-            <div className="flex items-center gap-2 text-sm font-black text-white">
-              <Sparkles className="h-4 w-4 text-cyan-200" />
+            <div className="flex items-center gap-2 text-[13px] font-bold text-white">
+              <Sparkles className="h-4 w-4 text-[#c4b5fd]" />
               {preset.label}
             </div>
-            <p className="mt-1 text-xs leading-5 text-slate-400">
+            <p className="mt-1 text-xs leading-5 text-[#8b91ad]">
               {preset.helper}
             </p>
           </button>
@@ -1641,11 +1635,11 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+      <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
         {label}
       </span>
       {children}
-      {helper && <span className="mt-2 block text-xs leading-5 text-slate-500">{helper}</span>}
+      {helper && <span className="mt-2 block text-xs leading-5 text-[#6b7192]">{helper}</span>}
     </label>
   );
 }
@@ -1666,12 +1660,12 @@ function StatusChip({
   const toneStyle = tone ? statusToneClasses[tone] : null;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
-      <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">
+    <div className="rounded-[10px] border border-white/[0.08] bg-black/20 p-3">
+      <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] text-[#8b91ad]">
         {icon}
         {label}
       </div>
-      <div className={`mt-1 flex items-center gap-2 text-sm font-black ${toneStyle?.text || "text-white"}`}>
+      <div className={`mt-1 flex items-center gap-2 text-[13px] font-extrabold ${toneStyle?.text || "text-white"}`}>
         {tone && (
           <span className="relative flex h-2 w-2 shrink-0">
             {pulse && (
@@ -1689,15 +1683,15 @@ function StatusChip({
 function operationStatusClass(status?: string | null) {
   switch ((status || "").toLowerCase()) {
     case "completed":
-      return "border-emerald-300/20 bg-emerald-400/10 text-emerald-100";
+      return "border-[rgba(52,211,153,0.25)] bg-[rgba(52,211,153,0.1)] text-[#6ee7b7]";
     case "processing":
-      return "border-cyan-300/20 bg-cyan-400/10 text-cyan-100";
+      return "border-[rgba(96,165,250,0.25)] bg-[rgba(96,165,250,0.1)] text-[#93c5fd]";
     case "queued":
-      return "border-yellow-300/20 bg-yellow-400/10 text-yellow-100";
+      return "border-[rgba(251,191,36,0.25)] bg-[rgba(251,191,36,0.1)] text-[#fbbf24]";
     case "failed":
-      return "border-red-300/20 bg-red-400/10 text-red-100";
+      return "border-[rgba(248,113,113,0.25)] bg-[rgba(248,113,113,0.1)] text-[#fca5a5]";
     default:
-      return "border-slate-300/20 bg-slate-400/10 text-slate-100";
+      return "border-white/[0.1] bg-white/[0.05] text-[#9aa0b8]";
   }
 }
 
@@ -1749,19 +1743,19 @@ function RecentOperationStream({
 
   return (
     <>
-      <div className="rounded-[2rem] border border-cyan-300/15 bg-cyan-500/[0.035] p-4">
+      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-cyan-200">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
               <Activity className="h-4 w-4" />
               Telemetry Stream
             </div>
-            <p className="mt-1 text-xs leading-5 text-slate-500">
+            <p className="mt-1 text-xs leading-5 text-[#6b7192]">
               Latest bridge operations from the admin queue.
             </p>
           </div>
 
-          <span className="rounded-full border border-cyan-200/15 bg-cyan-300/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100">
+          <span className="rounded-full border border-white/[0.1] bg-white/[0.03] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#9aa0b8]">
             {telemetryStatus === "live"
               ? "Realtime"
               : telemetryStatus === "syncing"
@@ -1771,7 +1765,7 @@ function RecentOperationStream({
         </div>
 
         {operations.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 text-slate-400">
+          <div className="rounded-[10px] border border-white/[0.07] bg-black/20 p-4 text-[13px] leading-6 text-[#8b91ad]">
             No recent bridge operations yet.
           </div>
         ) : (
@@ -1781,24 +1775,24 @@ function RecentOperationStream({
                 key={operation.id}
                 type="button"
                 onClick={() => setSelectedOperation(operation)}
-                className="group w-full rounded-2xl border border-white/10 bg-black/20 p-3 text-left transition hover:border-cyan-300/30 hover:bg-cyan-300/10"
+                className="group w-full rounded-[11px] border border-white/[0.07] bg-black/20 p-3 text-left transition hover:border-white/[0.16] hover:bg-white/[0.04]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-black text-white">
+                    <p className="truncate text-[13px] font-bold text-white">
                       {formatActionName(operation.action_type)}
                     </p>
-                    <p className="mt-1 truncate text-xs text-slate-500">
+                    <p className="mt-1 truncate text-xs text-[#6b7192]">
                       Target: {operation.minecraft_username || "SERVER"}
                     </p>
                   </div>
 
-                  <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${operationStatusClass(operation.status)}`}>
+                  <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${operationStatusClass(operation.status)}`}>
                     {operation.status || "queued"}
                   </span>
                 </div>
 
-                <p className="mt-2 truncate text-xs text-slate-500">
+                <p className="mt-2 truncate text-xs text-[#6b7192]">
                   {operation.result_message || "Awaiting bridge result."}
                 </p>
               </button>
@@ -1809,17 +1803,17 @@ function RecentOperationStream({
 
       {selectedOperation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm">
-          <div className="w-full max-w-2xl overflow-hidden rounded-[2rem] border border-cyan-300/20 bg-[#070719] shadow-[0_0_70px_rgba(34,211,238,0.14)]">
-            <div className="border-b border-white/10 bg-gradient-to-r from-cyan-400/[0.14] via-purple-400/[0.10] to-transparent p-5">
+          <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-white/[0.1] bg-[#0c0c17]">
+            <div className="border-b border-white/[0.08] p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-200">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
                     Bridge Operation Detail
                   </p>
-                  <h3 className="mt-2 text-2xl font-black text-white">
+                  <h3 className="mt-2 text-xl font-extrabold text-white">
                     {formatActionName(selectedOperation.action_type)}
                   </h3>
-                  <p className="mt-1 text-sm text-slate-400">
+                  <p className="mt-1 text-[13px] text-[#9aa0b8]">
                     Target: {selectedOperation.minecraft_username || "SERVER"}
                   </p>
                 </div>
@@ -1827,7 +1821,7 @@ function RecentOperationStream({
                 <button
                   type="button"
                   onClick={() => setSelectedOperation(null)}
-                  className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm font-black text-slate-300 transition hover:border-white/25 hover:text-white"
+                  className="rounded-full border border-white/[0.1] bg-white/[0.03] px-3 py-1.5 text-[13px] font-bold text-[#9aa0b8] transition hover:border-white/25 hover:text-white"
                 >
                   Close
                 </button>
@@ -1844,22 +1838,22 @@ function RecentOperationStream({
 
               <DetailCell label="Operation ID" value={selectedOperation.id} mono />
 
-              <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+              <div className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
                   Bridge Result
                 </p>
-                <p className="mt-2 text-sm leading-6 text-slate-200">
+                <p className="mt-2 text-[13px] leading-6 text-[#c4c9dc]">
                   {selectedOperation.result_message || "No result message has been returned by the bridge yet."}
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.045] p-4">
+              <div className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-200">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
                       Payload Inspector
                     </p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                    <p className="mt-1 text-xs leading-5 text-[#6b7192]">
                       Exact bridge command data sent into the queue.
                     </p>
                   </div>
@@ -1869,13 +1863,13 @@ function RecentOperationStream({
                     onClick={() => {
                       void navigator.clipboard.writeText(formatPayload(selectedOperation.payload));
                     }}
-                    className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-xs font-black text-cyan-100 transition hover:border-cyan-300/45 hover:bg-cyan-300/15"
+                    className="rounded-[10px] border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-xs font-bold text-[#c4c9dc] transition hover:bg-white/[0.06]"
                   >
                     Copy Payload
                   </button>
                 </div>
 
-                <pre className="mt-4 max-h-56 overflow-auto rounded-2xl border border-white/10 bg-black/35 p-4 text-xs leading-5 text-slate-300">
+                <pre className="mt-4 max-h-56 overflow-auto rounded-[10px] border border-white/[0.07] bg-black/30 p-4 text-xs leading-5 text-[#9aa0b8]">
 {formatPayload(selectedOperation.payload)}
                 </pre>
               </div>
@@ -1886,7 +1880,7 @@ function RecentOperationStream({
                   onClick={() => {
                     void navigator.clipboard.writeText(selectedOperation.id);
                   }}
-                  className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-2.5 text-sm font-black text-cyan-100 transition hover:border-cyan-300/45 hover:bg-cyan-300/15"
+                  className="rounded-[10px] border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-[13px] font-bold text-[#c4c9dc] transition hover:bg-white/[0.06]"
                 >
                   Copy Operation ID
                 </button>
@@ -1894,7 +1888,7 @@ function RecentOperationStream({
                 <button
                   type="button"
                   onClick={() => setSelectedOperation(null)}
-                  className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-black text-white transition hover:border-white/25 hover:bg-white/[0.08]"
+                  className="rounded-[10px] bg-[#a855f7] px-4 py-2.5 text-[13px] font-bold text-[#150829] transition hover:bg-[#9333ea]"
                 >
                   Done
                 </button>
@@ -1917,11 +1911,11 @@ function DetailCell({
   mono?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+    <div className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
+      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
         {label}
       </p>
-      <p className={`mt-2 break-words text-sm text-slate-200 ${mono ? "font-mono" : ""}`}>
+      <p className={`mt-2 break-words text-[13px] text-[#c4c9dc] ${mono ? "font-mono" : ""}`}>
         {value || "Not recorded"}
       </p>
     </div>
@@ -1937,12 +1931,12 @@ function IntelRow({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
-      <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
+    <div className="rounded-[10px] border border-white/[0.08] bg-black/20 p-3">
+      <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] text-[#8b91ad]">
         {icon}
         {label}
       </div>
-      <div className="mt-1 break-words font-mono text-sm text-cyan-100">{value}</div>
+      <div className="mt-1 break-words font-mono text-[13px] text-[#c4b5fd]">{value}</div>
     </div>
   );
 }
@@ -1962,18 +1956,18 @@ function ExecutionPreview({
   });
 
   return (
-    <div className="rounded-2xl border border-cyan-300/15 bg-black/30 p-4">
+    <div className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
             Final Review
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[#6b7192]">
             Operator-readable route. The bridge still validates and sanitizes before execution.
           </p>
         </div>
 
-        <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${riskStyles[operation.risk]}`}>
+        <span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${riskStyles[operation.risk]}`}>
           {operation.risk}
         </span>
       </div>
@@ -1986,15 +1980,15 @@ function ExecutionPreview({
       </div>
 
       {visibleFields.length > 0 && (
-        <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
+        <div className="mt-3 rounded-[10px] border border-white/[0.08] bg-white/[0.03] p-3">
+          <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#8b91ad]">
             Payload Matrix
           </p>
 
-          <div className="mt-2 space-y-1 font-mono text-xs text-slate-300">
+          <div className="mt-2 space-y-1 font-mono text-xs text-[#9aa0b8]">
             {visibleFields.map((field) => (
               <div key={field} className="flex gap-2">
-                <span className="text-cyan-300">{field}:</span>
+                <span className="text-[#c4b5fd]">{field}:</span>
                 <span className="break-all">{values[field]}</span>
               </div>
             ))}
@@ -2007,11 +2001,11 @@ function ExecutionPreview({
 
 function PreviewItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-      <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
+    <div className="rounded-[10px] border border-white/[0.08] bg-white/[0.03] p-3">
+      <div className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#8b91ad]">
         {label}
       </div>
-      <div className="mt-1 break-words font-mono text-sm text-white">{value}</div>
+      <div className="mt-1 break-words font-mono text-[13px] text-white">{value}</div>
     </div>
   );
 }
@@ -2024,15 +2018,15 @@ function Feedback({
   children: ReactNode;
 }) {
   const styles = {
-    warning: "border-yellow-400/20 bg-yellow-400/10 text-yellow-100",
-    error: "border-red-400/20 bg-red-500/10 text-red-100",
-    success: "border-emerald-400/20 bg-emerald-500/10 text-emerald-100",
+    warning: "border-[rgba(251,191,36,0.25)] bg-[rgba(251,191,36,0.08)] text-[#fbbf24]",
+    error: "border-[rgba(248,113,113,0.25)] bg-[rgba(248,113,113,0.08)] text-[#fca5a5]",
+    success: "border-[rgba(52,211,153,0.25)] bg-[rgba(52,211,153,0.08)] text-[#6ee7b7]",
   };
 
   const Icon = tone === "success" ? Sparkles : AlertTriangle;
 
   return (
-    <div className={`flex items-start gap-3 rounded-2xl border p-4 text-sm ${styles[tone]}`}>
+    <div className={`flex items-start gap-3 rounded-xl border p-4 text-[13px] ${styles[tone]}`}>
       <Icon className="mt-0.5 h-4 w-4 shrink-0" />
       {children}
     </div>

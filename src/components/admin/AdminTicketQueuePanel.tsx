@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { Search } from "lucide-react";
+import { ChevronRight, Search } from "lucide-react";
 import type { AdminProfile, AdminRole } from "../../types/admin";
 import type { Ticket, TicketStatus } from "../../types/tickets";
 import { fetchAllTickets, subscribeToTickets } from "../../services/tickets";
@@ -14,10 +14,10 @@ type AdminTicketQueuePanelProps = {
 };
 
 const statusStyles: Record<TicketStatus, string> = {
-  open: "border-yellow-400/25 bg-yellow-400/10 text-yellow-200",
-  claimed: "border-blue-400/25 bg-blue-500/10 text-blue-200",
-  resolved: "border-emerald-400/25 bg-emerald-500/10 text-emerald-200",
-  closed: "border-gray-400/25 bg-gray-500/10 text-gray-200",
+  open: "text-[#fbbf24] bg-[rgba(251,191,36,0.14)] border-[rgba(251,191,36,0.25)]",
+  claimed: "text-[#60a5fa] bg-[rgba(96,165,250,0.14)] border-[rgba(96,165,250,0.25)]",
+  resolved: "text-[#34d399] bg-[rgba(52,211,153,0.14)] border-[rgba(52,211,153,0.25)]",
+  closed: "text-[#8b91ad] bg-white/[0.05] border-white/[0.1]",
 };
 
 const filters: { label: string; value: TicketStatus | "all" }[] = [
@@ -86,27 +86,27 @@ export function AdminTicketQueuePanel({
 
   return (
     <>
-      <div className="grid gap-3 rounded-[1.75rem] border border-purple-500/20 bg-white/[0.045] p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+      <div className="grid gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3.5 lg:grid-cols-[1fr_auto] lg:items-center">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-purple-300" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7192]" />
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by ticket #, IGN, Discord, email..."
-            className="w-full rounded-2xl border border-purple-500/25 bg-black/40 px-11 py-3 text-white outline-none lg:max-w-xl"
+            className="w-full rounded-[10px] border border-white/[0.08] bg-black/25 px-10 py-2.5 text-sm text-white outline-none placeholder:text-[#565d78] focus:border-white/20 lg:max-w-xl"
           />
         </div>
 
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
           {filters.map((filter) => (
             <button
               key={filter.value}
               type="button"
               onClick={() => setActiveFilter(filter.value)}
-              className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
+              className={`shrink-0 rounded-[8px] px-3 py-1.5 text-[11px] font-bold transition ${
                 activeFilter === filter.value
-                  ? "border-purple-300 bg-purple-500/25 text-white"
-                  : "border-purple-500/25 bg-white/[0.04] text-purple-200 hover:bg-white/[0.08]"
+                  ? "bg-[rgba(168,85,247,0.16)] text-[#e9d5ff]"
+                  : "border border-white/[0.1] text-[#9aa0b8] hover:bg-white/[0.04]"
               }`}
             >
               {filter.label}
@@ -115,41 +115,61 @@ export function AdminTicketQueuePanel({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-3">
+      <div className="mt-5 overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02]">
+        <div
+          className="hidden gap-3 border-b border-white/[0.06] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#565d78] sm:grid"
+          style={{ gridTemplateColumns: "0.8fr 1.6fr 1fr 0.9fr auto" }}
+        >
+          <span>Ticket</span>
+          <span>Subject</span>
+          <span>Requester</span>
+          <span>Age</span>
+          <span>Status</span>
+        </div>
+
         {filteredTickets.map((ticket) => (
           <button
             key={ticket.id}
             type="button"
             onClick={() => setSelectedTicket(ticket)}
-            className="rounded-[1.5rem] border border-purple-500/20 bg-white/[0.045] p-5 text-left transition hover:border-purple-300/40 hover:bg-white/[0.08]"
+            className="grid w-full grid-cols-[1fr_auto] items-center gap-3 border-b border-white/[0.05] px-4 py-3.5 text-left text-[13px] transition last:border-b-0 hover:bg-white/[0.02] sm:grid-cols-[0.8fr_1.6fr_1fr_0.9fr_auto]"
           >
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full border border-purple-400/20 bg-purple-500/10 px-3 py-1 text-xs font-black uppercase text-purple-200">
-                    {categoryLabels[ticket.category] || ticket.category}
-                  </span>
-                  <span
-                    className={`inline-flex rounded-full border px-3 py-1 text-xs font-black uppercase ${statusStyles[ticket.status]}`}
-                  >
-                    {ticket.status}
-                  </span>
-                </div>
-                <p className="mt-2 font-black text-white">
-                  #{ticket.ticket_number} — {ticket.subject}
-                </p>
-                <p className="mt-1 text-sm text-gray-400">
-                  {ticket.minecraft_username || ticket.opened_by_email || "Guest"} ·{" "}
-                  {new Date(ticket.created_at).toLocaleString()}
-                </p>
-              </div>
+            <span className="font-mono text-xs text-[#9aa0b8]">
+              #{ticket.ticket_number}
+              <span className="ml-1.5 hidden font-sans text-[10px] font-bold uppercase tracking-wide text-[#6b7192] sm:inline">
+                {categoryLabels[ticket.category] || ticket.category}
+              </span>
+            </span>
+
+            <div className="min-w-0">
+              <p className="truncate font-bold text-white">{ticket.subject}</p>
+              <p className="mt-0.5 truncate text-[11px] text-[#8b91ad] sm:hidden">
+                {ticket.minecraft_username || ticket.opened_by_email || "Guest"}
+              </p>
+            </div>
+
+            <span className="hidden truncate text-[#9aa0b8] sm:block">
+              {ticket.minecraft_username || ticket.opened_by_email || "Guest"}
+            </span>
+
+            <span className="hidden text-[#9aa0b8] sm:block">
+              {new Date(ticket.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+            </span>
+
+            <div className="flex items-center justify-end gap-2">
+              <span
+                className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-bold capitalize ${statusStyles[ticket.status]}`}
+              >
+                {ticket.status}
+              </span>
+              <ChevronRight className="hidden h-4 w-4 shrink-0 text-[#6b7192] sm:block" />
             </div>
           </button>
         ))}
 
         {filteredTickets.length === 0 && (
-          <div className="rounded-[2rem] border border-purple-500/20 bg-white/[0.02] p-10 text-center">
-            <p className="text-gray-400">No tickets found matching your filters.</p>
+          <div className="p-10 text-center">
+            <p className="text-[13px] text-[#6b7192]">No tickets found matching your filters.</p>
           </div>
         )}
       </div>
