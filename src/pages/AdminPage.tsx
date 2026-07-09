@@ -401,7 +401,7 @@ function AdminPage() {
 
   return (
     <main className="min-h-screen bg-[#0a0a14] text-white">
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen flex-col lg:flex-row">
         <AdminDashboardTabs
           activeTab={activeTab}
           onChange={setActiveTab}
