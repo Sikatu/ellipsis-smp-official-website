@@ -89,6 +89,7 @@ Admin/console:
 - /ellipsisbridge heartbeat
 - /ellipsisbridge poll
 - /ellipsisbridge sync
+- /ellipsisbridge syncall
 - /ellipsisbridge syncplayer <player>
 - /ellipsisbridge reload
 
@@ -139,6 +140,12 @@ Safe command template:
 - approved_command
 
 The approved_command action must only execute command keys defined in config. It must never execute raw user-submitted commands directly.
+
+Profile sync:
+
+- sync_all_profiles
+
+Unlike the other action types, sync_all_profiles does not dispatch a console command. The bridge intercepts it directly and resyncs every player who has ever joined the server (not just online ones), in throttled batches, so it can be queued safely from the website's admin Command Center or Players tab.
 
 ## Database Tables
 

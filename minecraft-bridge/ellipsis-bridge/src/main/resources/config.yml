@@ -129,6 +129,10 @@ profile-sync:
   sync-on-quit: true
   sync-online-players: true
   sync-offline-players-from-actions: true
+  # Used by /ellipsisbridge syncall and the website's "Sync All Players" button,
+  # which resyncs every player who has ever joined (not just online ones).
+  full-sync-batch-size: 15
+  full-sync-batch-delay-ticks: 20
 
   placeholders:
     current-rank: "%luckperms_primary_group_name%"

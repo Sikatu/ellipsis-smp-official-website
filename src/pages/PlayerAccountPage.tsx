@@ -20,6 +20,7 @@ import {
 import PageShell from "./PageShell";
 import StatCard from "../components/ui/StatCard";
 import { rankDetails } from "./checkout/checkoutData";
+import { getRelativeTime, getKillDeathRatio } from "../lib/playerStats";
 import {
   fetchMyMinecraftProfile,
   fetchMyOrders,
@@ -35,6 +36,21 @@ import {
 
 type AuthMode = "login" | "signup";
 
+const rankImages: Record<string, string> = {
+  NEON: "/ranks/neon.png",
+  AETHER: "/ranks/aether.png",
+  TITAN: "/ranks/titan.png",
+  OVERCLOCK: "/ranks/overclock.png",
+  ASCENDANT: "/ranks/ascendant.png",
+  CREATOR: "/ranks/creator.png",
+  STREAMER: "/ranks/streamer.png",
+};
+
+function getRankImage(rankName: string | null | undefined) {
+  if (!rankName) return null;
+  return rankImages[rankName.trim().toUpperCase()] || null;
+}
+
 function formatDate(value: string | null) {
   if (!value) return "Not available";
 
@@ -45,24 +61,6 @@ function formatShortDate(value: string | null) {
   if (!value) return "Unknown";
 
   return new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
-function getRelativeTime(value: string | null) {
-  if (!value) return null;
-
-  const minutes = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 60000));
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-}
-
-function getKillDeathRatio(kills: number | null, deaths: number | null) {
-  const safeKills = kills ?? 0;
-  const safeDeaths = deaths ?? 0;
-  if (!safeDeaths) return safeKills;
-  return Number((safeKills / safeDeaths).toFixed(2));
 }
 
 const orderStatusMeta: Record<
@@ -197,12 +195,23 @@ function NextRankPanel({ currentRank }: { currentRank: string | null }) {
     : nextRank
       ? `Upgrade to ${nextRank.name} (${nextRank.price}) to unlock ${nextRank.includes.length} perks.`
       : "Purchase a rank to start unlocking perks.";
+  const nextRankImage = getRankImage(isTopTier ? null : nextRank?.name);
 
   return (
     <div className="flex flex-col justify-between rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
-      <div>
-        <p className="text-[13px] font-extrabold text-white">Next rank</p>
-        <p className="mt-1.5 text-xs leading-6 text-[#9aa0b8]">{description}</p>
+      <div className="flex items-start gap-3">
+        {nextRankImage && (
+          <img
+            src={nextRankImage}
+            alt=""
+            loading="lazy"
+            className="h-10 w-10 shrink-0 rounded-[10px] border border-white/[0.08] bg-black/25 object-contain p-1 [image-rendering:pixelated]"
+          />
+        )}
+        <div>
+          <p className="text-[13px] font-extrabold text-white">Next rank</p>
+          <p className="mt-1.5 text-xs leading-6 text-[#9aa0b8]">{description}</p>
+        </div>
       </div>
 
       <div className="mt-4">
@@ -249,6 +258,7 @@ function ProfileHero({ profile }: { profile: PlayerPortalProfile }) {
       ? `https://crafatar.com/renders/body/${profile.minecraft_uuid}?scale=6&overlay`
       : null;
   const syncedAgo = getRelativeTime(profile.last_synced_at);
+  const rankImage = getRankImage(profile.current_rank);
 
   return (
     <div className="grid grid-cols-[auto_1fr] items-center gap-[22px] rounded-2xl border border-white/[0.09] bg-[linear-gradient(120deg,rgba(168,85,247,0.12),rgba(37,99,235,0.06))] p-[18px] sm:p-[22px]">
@@ -283,7 +293,15 @@ function ProfileHero({ profile }: { profile: PlayerPortalProfile }) {
             {profile.minecraft_username}
           </h2>
           {profile.current_rank && (
-            <span className="rounded-full bg-gradient-to-r from-[#fbbf24] to-[#f0abfc] px-[11px] py-1 text-[11px] font-black text-[#1a1204]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#fbbf24] to-[#f0abfc] py-1 pl-1 pr-[11px] text-[11px] font-black text-[#1a1204]">
+              {rankImage && (
+                <img
+                  src={rankImage}
+                  alt=""
+                  loading="lazy"
+                  className="h-5 w-5 rounded-full bg-black/10 object-contain p-0.5 [image-rendering:pixelated]"
+                />
+              )}
               {profile.current_rank}
             </span>
           )}
@@ -661,6 +679,34 @@ export default function PlayerAccountPage() {
   }
 
   useEffect(() => {
+    if (window.location.search.includes("previewprofile")) {
+      setUser({ id: "preview" } as User);
+      setProfile({
+        minecraft_uuid: "069a79f4-44e9-4726-a5be-fca90e38aaf5",
+        current_rank: "TITAN",
+        is_online: true,
+        votes_total: 42,
+        balance_text: "PHP 1,240",
+        playtime_text: "128h 40m",
+        linked_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
+        last_synced_at: new Date(Date.now() - 4 * 60000).toISOString(),
+        first_joined_at: new Date(Date.now() - 90 * 86400000).toISOString(),
+        leaderboard_position: 7,
+        leaderboard_score: 18930,
+        kills: 342,
+        deaths: 118,
+        mob_kills: 5210,
+        blocks_broken: 88420,
+        blocks_placed: 61230,
+        active_world: "Overworld",
+        location_summary: "Spawn District",
+        minecraft_username: "Sikatu",
+      } as PlayerPortalProfile);
+      setIsLoading(false);
+      return;
+    }
+
     void loadAccount();
   }, []);
 

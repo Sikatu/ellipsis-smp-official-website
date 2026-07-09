@@ -491,6 +491,7 @@ function AdminPage() {
             needsAttentionOrders={orders.filter(orderNeedsAttention)}
             realtimeStatus={realtimeStatus}
             lastUpdated={lastUpdated}
+            canManagePlayers={hasManageRights}
             onNavigate={setActiveTab}
             onSetOrderFilter={setActiveFilter}
             onRefresh={handleRefresh}

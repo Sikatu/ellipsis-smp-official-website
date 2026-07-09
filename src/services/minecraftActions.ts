@@ -35,6 +35,7 @@ export const minecraftActionLabels: Record<MinecraftActionType, string> = {
   actionbar_broadcast: "Action Bar Broadcast",
   sound_broadcast: "Sound Broadcast",
   approved_command: "Approved Command",
+  sync_all_profiles: "Sync All Players",
 };
 
 export const minecraftActionStatusLabels: Record<MinecraftActionStatus, string> = {
@@ -97,6 +98,9 @@ export function getMinecraftActionPayloadSummary(action: MinecraftAdminAction) {
 
     case "approved_command":
       return `Approved Command: ${String(payload.commandKey || "N/A")}`;
+
+    case "sync_all_profiles":
+      return "Resyncing every known player's profile from the live server.";
 
     default:
       return "No extra payload.";
@@ -402,6 +406,49 @@ export async function updateMinecraftAdminActionStatus({
       : null,
   };
 }
+export async function createSyncAllProfilesAction(): Promise<{
+  data: MinecraftAdminAction | null;
+  error: Error | null;
+  warning: string | null;
+}> {
+  const { data, error } = await supabase
+    .from("minecraft_admin_actions")
+    .insert({
+      player_key: "server",
+      minecraft_username: "SERVER",
+      discord_username: null,
+      action_type: "sync_all_profiles",
+      payload: {},
+      reason: "Staff requested a full player data resync.",
+      status: "queued",
+      automated: false,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    return {
+      data: null,
+      error: new Error(error.message),
+      warning: null,
+    };
+  }
+
+  const action = data as MinecraftAdminAction;
+  const notifyResult = await notifyDiscordMinecraftAction({
+    action,
+    previousStatus: "new",
+  });
+
+  return {
+    data: action,
+    error: null,
+    warning: notifyResult.error
+      ? `Sync queued, but Discord notification failed: ${notifyResult.error.message}`
+      : null,
+  };
+}
+
 export async function createServerBroadcastAction({
   title,
   message,

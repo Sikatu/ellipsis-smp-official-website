@@ -21,7 +21,8 @@ export type MinecraftActionType =
   | "title_broadcast"
   | "actionbar_broadcast"
   | "sound_broadcast"
-  | "approved_command";
+  | "approved_command"
+  | "sync_all_profiles";
 
 export type MinecraftActionStatus =
   | "queued"

@@ -53,6 +53,7 @@ function getActionIcon(actionType: MinecraftActionType) {
   if (actionType === "give_rank") return <BadgeCheck className="h-4 w-4" />;
   if (actionType === "give_coins") return <Coins className="h-4 w-4" />;
   if (actionType === "temp_ban") return <TimerReset className="h-4 w-4" />;
+  if (actionType === "sync_all_profiles") return <RefreshCcw className="h-4 w-4" />;
   return <ShieldAlert className="h-4 w-4" />;
 }
 

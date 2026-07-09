@@ -26,6 +26,7 @@ import {
   getPlayerProfileSummary,
 } from "../../services/playerProfiles";
 import {
+  createSyncAllProfilesAction,
   getMinecraftActionPayloadSummary,
   minecraftActionLabels,
   minecraftActionStatusLabels,
@@ -46,6 +47,7 @@ type AdminCommandCenterProps = {
   needsAttentionOrders: Order[];
   realtimeStatus: "connecting" | "live" | "error";
   lastUpdated: string;
+  canManagePlayers: boolean;
   onNavigate: (tab: AdminTab) => void;
   onSetOrderFilter: (filter: StatusFilter) => void;
   onRefresh: () => void;
@@ -97,6 +99,7 @@ export function AdminCommandCenter({
   needsAttentionOrders,
   realtimeStatus,
   lastUpdated,
+  canManagePlayers,
   onNavigate,
   onSetOrderFilter,
   onRefresh,
@@ -106,6 +109,8 @@ export function AdminCommandCenter({
   const [serverProfiles, setServerProfiles] = useState<MinecraftPlayerProfile[]>([]);
   const [loadingActions, setLoadingActions] = useState(false);
   const [actionError, setActionError] = useState("");
+  const [syncState, setSyncState] = useState<"idle" | "queuing" | "queued" | "error">("idle");
+  const [syncMessage, setSyncMessage] = useState("");
 
   const actionStats = useMemo(() => {
     const waiting = minecraftActions.filter(
@@ -353,6 +358,22 @@ export function AdminCommandCenter({
     onNavigate("orders");
   }
 
+  async function handleSyncAllPlayers() {
+    setSyncState("queuing");
+    setSyncMessage("");
+
+    const { error, warning } = await createSyncAllProfilesAction();
+
+    if (error) {
+      setSyncState("error");
+      setSyncMessage(error.message);
+      return;
+    }
+
+    setSyncState("queued");
+    setSyncMessage(warning || "Sync queued. The bridge will resync every known player shortly.");
+  }
+
   const intelligenceRows: Array<{ label: string; value: string | number }> = [
     { label: "Players Online", value: `${serverStatus.playersOnline}/${serverStatus.playersMax}` },
     { label: "Capacity", value: `${serverIntelligence.playerCapacity}%` },
@@ -558,9 +579,26 @@ export function AdminCommandCenter({
           </div>
 
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
-              Minecraft Queue Health
-            </p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
+                Minecraft Queue Health
+              </p>
+
+              <button
+                type="button"
+                onClick={handleSyncAllPlayers}
+                disabled={!canManagePlayers || syncState === "queuing"}
+                title={canManagePlayers ? "Queue a full resync of every known player" : "Support role cannot queue Minecraft actions"}
+                className="inline-flex items-center gap-1.5 rounded-[8px] border border-[rgba(96,165,250,0.25)] bg-[rgba(96,165,250,0.08)] px-2.5 py-1 text-[11px] font-bold text-[#60a5fa] transition hover:bg-[rgba(96,165,250,0.14)] disabled:cursor-not-allowed disabled:border-white/[0.06] disabled:bg-white/[0.02] disabled:text-[#565d78]"
+              >
+                {syncState === "queuing" ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <RefreshCcw className="h-3.5 w-3.5" />
+                )}
+                Sync All Players
+              </button>
+            </div>
 
             <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
               <MiniStat label="Waiting" value={actionStats.waiting} />
@@ -572,6 +610,12 @@ export function AdminCommandCenter({
               <div className="mt-3 rounded-[10px] border border-[rgba(248,113,113,0.3)] bg-[rgba(248,113,113,0.08)] p-3 text-[13px] font-semibold text-[#fca5a5]">
                 {actionError}
               </div>
+            )}
+
+            {syncMessage && (
+              <p className={`mt-3 text-[13px] font-semibold ${syncState === "error" ? "text-[#fca5a5]" : "text-[#6ee7b7]"}`}>
+                {syncMessage}
+              </p>
             )}
           </div>
 
