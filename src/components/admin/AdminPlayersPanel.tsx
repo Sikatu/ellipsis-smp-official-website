@@ -29,7 +29,7 @@ import {
   getPlayerProfileSummary,
 } from "../../services/playerProfiles";
 import { createSyncAllProfilesAction } from "../../services/minecraftActions";
-import { getKillDeathRatio, getRelativeTime } from "../../lib/playerStats";
+import { getKillDeathRatio, getRankWeight, getRelativeTime } from "../../lib/playerStats";
 import { AdminMinecraftActionModal } from "./AdminMinecraftActionModal";
 import { AdminPlayerNotesModal } from "./AdminPlayerNotesModal";
 import {
@@ -104,7 +104,7 @@ function getStatsSortValue(profile: MinecraftPlayerProfile, key: StatsSortKey): 
     case "minecraft_username":
       return profile.minecraft_username.toLowerCase();
     case "current_rank":
-      return profile.current_rank.toLowerCase();
+      return getRankWeight(profile.current_rank);
     case "last_seen_at":
       return profile.last_seen_at ? new Date(profile.last_seen_at).getTime() : 0;
     default:
@@ -290,9 +290,11 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
   const [syncMessage, setSyncMessage] = useState("");
   const [rankingMetric, setRankingMetric] = useState<RankingMetric>("leaderboard_score");
   const [statsSort, setStatsSort] = useState<{ key: StatsSortKey; direction: "asc" | "desc" }>({
-    key: "leaderboard_score",
+    key: "current_rank",
     direction: "desc",
   });
+  const [rankFilter, setRankFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "online" | "offline">("all");
 
   async function loadServerProfiles() {
     setIsLoadingProfiles(true);
@@ -393,13 +395,25 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
       .slice(0, 10);
   }, [serverProfiles, rankingMetric]);
 
+  const availableRanks = useMemo(() => {
+    const ranks = new Set(serverProfiles.map((profile) => profile.current_rank.trim().toUpperCase()));
+    return Array.from(ranks).sort((a, b) => getRankWeight(b) - getRankWeight(a));
+  }, [serverProfiles]);
+
   const sortedStatsProfiles = useMemo(() => {
     const filtered = serverProfiles.filter((profile) => {
       const haystack = `${profile.minecraft_username} ${profile.discord_username || ""}`.toLowerCase();
-      return haystack.includes(search.toLowerCase());
+      const matchesSearch = haystack.includes(search.toLowerCase());
+      const matchesRank = rankFilter === "all" || profile.current_rank.trim().toUpperCase() === rankFilter;
+      const matchesStatus =
+        statusFilter === "all" || (statusFilter === "online") === profile.is_online;
+
+      return matchesSearch && matchesRank && matchesStatus;
     });
 
     return filtered.sort((a, b) => {
+      if (a.is_online !== b.is_online) return a.is_online ? -1 : 1;
+
       const aValue = getStatsSortValue(a, statsSort.key);
       const bValue = getStatsSortValue(b, statsSort.key);
       const direction = statsSort.direction === "asc" ? 1 : -1;
@@ -410,7 +424,7 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
 
       return (Number(aValue) - Number(bValue)) * direction;
     });
-  }, [serverProfiles, search, statsSort]);
+  }, [serverProfiles, search, statsSort, rankFilter, statusFilter]);
 
   function openAction(player: { ign: string; discord: string }, actionType: MinecraftActionType) {
     setSelectedActionPlayer({
@@ -575,12 +589,51 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
       </div>
 
       <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
-        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
-          All Player Stats
-        </p>
-        <h3 className="mt-2 text-lg font-extrabold text-white">
-          Full synced profile table
-        </h3>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b91ad]">
+              All Player Stats
+            </p>
+            <h3 className="mt-2 text-lg font-extrabold text-white">
+              Full synced profile table
+            </h3>
+            <p className="mt-1.5 text-[13px] text-[#8b91ad]">
+              Online players are always pinned to the top, ranked by hierarchy by default.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex gap-1 rounded-[8px] bg-white/[0.03] p-1">
+              {(["all", "online", "offline"] as const).map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => setStatusFilter(status)}
+                  className={`rounded-[6px] px-2.5 py-1 text-[11px] font-bold capitalize transition ${
+                    statusFilter === status
+                      ? "bg-[rgba(168,85,247,0.18)] text-[#e9d5ff]"
+                      : "text-[#9aa0b8] hover:bg-white/[0.06]"
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+
+            <select
+              value={rankFilter}
+              onChange={(event) => setRankFilter(event.target.value)}
+              className="rounded-[8px] border border-white/[0.08] bg-black/25 px-2.5 py-1.5 text-[11px] font-bold text-[#c4c9dc] outline-none focus:border-white/20"
+            >
+              <option value="all">All Ranks</option>
+              {availableRanks.map((rank) => (
+                <option key={rank} value={rank}>
+                  {rank}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse text-[13px]">
@@ -649,7 +702,11 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
 
           {sortedStatsProfiles.length === 0 && (
             <div className="p-6 text-center text-[13px] text-[#6b7192]">
-              {isLoadingProfiles ? "Loading synced profiles..." : "No synced Minecraft profiles found."}
+              {isLoadingProfiles
+                ? "Loading synced profiles..."
+                : serverProfiles.length === 0
+                  ? "No synced Minecraft profiles found."
+                  : "No players match the current filters."}
             </div>
           )}
         </div>

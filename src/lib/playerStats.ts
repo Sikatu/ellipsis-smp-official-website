@@ -15,3 +15,22 @@ export function getKillDeathRatio(kills: number | null, deaths: number | null) {
   if (!safeDeaths) return safeKills;
   return Number((safeKills / safeDeaths).toFixed(2));
 }
+
+// Highest prestige first. Keep in sync with the rank images map in
+// PlayerAccountPage and the rankOptions list in AdminMinecraftActionModal.
+const rankHierarchy = [
+  "STREAMER",
+  "CREATOR",
+  "ASCENDANT",
+  "OVERCLOCK",
+  "TITAN",
+  "AETHER",
+  "NEON",
+  "MEMBER",
+];
+
+export function getRankWeight(rankName: string | null | undefined) {
+  if (!rankName) return -1;
+  const index = rankHierarchy.indexOf(rankName.trim().toUpperCase());
+  return index === -1 ? -1 : rankHierarchy.length - index;
+}
