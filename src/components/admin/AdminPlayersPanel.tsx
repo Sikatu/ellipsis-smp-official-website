@@ -391,7 +391,10 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
 
   const topRankedProfiles = useMemo(() => {
     return [...serverProfiles]
-      .sort((a, b) => Number(b[rankingMetric] || 0) - Number(a[rankingMetric] || 0))
+      .sort((a, b) => {
+        if (a.is_online !== b.is_online) return a.is_online ? -1 : 1;
+        return Number(b[rankingMetric] || 0) - Number(a[rankingMetric] || 0);
+      })
       .slice(0, 10);
   }, [serverProfiles, rankingMetric]);
 
@@ -572,7 +575,14 @@ export function AdminPlayersPanel({ orders, canManagePlayers }: AdminPlayersPane
                   {position <= 3 ? <Medal className="h-4 w-4" /> : position}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-bold text-white">{profile.minecraft_username}</p>
+                  <p className="flex items-center gap-1.5 truncate font-bold text-white">
+                    {profile.is_online ? (
+                      <Wifi className="h-3.5 w-3.5 shrink-0 text-[#34d399]" />
+                    ) : (
+                      <WifiOff className="h-3.5 w-3.5 shrink-0 text-[#565d78]" />
+                    )}
+                    {profile.minecraft_username}
+                  </p>
                   <p className="mt-0.5 truncate text-xs text-[#8b91ad]">{profile.current_rank}</p>
                 </div>
                 <span className="shrink-0 text-[13px] font-bold text-[#fde047]">{metric.format(profile)}</span>
