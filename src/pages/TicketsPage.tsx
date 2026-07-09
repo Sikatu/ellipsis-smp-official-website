@@ -41,22 +41,22 @@ const statusMeta: Record<
 > = {
   open: {
     label: "Open",
-    tone: "border-yellow-400/25 bg-yellow-400/10 text-yellow-100",
+    tone: "border-[rgba(251,191,36,0.25)] bg-[rgba(251,191,36,0.1)] text-[#fef3c7]",
     icon: Clock3,
   },
   claimed: {
     label: "In Progress",
-    tone: "border-blue-400/25 bg-blue-500/10 text-blue-100",
+    tone: "border-[rgba(96,165,250,0.25)] bg-[rgba(96,165,250,0.1)] text-[#dbeafe]",
     icon: ShieldCheck,
   },
   resolved: {
     label: "Resolved",
-    tone: "border-emerald-400/25 bg-emerald-500/10 text-emerald-100",
+    tone: "border-[rgba(52,211,153,0.25)] bg-[rgba(52,211,153,0.1)] text-[#d1fae5]",
     icon: PackageCheck,
   },
   closed: {
     label: "Closed",
-    tone: "border-gray-400/25 bg-gray-500/10 text-gray-200",
+    tone: "border-white/[0.15] bg-white/[0.05] text-gray-200",
     icon: CheckCircle2,
   },
 };
@@ -151,10 +151,12 @@ function NewTicketForm({
     .filter((question) => question.required)
     .every((question) => (answers[question.key] || "").trim());
 
+  const requiresLoginButGuest = !definition.allowGuest && !isLoggedIn;
+
   async function handleSubmit() {
     setError("");
 
-    if (!definition.allowGuest && !isLoggedIn) {
+    if (requiresLoginButGuest) {
       setError("You must be logged in to submit this ticket type.");
       return;
     }
@@ -219,9 +221,20 @@ function NewTicketForm({
       </div>
 
       <div className="grid gap-4 rounded-[2rem] border border-purple-500/20 bg-white/[0.05] p-6">
+        {requiresLoginButGuest && (
+          <div className="flex gap-3 rounded-2xl border border-yellow-400/25 bg-yellow-400/10 p-4 text-sm text-yellow-100">
+            <Lock className="mt-0.5 h-4 w-4 shrink-0" />
+            You'll need to log in before this ticket type can be submitted. You
+            can still fill out the form below, but log in first to send it.
+          </div>
+        )}
+
         {definition.questions.map((question) => (
           <label key={question.key} className="grid gap-2 text-sm font-bold text-gray-300">
-            {question.label}
+            <span>
+              {question.label}
+              {question.required && <span className="text-yellow-300"> *</span>}
+            </span>
             {question.type === "select" && (
               <select
                 value={answers[question.key] || ""}
@@ -265,9 +278,13 @@ function NewTicketForm({
           </div>
         )}
 
-        <Button onClick={handleSubmit} disabled={isSubmitting} size="lg" className="py-4">
+        <Button onClick={handleSubmit} disabled={isSubmitting || requiresLoginButGuest} size="lg" className="py-4">
           <Send className="h-4 w-4" />
-          {isSubmitting ? "Submitting..." : "Submit Ticket"}
+          {isSubmitting
+            ? "Submitting..."
+            : requiresLoginButGuest
+              ? "Log In to Submit"
+              : "Submit Ticket"}
         </Button>
       </div>
     </div>
