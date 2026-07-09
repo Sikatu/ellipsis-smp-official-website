@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { LogOut, Search } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { useSeo } from "../hooks/useSeo";
 import { AdminAuth } from "../components/admin/AdminAuth";
 import { AdminStaffApproval } from "../components/admin/AdminStaffApproval";
 import { AdminOrderCard } from "../components/admin/AdminOrderCard";
@@ -116,6 +117,13 @@ function AdminPage() {
 
   const hasManageRights = canManageOrders(adminProfile?.role);
   const hasServerOpsAccess = hasFullAccess(adminProfile?.role);
+
+  useSeo({
+    title: "Staff Admin | Ellipsis SMP",
+    description: "Staff-only administration console for Ellipsis SMP.",
+    path: "/admin",
+    noindex: true,
+  });
 
   async function verifyAdminAccess(activeSession: Session) {
     setAccessState("checking");

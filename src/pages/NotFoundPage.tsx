@@ -1,10 +1,20 @@
+import { useLocation } from "react-router-dom";
 import PageShell from "./PageShell";
 import GlassPanel from "../components/ui/GlassPanel";
 import { LinkButton } from "../components/ui/Button";
 
 function NotFoundPage() {
+  const location = useLocation();
+
   return (
-    <PageShell>
+    <PageShell
+      seo={{
+        title: "Page Not Found | Ellipsis SMP",
+        description: "The page you're looking for doesn't exist on Ellipsis SMP.",
+        path: location.pathname,
+        noindex: true,
+      }}
+    >
       <section className="flex min-h-[75vh] items-center px-4 py-32 sm:px-6">
         <div className="mx-auto max-w-3xl text-center">
           <GlassPanel className="p-8 md:p-12">

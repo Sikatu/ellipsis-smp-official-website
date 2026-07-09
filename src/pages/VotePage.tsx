@@ -72,7 +72,14 @@ const voteImpact = [
 
 function VotePage() {
   return (
-    <PageShell>
+    <PageShell
+      seo={{
+        title: "Vote for Ellipsis SMP | Minecraft Server Vote Rewards",
+        description:
+          "Vote daily for Ellipsis SMP on top Minecraft server lists and earn in-game rewards. Help our SMP server climb the rankings.",
+        path: "/vote",
+      }}
+    >
       <PageHero
         eyebrow="Vote 3.0"
         title={

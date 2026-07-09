@@ -150,7 +150,14 @@ function HomePage() {
     }
 
     return (
-        <PageShell>
+        <PageShell
+            seo={{
+                title: "Ellipsis SMP | Premium Crossplay Minecraft SMP Server",
+                description:
+                    "Join Ellipsis SMP, a premium Minecraft SMP server for Java & Bedrock crossplay. Custom ranks, crates, voting rewards, an active community, and adventure — play today.",
+                path: "/",
+            }}
+        >
             <Hero />
 
             <section className="mx-auto max-w-7xl px-4 py-16 text-white sm:px-6 lg:py-20">

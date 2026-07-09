@@ -17,6 +17,7 @@ import {
 import { supabase } from "../lib/supabase";
 import GradientText from "../components/ui/GradientText";
 import Button from "../components/ui/Button";
+import { useSeo } from "../hooks/useSeo";
 
 type OrderStatus = "pending" | "verified" | "delivered" | "rejected";
 
@@ -135,6 +136,13 @@ function TrackOrderPage() {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  useSeo({
+    title: "Track Your Order | Ellipsis SMP",
+    description: "Look up the status of your Ellipsis SMP order using your order ID.",
+    path: "/track",
+    noindex: true,
+  });
 
   const activeStatus = order ? statusMeta[order.status] : null;
   const ActiveStatusIcon = activeStatus?.icon;

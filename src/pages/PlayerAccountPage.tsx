@@ -383,9 +383,9 @@ function AuthPanel({
         Player Login
       </div>
 
-      <h1 className="text-2xl font-extrabold text-white md:text-[28px]">
+      <h2 className="text-2xl font-extrabold text-white md:text-[28px]">
         Access your Ellipsis SMP profile.
-      </h1>
+      </h2>
 
       <p className="mt-3 text-[13px] leading-6 text-[#9aa0b8]">
         Log in to claim your Minecraft account, view your server progress, and
@@ -717,7 +717,14 @@ export default function PlayerAccountPage() {
   }, [profile, user]);
 
   return (
-    <PageShell>
+    <PageShell
+      seo={{
+        title: "My Account | Ellipsis SMP",
+        description: "Manage your linked Minecraft profile, view stats, and track orders on Ellipsis SMP.",
+        path: "/account",
+        noindex: true,
+      }}
+    >
       <section className="bg-[#030014] px-4 pb-14 pt-32 text-white sm:px-6">
         <div className="mx-auto max-w-7xl">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
